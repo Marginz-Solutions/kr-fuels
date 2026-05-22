@@ -1,13 +1,14 @@
+"use client";
 import type { FC } from "react";
 import { Search, Bell, Fuel } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { C } from "../../constants/colors";
 import { NAV } from "../../constants/navigation";
 import { pill } from "../../styles/shared";
-import type { FuelPrices, PageId } from "../../types";
+import type { FuelPrices } from "../../types";
 
 interface TopbarProps {
-  page:  PageId;
-  fuels: FuelPrices;
+  fuels: FuelPrices; // page prop removed ✅
 }
 
 const fuelBadges: Array<[keyof FuelPrices, string, "blue" | "amber" | "green"]> = [
@@ -16,8 +17,11 @@ const fuelBadges: Array<[keyof FuelPrices, string, "blue" | "amber" | "green"]> 
   ["autoLPG", "Auto LPG", "green"],
 ];
 
-const Topbar: FC<TopbarProps> = ({ page, fuels }) => {
-  const pageLabel = NAV.find((n) => n.id === page)?.label ?? "Dashboard";
+const Topbar: FC<TopbarProps> = ({ fuels }) => {
+  const pathname = usePathname();
+
+  // Match current path to NAV label
+  const pageLabel = NAV.find((n) => n.href === pathname)?.label ?? "Dashboard";
 
   return (
     <header
@@ -44,13 +48,13 @@ const Topbar: FC<TopbarProps> = ({ page, fuels }) => {
       {/* Search */}
       <div
         style={{
-          display:     "flex",
-          alignItems:  "center",
-          gap:         8,
-          background:  C.bg,
-          borderRadius:10,
-          padding:     "7px 12px",
-          width:       220,
+          display:      "flex",
+          alignItems:   "center",
+          gap:          8,
+          background:   C.bg,
+          borderRadius: 10,
+          padding:      "7px 12px",
+          width:        220,
         }}
       >
         <Search size={15} color={C.tm} />

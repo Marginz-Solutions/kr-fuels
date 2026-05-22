@@ -8,17 +8,19 @@ import {
   Phone,
   Settings,
   User,
+  Star,
+  Mail,
 } from "lucide-react";
 import type { NavItem } from "../types";
 
-export const NAV: NavItem[] = [
-  { id: "dashboard",    label: "Dashboard",             icon: LayoutDashboard },
-  { id: "testimonials", label: "Testimonials",           icon: MessageSquare   },
-  { id: "clients",      label: "Clients / Collaborators",icon: Users           },
-  { id: "stations",     label: "Auto LPG Stations",      icon: MapPin          },
-  { id: "products",     label: "Products",               icon: Package         },
-  { id: "faq",          label: "FAQ",                    icon: HelpCircle      },
-  { id: "contact",      label: "Contact & Forms",        icon: Phone           },
-  { id: "settings",     label: "Website Settings",       icon: Settings        },
-  { id: "profile",      label: "Admin Profile",          icon: User            },
+export const NAV = [
+  { id: "dashboard",    label: "Dashboard",    href: "/dashboard",    icon: LayoutDashboard },
+  { id: "clients",      label: "Clients",      href: "/clients",      icon: Users },
+  { id: "stations",     label: "Stations",     href: "/stations",     icon: MapPin },
+  { id: "products",     label: "Products",     href: "/products",     icon: Package },
+  { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star },
+  { id: "faq",          label: "FAQ",          href: "/faq",          icon: HelpCircle },
+  { id: "contact",      label: "Contact",      href: "/contact",      icon: Mail },
+  { id: "settings",     label: "Settings",     href: "/settings",     icon: Settings },
+  { id: "profile",      label: "Profile",      href: "/profile",      icon: User },
 ];
