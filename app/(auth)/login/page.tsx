@@ -8,7 +8,7 @@ import { auth } from "@/lib/firebase/client";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 async function createSession(idToken: string) {
-    await fetch("/api/auth/session", {
+    await fetch("/api/v1/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
@@ -26,9 +26,11 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (!authLoading && user) {
+            
             router.push("/dashboard");
         }
     }, [user, authLoading]);
+
 
     if (authLoading) {
         return (
@@ -46,6 +48,7 @@ export default function LoginPage() {
         try {
             const { user } = await signInWithEmailAndPassword(auth, email, password);
             const idToken = await user.getIdToken();
+            console.log(idToken)
             await createSession(idToken);
             router.push("/dashboard");
         } catch (err: any) {

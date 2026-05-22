@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
     // Verify the token and create a session cookie (14 days)
     const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+    console.log(sessionCookie)
 
     const response = NextResponse.json({ status: "success" });
     response.cookies.set("session", sessionCookie, {

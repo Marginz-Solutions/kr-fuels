@@ -15,5 +15,7 @@ const adminConfig = {
 const adminApp = getApps().find(a => a.name === "admin")
   ?? initializeApp(adminConfig, "admin");
 
+const dbId = process.env.FIREBASE_DB ?? "(default)";
+
 export const adminAuth = getAuth(adminApp);
-export const adminDb = getFirestore(adminApp);
+export const adminDb = getFirestore(adminApp, dbId);
