@@ -2,7 +2,7 @@ import "server-only"
 import { cert,getApp,getApps,initializeApp } from "firebase-admin/app"
 import { getAuth } from "firebase-admin/auth"
 import { getFirestore } from "firebase-admin/firestore"
-
+import { getStorage } from "firebase-admin/storage"
 const adminConfig = {
   credential: cert({
     projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -19,3 +19,4 @@ const dbId = process.env.FIREBASE_DB ?? "(default)";
 
 export const adminAuth = getAuth(adminApp);
 export const adminDb = getFirestore(adminApp, dbId);
+export const adminStorage = getStorage(adminApp)
