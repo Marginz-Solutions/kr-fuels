@@ -35,7 +35,6 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             {children}
-            <Toaster/>
           </AuthProvider>
         </QueryProvider>
       </body>
