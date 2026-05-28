@@ -1,10 +1,15 @@
-import React from 'react'
-import TestimonialsPage from './TestimonialsPage'
+// app/(admin)/testimonials/page.tsx
 
-const page = () => {
+import { TestimonialsResponse } from "@/types";
+import TestimonialsPage from "./TestimonialsPage";
+import { fetchServerApi } from "@/hooks/server-fetch";
+
+export default async function Page() {
+  const res = await fetchServerApi<TestimonialsResponse>("/api/v1/testimonials");
+
   return (
-    <TestimonialsPage/>
-  )
+    <TestimonialsPage
+      initialTestimonials={res.message ?? []}
+    />
+  );
 }
-
-export default page
