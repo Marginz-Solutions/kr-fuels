@@ -78,7 +78,7 @@ export interface ProductDocument {
   product_image: string;
   gallery_images: string[];
   is_active: boolean;
-  created_at: string; 
+  created_at: string;
   updated_at: string;
 }
 
@@ -90,7 +90,7 @@ export interface Product {
   product_image: string;
   gallery_images: string[];
   is_active: boolean;
-  created_at: number;  
+  created_at: number;
   updated_at: number;
 }
 
@@ -260,7 +260,7 @@ export const mockTestimonials: Testimonial[] = [
 ];
 
 export type StationFormDraft = Pick<Station,
-    "id"
+  "id"
   | "stationName"
   | "area"
   | "address"
@@ -271,6 +271,7 @@ export type StationFormDraft = Pick<Station,
   | "location"
 > & {
   telephone: string;
+  status: "active" | "inactive"
   emailID: string;
   mapLink: string;
   images: string[];

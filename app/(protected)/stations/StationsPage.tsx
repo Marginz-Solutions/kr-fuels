@@ -21,6 +21,7 @@ const EMPTY_FORM: StationFormDraft = {
   contactPerson: "", mobileNumber: "", telephone: "", emailID: "",
   district: "Madurai", workingHours: "",
   location: { latitude: 0, longitude: 0 }, mapLink: "",
+  status: "active",
   images: []
 }
 
@@ -114,6 +115,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       address: s.address, contactPerson: s.contactPerson,
       mobileNumber: s.mobileNumber, telephone: s.telephone ?? "",
       emailID: s.emailID ?? "", district: s.district,
+      status: s.status,
       workingHours: s.workingHours, location: s.location,
       mapLink: "", images: s.images ?? [],
     })
@@ -134,6 +136,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       contactPerson: form.contactPerson, mobileNumber: form.mobileNumber,
       telephone: form.telephone ?? "", emailID: form.emailID ?? "",
       district: form.district, workingHours: form.workingHours,
+      status: form.status,
       mapLink: form.mapLink ?? "", address: form.address, location: form.location,
     }))
     pendingFiles.forEach(f => formData.append("images", f))
@@ -141,7 +144,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       setSaveLoading(true)
       if (editing) {
         const response = await api.patch(`/stations/${editing.id}`, formData)
-        setList(l => l.map(s => s.id === editing.id ? { ...s, ...response.data.data } : s))
+        setList(l => l.map(s => s.id === editing.id ? { ...s, ...response.data.data, status: response.data.data.status ?? s.status } : s))
         toast.success("Edited Successfully")
       } else {
         await api.post("/stations", formData)
@@ -178,14 +181,14 @@ const StationsPage: FC<StationResponse> = (props) => {
       <div style={{ ...card(), padding: 0, overflow: "hidden" }}>
         {/* Toolbar */}
         <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.bd}`, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 200, display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 10, padding: "7px 12px" }}>
+          {/* <div style={{ flex: 1, minWidth: 200, display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 10, padding: "7px 12px" }}>
             <Search size={14} color={C.tm} />
             <input
               value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search by name, area, address..."
               style={{ border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit", width: "100%", color: C.t }}
             />
-          </div>
+          </div> */}
           <select value={district} onChange={e => setDistrict(e.target.value)} style={{ ...inp({ width: "auto", padding: "7px 12px" }), minWidth: 140 }}>
             {allDistricts.map(d => <option key={d}>{d}</option>)}
           </select>

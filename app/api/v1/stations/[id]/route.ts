@@ -73,6 +73,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       { status: 400 }
     );
   }
+  console.log(result.data)
 
   const updatedData: Record<string, any> = flattenObject(result.data)
 

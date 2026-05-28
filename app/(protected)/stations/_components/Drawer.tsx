@@ -84,6 +84,35 @@ const Drawer = (props: DrawerProps) => {
                         </div>
                     ))}
 
+                    {/* Status */}
+                    <div style={{ marginBottom: 16 }}>
+                        <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 8, display: "block" }}>Status</label>
+                        <div style={{ display: "flex", background: C.bd, borderRadius: 8, padding: 3, gap: 3 }}>
+                            {(["active", "inactive"] as const).map(s => (
+                                <button
+                                    key={s}
+                                    onClick={() => setForm(p => ({ ...p, status: s }))}
+                                    style={{
+                                        flex: 1,
+                                        padding: "6px 0",
+                                        borderRadius: 6,
+                                        border: "none",
+                                        cursor: "pointer",
+                                        fontSize: 13,
+                                        fontWeight: 500,
+                                        transition: "background 0.15s, color 0.15s",
+                                        background: form.status === s
+                                            ? s === "active" ? "#22c55e" : "#ef4444"
+                                            : "transparent",
+                                        color: form.status === s ? "#fff" : C.tm,
+                                    }}
+                                >
+                                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Address fields */}
                     <div style={{ marginBottom: 8 }}>
                         <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 4, display: "block" }}>Address</label>

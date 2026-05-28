@@ -172,7 +172,7 @@ const FAQPage: FC<FaqResponse> = (props) => {
       )}
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 200, display: "flex", alignItems: "center", gap: 8, background: C.white, border: `1px solid ${C.bd}`, borderRadius: 10, padding: "9px 12px" }}>
+        {/* <div style={{ flex: 1, minWidth: 200, display: "flex", alignItems: "center", gap: 8, background: C.white, border: `1px solid ${C.bd}`, borderRadius: 10, padding: "9px 12px" }}>
           <Search size={14} color={C.tm} />
           <input
             value={searchInput}
@@ -181,7 +181,7 @@ const FAQPage: FC<FaqResponse> = (props) => {
             style={{ border: "none", outline: "none", fontSize: 13, fontFamily: "inherit", width: "100%", color: C.t }}
           />
           {isFetching && <Loader2 size={14} color={C.tm} style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-        </div>
+        </div> */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <LimitSelect onChange={onLimitChange} value={limit} />
         </div>
