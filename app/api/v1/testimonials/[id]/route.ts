@@ -1,153 +1,132 @@
+// app/api/v1/testimonials/[id]/route.ts
+
 import { verifySession } from "@/lib/auth/verify-session";
-import { NextRequest, NextResponse } from "next/server";
-import { Params } from "../../stations/[id]/route";
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
-import { TestimonialPatchSchema } from "@/lib/validators/testimonial.schema";
-import {Bucket} from "@google-cloud/storage"
-import { FieldValue } from "firebase-admin/firestore";
+import { NextRequest, NextResponse } from "next/server";
 
+// ─── PUT /api/v1/testimonials/[id] ───────────────────────────────────────────
 
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-async function parseAndValidateFields(formData: FormData) {
-  const raw = formData.get("data");
-  if (!raw) return { fields: null, error: null };
-
-  if (typeof raw !== "string") {
-    return { fields: null, error: "Invalid data field" };
-  }
-
-  let body: unknown;
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    body = JSON.parse(raw);
-  } catch {
-    return { fields: null, error: "Invalid JSON in data field" };
-  }
-
-  const result = TestimonialPatchSchema.safeParse(body);
-  if (!result.success) {
-    return { fields: null, error: result.error.flatten().fieldErrors };
-  }
-
-  return { fields: result.data, error: null };
-}
-
-async function deleteOldImage(bucket: Bucket, imageUrl: string) {
-  try {
-    const oldPath = imageUrl.split(`${bucket.name}/`)[1]?.split("?")[0];
-    if (oldPath) await bucket.file(decodeURIComponent(oldPath)).delete();
-  } catch {
-    console.warn("Could not delete old testimonial image");
-  }
-}
-
-async function uploadTestimonialImage(imageFile: File, uid: string) {
-  const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
-  const buffer = Buffer.from(await imageFile.arrayBuffer());
-  const ext = imageFile.name.split(".").pop();
-  const fileName = `testimonials/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  const fileRef = bucket.file(fileName);
-
-  await fileRef.save(buffer, {
-    metadata: { contentType: imageFile.type, metadata: { uploadedBy: uid } },
-  });
-
-  await fileRef.makePublic();
-  return { bucket, imageUrl: `https://storage.googleapis.com/${bucket.name}/${fileName}` };
-}
-
-// ── PATCH handler ────────────────────────────────────────────────────────────
-
-export async function PATCH(req: NextRequest, { params }: Params) {
-  try {
-    const { id } = await params;
-
-    const user = await verifySession(req);
+    const user = await verifySession(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const ref = adminDb.collection("testimonials").doc(id);
-    const doc = await ref.get();
+    const { id } =  await params;
+
+    // Check document exists
+    const docRef = adminDb.collection("testimonials").doc(id);
+    const doc = await docRef.get();
+
     if (!doc.exists) {
-      return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Testimonial not found" },
+        { status: 404 }
+      );
     }
 
-    const formData = await req.formData();
-    const imageFile = formData.get("image") as File | null;
-    const hasImage = !!imageFile && imageFile.size > 0;
-    const hasData = !!formData.get("data");
+    const body = await request.json();
+    const { name, designation, company, message, image, rating, isActive } = body;
 
-    if (!hasData && !hasImage) {
-      return NextResponse.json({ error: "No fields or image provided" }, { status: 400 });
-    }
-
-    const { fields, error } = await parseAndValidateFields(formData);
-    if (error) {
-      return NextResponse.json({ error }, { status: 400 });
-    }
-
-    let imageUrl: string | undefined;
-    if (hasImage) {
-      const existingImageUrl = doc.data()?.imageUrl as string | undefined;
-      const { bucket, imageUrl: newUrl } = await uploadTestimonialImage(imageFile, user.uid);
-      if (existingImageUrl) await deleteOldImage(bucket, existingImageUrl);
-      imageUrl = newUrl;
+    // Basic validation
+    if (!name || !message) {
+      return NextResponse.json(
+        { success: false, error: "Name and message are required" },
+        { status: 400 }
+      );
     }
 
     const updatedData = {
-      ...fields,
-      ...(imageUrl && { imageUrl }),
-      updatedAt: FieldValue.serverTimestamp(),
+      name,
+      designation: designation || "",
+      company: company || "",
+      message,
+      image: image || "",
+      rating: rating ?? 5,
+      isActive: isActive ?? true,
+      updatedAt: new Date().toISOString(),
     };
 
-    await ref.update(updatedData);
-    return NextResponse.json({ success: true, data: { id, ...updatedData } });
-  } catch (error: any) {
+    await docRef.update(updatedData);
+
     return NextResponse.json(
-      { error: error.message || "Internal Server Error" },
+      {
+        success: true,
+        message: "Testimonial updated successfully",
+        data: { id, ...updatedData },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("UPDATE TESTIMONIAL ERROR:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update testimonial" },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
-    const { id } = await params;
+// app/api/v1/testimonials/[id]/route.ts
+// Add this to the same file as your PUT handler
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
     const user = await verifySession(request);
     if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const ref = adminDb.collection("testimonials").doc(id);
-    const doc = await ref.get();
+    const { id } =  await params;
+
+    // Check document exists
+    const docRef = adminDb.collection("testimonials").doc(id);
+    const doc = await docRef.get();
+
     if (!doc.exists) {
-        return NextResponse.json({ error: "Testimonial not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Testimonial not found" },
+        { status: 404 }
+      );
     }
 
-    const imageUrl: string = doc.data()?.imageUrl;
-
-    if (imageUrl) {
-        const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
-
-        try {
-
-            const filePath = decodeURIComponent(
-                imageUrl.split(`${bucket.name}/`)[1]
-            );
-
-            await bucket.file(filePath).delete();
-        } catch (err: any) {
-            console.error("❌ Error:", err.code, err.message);
+    // If testimonial has an image, delete it from storage too
+    const data = doc.data();
+    if (data?.image) {
+      try {
+        const bucket = adminStorage.bucket();
+        // Extract file path from public URL
+        // URL format: https://storage.googleapis.com/BUCKET_NAME/testimonials/filename
+        const urlParts = data.image.split(`${bucket.name}/`);
+        if (urlParts[1]) {
+          await bucket.file(urlParts[1]).delete();
         }
-
+      } catch (storageError) {
+        // Don't block deletion if image cleanup fails
+        console.warn("Image cleanup failed:", storageError);
+      }
     }
 
-    await ref.delete();
+    await docRef.delete();
 
-    return NextResponse.json({
+    return NextResponse.json(
+      {
         success: true,
-        message: "Testimonial deleted",
-    });
+        message: "Testimonial deleted successfully",
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("DELETE TESTIMONIAL ERROR:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete testimonial" },
+      { status: 500 }
+    );
+  }
 }
