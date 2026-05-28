@@ -10,7 +10,7 @@ export type PresentsCardProps = {
   presents: AdminContactPresents
   setPresents: React.Dispatch<React.SetStateAction<AdminContactPresents | null>>
   savingPre: boolean
-  savePresents: () => Promise<void>
+  savePresents: () => void
 }
 
 const sectionLabel: React.CSSProperties = {
@@ -116,13 +116,13 @@ const PresentsCard = (props: PresentsCardProps) => {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <FormField label="Latitude">
               <input style={{ ...inp(), fontFamily: "monospace", fontSize: 12 }}
-                value={presents.exactLoaction.lat}
-                onChange={(e) => setPresents({ ...presents, exactLoaction: { ...presents.exactLoaction, lat: e.target.value } })} />
+                value={presents.exactLocation.latitude}
+                onChange={(e) => setPresents({ ...presents, exactLocation: { ...presents.exactLocation, latitude: e.target.value } })} />
             </FormField>
             <FormField label="Longitude">
               <input style={{ ...inp(), fontFamily: "monospace", fontSize: 12 }}
-                value={presents.exactLoaction.lng}
-                onChange={(e) => setPresents({ ...presents, exactLoaction: { ...presents.exactLoaction, lng: e.target.value } })} />
+                value={presents.exactLocation.longitude}
+                onChange={(e) => setPresents({ ...presents, exactLocation: { ...presents.exactLocation, longitude: e.target.value } })} />
             </FormField>
           </div>
         </div>
@@ -178,7 +178,8 @@ const PresentsCard = (props: PresentsCardProps) => {
           borderTop: "0.5px solid rgba(0,0,0,0.08)",
           background: "rgba(0,0,0,0.02)",
         }}>
-          <button style={{ ...btn(), opacity: savingPre ? 0.7 : 1 }} onClick={savePresents} disabled={savingPre}>
+          <button style={{ ...btn(), opacity: savingPre ? 0.7 : 1 }} onClick={()=> {savePresents() 
+            console.log(presents)}} disabled={savingPre}>
             {savingPre
               ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
               : <Save size={14} />}

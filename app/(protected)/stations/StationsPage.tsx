@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, type FC } from "react";
-import { Plus, Search, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn, inp } from "../../../styles/shared";
 import { Badge, StatCard } from "../../../components/ui";
@@ -12,6 +12,8 @@ import Drawer from "./_components/Drawer";
 import { api } from "@/lib/axios";
 import Pagination from "@/components/ui/Pagination";
 import { Spin } from "antd";
+import ExcelUploadModal from "./_components/ExcelUploadModal";
+import { toast } from "sonner";
 
 const EMPTY_FORM: StationFormDraft = {
   id: "",
@@ -25,10 +27,11 @@ const EMPTY_FORM: StationFormDraft = {
 const LIMIT_OPTIONS = [10, 25, 50]
 
 const StationsPage: FC<StationResponse> = (props) => {
-  const { data, meta: initialMeta, stats } = props;
+  const { data, meta: initialMeta, stats: initialStats } = props;
 
   const [list, setList] = useState<Station[]>(data ?? []);
   const [meta, setMeta] = useState(initialMeta);
+  const [stats, setStats] = useState(initialStats)
   const [districts, setDistricts] = useState(stats?.districts ?? []);
   const [view, setView] = useState<"table" | "grid">("table");
   const [search, setSearch] = useState("");
@@ -40,6 +43,7 @@ const StationsPage: FC<StationResponse> = (props) => {
   const [editing, setEditing] = useState<Station | null>(null);
   const [form, setForm] = useState<StationFormDraft>(EMPTY_FORM);
   const [imagesOpen, setImagesOpen] = useState(false);
+  const [excelOpen, setExcelOpen] = useState(false)
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Station | null>(null)
@@ -60,6 +64,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       const response = await api.get(`/stations?${params}`)
       setList(response.data.data)
       setMeta(response.data.meta)
+      setStats(response.data.stats)
     } catch (err) {
       console.error("Fetch failed:", err)
     } finally {
@@ -76,6 +81,8 @@ const StationsPage: FC<StationResponse> = (props) => {
       setList(l => l.filter(s => s.id !== station.id))
       setDeleteTarget(null)
       setDeleteLoading(false)
+      fetchStations(1, 10)
+      toast.success("Deleted Successfully")
     } catch (err) {
       console.error("Delete failed:", err)
       setDeleteLoading(false)
@@ -135,14 +142,17 @@ const StationsPage: FC<StationResponse> = (props) => {
       if (editing) {
         const response = await api.patch(`/stations/${editing.id}`, formData)
         setList(l => l.map(s => s.id === editing.id ? { ...s, ...response.data.data } : s))
+        toast.success("Edited Successfully")
       } else {
         await api.post("/stations", formData)
         fetchStations(1, limit) // refetch to get updated list + meta
         setPage(1)
+        toast.success("Added Successfully")
       }
       setPendingFiles([])
       setDrawer(false)
     } catch (err) {
+      toast.error("Failed")
       console.error("Save failed:", err)
     } finally {
       setSaveLoading(false)
@@ -202,7 +212,9 @@ const StationsPage: FC<StationResponse> = (props) => {
             ))}
           </div>
           <button style={btn()} onClick={openAdd}><Plus size={14} />Add Station</button>
+          <button style={btn()} onClick={() => { setExcelOpen(true) }}><Upload size={14} />Upload</button>
         </div>
+        <ExcelUploadModal open={excelOpen} setOpen={setExcelOpen} fetchList={fetchStations} />
 
         {/* loading overlay */}
         {loading && (
@@ -261,41 +273,74 @@ const StationsPage: FC<StationResponse> = (props) => {
 
         {/* Table view */}
         {!loading && view === "table" && (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: C.bg }}>
-                {["Station Name", "Area", "District", "Contact", "Mobile", "Hours", "Status", "Actions"].map(h => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, color: C.tm, whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((s, i) => (
-                <tr key={s.id} style={{ borderTop: `1px solid ${C.bd}`, background: i % 2 === 0 ? C.white : "#fafcfb" }}>
-                  <td style={{ padding: "12px 16px", fontWeight: 500, color: C.t, fontSize: 13, whiteSpace: "nowrap" }}>{s.stationName}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.area}</td>
-                  <td style={{ padding: "12px 16px" }}><Badge color="blue">{s.district}</Badge></td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.contactPerson}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.mobileNumber}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>
-                    <Clock size={11} style={{ marginRight: 4 }} />{s.workingHours}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}><Badge color={s.status === "active" ? "green" : "red"}>{s.status}</Badge></td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => openEdit(s)} style={{ ...btn("ghost"), padding: "4px 8px" }}><Edit2 size={13} /></button>
-                      <button
-                        onClick={() => setDeleteTarget(s)}
-                        style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </td>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: C.bg }}>
+                  {["Station Name", "Area", "District", "Contact", "Mobile", "Hours", "Status", "Actions"].map(h => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: "10px 16px",
+                        textAlign: "left",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: C.tm,
+                        whiteSpace: "nowrap",
+                        position: h === "Station Name" ? "sticky" : undefined,
+                        left: h === "Station Name" ? 0 : undefined,
+                        background: h === "Station Name" ? C.bg : undefined,
+                        zIndex: h === "Station Name" ? 1 : undefined,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {list.map((s, i) => (
+                  <tr key={s.id} style={{ borderTop: `1px solid ${C.bd}`, background: i % 2 === 0 ? C.white : "#fafcfb" }}>
+                    <td
+                      style={{
+                        padding: "12px 16px",
+                        fontWeight: 500,
+                        color: C.t,
+                        fontSize: 13,
+                        whiteSpace: "nowrap",
+                        position: "sticky",
+                        left: 0,
+                        background: i % 2 === 0 ? C.white : "#fafcfb",
+                        zIndex: 1,
+                        boxShadow: "2px 0 4px -2px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      {s.stationName}
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.area}</td>
+                    <td style={{ padding: "12px 16px" }}><Badge color="blue">{s.district}</Badge></td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.contactPerson}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.mobileNumber}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>
+                      <Clock size={11} style={{ marginRight: 4 }} />{s.workingHours}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}><Badge color={s.status === "active" ? "green" : "red"}>{s.status}</Badge></td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => openEdit(s)} style={{ ...btn("ghost"), padding: "4px 8px" }}><Edit2 size={13} /></button>
+                        <button
+                          onClick={() => setDeleteTarget(s)}
+                          style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Grid view */}

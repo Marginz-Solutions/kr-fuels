@@ -7,89 +7,89 @@ import { DecodedIdToken } from "firebase-admin/auth";
 import AppError from "@/utils/appError";
 
 export async function GET(request: NextRequest) {
-  try{
-  const user = await verifySession(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const user = await verifySession(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+
+    const page = Math.max(Number.parseInt(searchParams.get("page") ?? "1"), 1);
+    const limit = Math.min(Number.parseInt(searchParams.get("limit") ?? "10"), 100);
+    const skip = (page - 1) * limit;
+    const district = searchParams.get("district") ?? "";
+    const area = searchParams.get("area") ?? "";
+    const search = searchParams.get("search") ?? "";
+
+    let query: Query<DocumentData> = adminDb.collection("stations");
+
+    if (district) query = query.where("district", "==", district);
+    if (area) query = query.where("area", "==", area);
+    if (search) {
+      query = query
+        .where("stationName", ">=", search)
+        .where("stationName", "<=", search + "\uf8ff");
+    }
+
+    const baseCollection = adminDb.collection("stations");
+
+    const [
+      countSnap,
+      activeSnap,
+      inactiveSnap,
+      districtsSnap,
+      paginatedSnap,
+    ] = await Promise.all([
+
+      query.count().get(),
+
+      baseCollection.where("status", "==", "active").count().get(),
+
+      baseCollection.where("status", "==", "inactive").count().get(),
+
+      baseCollection.select("district").get(),
+
+      query.orderBy("stationName").offset(skip).limit(limit).get(),
+    ]);
+
+
+    const uniqueDistricts = [
+      ...new Set(districtsSnap.docs.map(doc => doc.data().district).filter(Boolean))
+    ].sort();
+
+
+    const total = countSnap.data().count;
+    const totalPages = Math.ceil(total / limit);
+
+    const stations = paginatedSnap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    console.log(stations)
+
+    return NextResponse.json({
+      data: stations,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+      stats: {
+        active: activeSnap.data().count,
+        inactive: inactiveSnap.data().count,
+        totalDistricts: uniqueDistricts.length,
+        districts: uniqueDistricts,
+      },
+    });
   }
-
-  const { searchParams } = new URL(request.url);
-
-  const page     = Math.max(Number.parseInt(searchParams.get("page")     ?? "1"),   1);
-  const limit    = Math.min(Number.parseInt(searchParams.get("limit")    ?? "10"), 100);
-  const skip     = (page - 1) * limit;
-  const district = searchParams.get("district") ?? "";
-  const area      = searchParams.get("area")     ?? "";
-  const search    = searchParams.get("search")   ?? "";
-
-  let query: Query<DocumentData> = adminDb.collection("stations");
-
-  if (district) query = query.where("district", "==", district);
-  if (area)     query = query.where("area",     "==", area);
-  if (search) {
-    query = query
-      .where("stationName", ">=", search)
-      .where("stationName", "<=", search + "\uf8ff");
+  catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
-
-  const baseCollection = adminDb.collection("stations");
-
-  const [
-    countSnap,
-    activeSnap,
-    inactiveSnap,
-    districtsSnap,
-    paginatedSnap,
-  ] = await Promise.all([
-
-    query.count().get(),
-
-    baseCollection.where("status", "==", "active").count().get(),
-   
-    baseCollection.where("status", "==", "inactive").count().get(),
-
-    baseCollection.select("district").get(),
-
-    query.orderBy("stationName").offset(skip).limit(limit).get(),
-  ]);
-
- 
-  const uniqueDistricts = [
-    ...new Set(districtsSnap.docs.map(doc => doc.data().district).filter(Boolean))
-  ].sort();
-
-
-  const total      = countSnap.data().count;
-  const totalPages = Math.ceil(total / limit);
-
-  const stations = paginatedSnap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
-
-  console.log(stations)
-
-  return NextResponse.json({
-    data: stations,
-    meta: {
-      total,
-      page,
-      limit,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    },
-    stats: {
-      active:          activeSnap.data().count,
-      inactive:        inactiveSnap.data().count,
-      totalDistricts:  uniqueDistricts.length,
-      districts:       uniqueDistricts,
-    },
-  });
-}
-catch(err:any){
-  return NextResponse.json({error:err.message},{status:500})
-}
 }
 
 export async function POST(request: NextRequest) {
@@ -113,9 +113,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON in data field" }, { status: 400 });
     }
 
-    
 
-    const result = StationSchema.safeParse({...body,status:"active"});
+
+    const result = StationSchema.safeParse({ ...body, status: "active" });
     if (!result.success) {
       return NextResponse.json(
         {
@@ -138,6 +138,22 @@ export async function POST(request: NextRequest) {
 
     const id = (await adminDb.collection("stations").add(docData)).id;
 
+    if (imageUrls.length > 0) {
+      const batch = adminDb.batch()
+
+      imageUrls.forEach((url: string) => {
+        const imageRef = adminDb.collection("stationImages").doc()
+        batch.set(imageRef, {
+          url,
+          stationId: id,
+          createdAt: FieldValue.serverTimestamp(),
+          createdBy: user.uid,
+        })
+      })
+
+      await batch.commit()
+    }
+
     return NextResponse.json(
       { success: true, data: { id, ...docData } },
       { status: 201 }
@@ -155,41 +171,41 @@ export async function POST(request: NextRequest) {
 
 
 export const pushImagesToStorage = async (
-    formData: FormData,
-    user: DecodedIdToken | null
+  formData: FormData,
+  user: DecodedIdToken | null
 ): Promise<string[]> => {
-    const imageFiles = formData.getAll("images") as File[]
-    const imageUrls: string[] = [];
-    const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET)
+  const imageFiles = formData.getAll("images") as File[]
+  const imageUrls: string[] = [];
+  const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET)
 
-    for (const file of imageFiles) {
-        if (!file.type.startsWith("image/")) {
-            throw new AppError("Invalid file format",400)
-        }
-        if (file.size > 5 * 1024 * 1024) {
-            throw new AppError(`File too large: ${file.name} (max 5MB)`,400);
-        }
-
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const ext = file.name.split(".").pop()
-        const fileName = `stations/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const fileRef = bucket.file(fileName)
-
-        await fileRef.save(buffer, {
-            metadata: {
-                contentType: file.type,
-                metadata: { uploadedBy: user?.uid }
-            }
-        })
-
-        await fileRef.makePublic()
-
-        const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-        imageUrls.push(url);
-
+  for (const file of imageFiles) {
+    if (!file.type.startsWith("image/")) {
+      throw new AppError("Invalid file format", 400)
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new AppError(`File too large: ${file.name} (max 5MB)`, 400);
     }
 
-    return imageUrls;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const ext = file.name.split(".").pop()
+    const fileName = `stations/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const fileRef = bucket.file(fileName)
+
+    await fileRef.save(buffer, {
+      metadata: {
+        contentType: file.type,
+        metadata: { uploadedBy: user?.uid }
+      }
+    })
+
+    await fileRef.makePublic()
+
+    const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    imageUrls.push(url);
+
+  }
+
+  return imageUrls;
 }
 
 
