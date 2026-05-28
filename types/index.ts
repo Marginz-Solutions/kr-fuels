@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { Station } from "./dust";
 
 // ─── Domain Models ────────────────────────────────────────
 
@@ -27,17 +28,6 @@ export interface Client {
 
 export type StationStatus = "active" | "inactive";
 
-export interface Station {
-  id: number;
-  name: string;
-  address: string;
-  phone: string;
-  district: string;
-  status: StationStatus;
-  hours: string;
-  mapLink: string;
-  images: number;
-}
 
 export interface FAQ {
   id: number;
@@ -269,7 +259,22 @@ export const mockTestimonials: Testimonial[] = [
   },
 ];
 
-export type StationFormDraft = Pick<Station, "name" | "address" | "phone" | "district" | "hours" | "mapLink">;
+export type StationFormDraft = Pick<Station,
+    "id"
+  | "stationName"
+  | "area"
+  | "address"
+  | "district"
+  | "contactPerson"
+  | "mobileNumber"
+  | "workingHours"
+  | "location"
+> & {
+  telephone: string;
+  emailID: string;
+  mapLink: string;
+  images: string[];
+};
 
 export type FAQFormDraft = Pick<FAQ, "question" | "answer" | "isLink">;
 

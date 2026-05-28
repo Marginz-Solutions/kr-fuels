@@ -1,145 +1,231 @@
 "use client"
-import { useState, type FC } from "react";
-import { Download, Check, Trash2, Save } from "lucide-react";
-
+import { useEffect, useState, type FC } from "react";
 import { C } from "../../../constants/colors";
-import { mockSubmissions } from "../../../constants/mockData";
-import { card, btn, inp } from "../../../styles/shared";
-import { Badge, FormField } from "../../../components/ui";
-import type { Submission, SubmissionStatus, BadgeColor } from "../../../types";
+import type { BadgeColor } from "../../../types";
+import type {AdminContactEssentials,AdminContactPresents,EnquiryResponse,FeedbackResponse,Enquiry,Feedback,Pagination,} from "@/types/dust";
+import { api } from "@/lib/axios";
+import { TabSwitcher } from "./_components/TabSwitcher";
+import Table from "./_components/Table";
+import EssentialsCard from "./_components/EssentialsCard";
+import PresentsCard from "./_components/PresentsCard";
+import { btn } from "@/styles/shared";
+import { EssentialsCardLoading, PresentsCardLoading } from "@/components/ui/AdminContactCardSkeleton";
 
-type Tab = "submissions" | "feedback" | "details";
+export type Tab = "enquiry" | "feedback" | "admin-contact";
 
-const statusColor = (s: SubmissionStatus): BadgeColor =>
-  s === "resolved" ? "green" : s === "in_progress" ? "blue" : "amber";
+export type ListItem = Enquiry | Feedback;
 
-const statusLabel = (s: SubmissionStatus): string =>
-  s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
+export type Status = Feedback["status"];
 
-const tabOptions: Array<[Tab, string]> = [
-  ["submissions", "Form Submissions"],
+export const STATUS_COLOR_MAP: Record<string, BadgeColor> = {
+  "resolved": "green",
+  "in-progress": "blue",
+  "pending": "amber",
+}
+
+export const statusColor = (s: string): BadgeColor =>
+  STATUS_COLOR_MAP[s] ?? "amber"
+
+export const statusLabel = (s: string): string =>
+  s === "in-progress" ? "In Progress" : s?.charAt(0).toUpperCase() + s?.slice(1);
+
+export const tabOptions: Array<[Tab, string]> = [
+  ["enquiry", "Form Submissions"],
   ["feedback", "Feedback"],
-  ["details", "Contact Details"],
+  ["admin-contact", "Contact Details"],
 ];
 
-const TABLE_HEADS = ["Name", "Email", "Phone", "Message", "Date", "Status", "Actions"];
+export const fmtDate = (d?: Date | string) =>
+  d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-const ContactPage: FC = () => {
-  const [tab, setTab] = useState<Tab>("submissions");
-  const [list, setList] = useState<Submission[]>(mockSubmissions);
+const DEFAULT_META: Pagination = {
+  total: 0, limit: 10, page: 1, totalPages: 1,
+  hasNextPage: false, hasPrevPage: false,
+};
 
-  const resolve = (id: number) =>
-    setList((l) => l.map((x) => (x.id === id ? { ...x, status: "resolved" } : x)));
+// ─── Component 
+const ContactPage: FC<EnquiryResponse> = (props) => {
+  const [tab, setTab] = useState<Tab>("enquiry");
+  const { data, meta: initialMeta } = props
+  const [initialLoad, setInitialLoad] = useState(true)
 
-  const remove = (id: number) => setList((l) => l.filter((x) => x.id !== id));
+  // ── table state ──
+  const [list, setList] = useState<ListItem[]>(data);
+  const [meta, setMeta] = useState<Pagination>(initialMeta);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // ── admin-contact state ──
+  const [essentials, setEssentials] = useState<AdminContactEssentials | null>(null);
+  const [presents, setPresents] = useState<AdminContactPresents | null>(null);
+  const [contactLoading, setContactLoading] = useState(false);
+  const [savingEss, setSavingEss] = useState(false);
+  const [savingPre, setSavingPre] = useState(false);
+  const [contactError, setContactError] = useState<string | null>(null);
+
+  // ── per-row action state ──
+  const [resolving, setResolving] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+
+  // ─── Fetch table data (enquiry / feedback) 
+  const fetchList = async (t: Tab, pg = 1, limit = 10) => {
+    if (t === "admin-contact") return;
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ page: pg.toString(), limit: limit ? limit.toString() : "10" });
+      const { data } = await api.get<EnquiryResponse | FeedbackResponse>(
+        `/${t}?${params}`
+      );
+      setList(data.data as ListItem[]);
+      setMeta(data.meta);
+      setPage(pg);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─── Fetch admin contact 
+  const fetchContact = async () => {
+    setContactLoading(true);
+    setContactError(null);
+    try {
+      const ess = await api.get("/admin-contact/essentials");
+      const pre = await api.get("/admin-contact/presents");
+      setPresents(pre.data.data);
+      setEssentials(ess.data.data);
+    } catch (e: any) {
+      setContactError(e.message);
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  // ─── Tab switch 
+  useEffect(() => {
+    if (initialLoad) {
+      setInitialLoad(false)
+      return
+    }
+    setList([]);
+    setMeta(DEFAULT_META);
+    setPage(1);
+    setError(null);
+    if (tab === "admin-contact") {
+      fetchContact();
+    } else {
+      fetchList(tab, 1);
+    }
+  }, [tab]);
+
+  // ─── Resolve (PATCH status → "resolved") 
+  const resolve = async (id: string) => {
+    setResolving(id);
+    try {
+      await api.patch(`/${tab}/${id}`, { status: "resolved" });
+
+      setList((l) =>
+        l.map((x) => (x.id === id ? { ...x, status: "resolved" as Status } : x))
+      );
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setResolving(null);
+    }
+  };
+
+  // ─── Delete 
+  const remove = async (id: string) => {
+    setDeleting(id);
+    try {
+      await api.delete(`/${tab}/${id}`);
+      const newList = list.filter((x) => x.id !== id);
+      if (newList.length === 0 && page > 1) {
+        fetchList(tab, page - 1);
+      } else {
+        setList(newList);
+      }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  // ─── Save essentials 
+  const saveEssentials = async () => {
+    if (!essentials) return;
+    setSavingEss(true);
+    console.log(essentials)
+    try {
+      await api.patch("/admin-contact/essentials", essentials);
+    } catch (e: any) {
+      setContactError(e.message);
+    } finally {
+      setSavingEss(false);
+    }
+  };
+
+  // ─── Save presents (social + address) 
+  const savePresents = async () => {
+    if (!presents) return;
+    setSavingPre(true);
+    try {
+      await api.patch("/admin-contact/presents", presents);
+    } catch (e: any) {
+      setContactError(e.message);
+    } finally {
+      setSavingPre(false);
+    }
+  };
 
   return (
     <div style={{ padding: 24 }}>
+
       {/* Tab switcher */}
-      <div style={{ display: "flex", gap: 4, background: C.bg, borderRadius: 12, padding: 4, marginBottom: 20, width: "fit-content" }}>
-        {tabOptions.map(([k, l]) => (
-          <button
-            key={k}
-            onClick={() => setTab(k)}
-            style={{
-              ...btn("ghost"),
-              borderRadius: 9,
-              padding: "7px 16px",
-              fontSize: 13,
-              background: tab === k ? C.white : "transparent",
-              color: tab === k ? C.t : C.tm,
-              border: tab === k ? `1px solid ${C.bd}` : "none",
-              boxShadow: tab === k ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
-            }}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+      <TabSwitcher setTab={setTab} tab={tab} tabOptions={tabOptions} />
 
-      {/* Submissions / Feedback table */}
-      {(tab === "submissions" || tab === "feedback") && (
-        <div style={{ ...card(), padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.bd}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontWeight: 600, color: C.t, fontSize: 14 }}>
-              {tab === "submissions" ? "Contact Form Submissions" : "Feedback Submissions"}
-            </span>
-            <button style={{ ...btn("ghost"), padding: "6px 12px", fontSize: 12 }}><Download size={13} />Export CSV</button>
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: C.bg }}>
-                {TABLE_HEADS.map((h) => (
-                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, color: C.tm }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((s, i) => (
-                <tr key={s.id} style={{ borderTop: `1px solid ${C.bd}`, background: i % 2 === 0 ? C.white : "#fafcfb" }}>
-                  <td style={{ padding: "12px 16px", fontWeight: 500, color: C.t, fontSize: 13 }}>{s.name}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.email}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.phone}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.t, maxWidth: 200 }}>
-                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.message}</div>
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.date}</td>
-                  <td style={{ padding: "12px 16px" }}><Badge color={statusColor(s.status)}>{statusLabel(s.status)}</Badge></td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => resolve(s.id)} style={{ ...btn("ghost"), padding: "4px 8px", fontSize: 12, color: C.green }}><Check size={12} />Resolve</button>
-                      <button onClick={() => remove(s.id)} style={{ ...btn("ghost"), padding: "4px 8px", color: C.red }}><Trash2 size={12} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Global error banner */}
+      {error && (
+        <div style={{ background: "#fef2f2", border: `1px solid #fecaca`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.red, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {error}
+          <button onClick={() => setError(null)} style={{ ...btn("ghost"), padding: "2px 8px", fontSize: 12 }}>Dismiss</button>
         </div>
       )}
 
-      {/* Contact details */}
-      {tab === "details" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-          {/* Company info */}
-          <div style={{ ...card(), padding: 20 }}>
-            <div style={{ fontWeight: 600, color: C.t, fontSize: 14, marginBottom: 16 }}>Company Information</div>
-            {(
-              [
-                ["Address", "42, Industrial Estate, Madurai - 625003, Tamil Nadu"],
-                ["Phone 1", "+91 452 234 5678"],
-                ["Phone 2", "+91 98421 00000"],
-                ["Email", "teamkrfuels@gmail.com"],
-                ["GST No.", "33AABCK1234M1Z5"],
-              ] as const
-            ).map(([l, v]) => (
-              <div key={l} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${C.bd}` }}>
-                <span style={{ fontSize: 12, color: C.tm, width: 80, flexShrink: 0 }}>{l}</span>
-                <span style={{ fontSize: 13, color: C.t }}>{v}</span>
-              </div>
-            ))}
-            <button style={{ ...btn(), marginTop: 14 }}><Save size={14} />Save Changes</button>
-          </div>
+      {/* Enquiry / Feedback table */}
+      <Table deleting={deleting} fetchList={fetchList} list={list} loading={loading} meta={meta} page={page} remove={remove} resolve={resolve} resolving={resolving} tab={tab} setPage={setPage} />
 
-          {/* Social links */}
-          <div style={{ ...card(), padding: 20 }}>
-            <div style={{ fontWeight: 600, color: C.t, fontSize: 14, marginBottom: 16 }}>Social Media Links</div>
-            {(
-              [
-                ["Facebook", "https://facebook.com/krfuels"],
-                ["Instagram", "https://instagram.com/krfuels"],
-                ["LinkedIn", "https://linkedin.com/company/krfuels"],
-                ["YouTube", "https://youtube.com/@krfuels"],
-              ] as const
-            ).map(([l, v]) => (
-              <FormField key={l} label={l}>
-                <input style={inp()} defaultValue={v} />
-              </FormField>
-            ))}
-            <button style={{ ...btn(), marginTop: 6 }}><Save size={14} />Save Links</button>
-          </div>
-        </div>
+      {/* Admin Contact */}
+      {tab === "admin-contact" && (
+        <>
+          {contactError && (
+            <div style={{ background: "#fef2f2", border: `1px solid #fecaca`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.red, marginBottom: 14 }}>
+              {contactError}
+            </div>
+          )}
+
+          {contactLoading && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              <EssentialsCardLoading />
+              <PresentsCardLoading />
+            </div>
+          )}
+
+          {!contactLoading && essentials && presents && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+              <EssentialsCard essentials={essentials} saveEssentials={saveEssentials} savingEss={savingEss} setEssentials={setEssentials} />
+              <PresentsCard presents={presents} savePresents={savePresents} savingPre={savingPre} setPresents={setPresents} />
+            </div>
+          )}
+        </>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   );
 };
