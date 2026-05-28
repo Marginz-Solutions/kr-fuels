@@ -14,7 +14,7 @@ type AddModalProps = {
     form: FAQFormDraft,
     setForm: React.Dispatch<React.SetStateAction<FAQFormDraft>>
     formError: string | null,
-    save: () => Promise<void>
+    save: () => void
 }
 
 const AddModal = (props: AddModalProps) => {

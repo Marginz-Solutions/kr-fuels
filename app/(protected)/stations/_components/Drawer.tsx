@@ -6,6 +6,7 @@ import { Station } from '@/types/dust'
 import { error } from 'console'
 import { ImageIcon, Save, X } from 'lucide-react'
 import React, { useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 type DrawerProps = {
     editing: Station | null
@@ -46,7 +47,9 @@ const Drawer = (props: DrawerProps) => {
                         : s
                 ))
             }
+            toast.success("Image Removed")
         } catch {
+            toast.error("Failed")
             console.error("error")
         }
     }

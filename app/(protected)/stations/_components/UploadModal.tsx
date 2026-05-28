@@ -4,6 +4,8 @@ import { C } from '@/constants/colors'
 import React, { useState, useRef, useCallback, DragEvent, ChangeEvent, SetStateAction } from 'react'
 import { Station } from './ImagesModal'
 import { api } from '@/lib/axios'
+import { toast } from 'sonner'
+import { Station as OriginalStation } from "@/types/dust"
 
 type UploadFile = {
   id: string
@@ -17,9 +19,12 @@ type UploadFile = {
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const ACCENT = '#3b82f6'
 
-type UploadModalProps = { open: boolean; setOpen: (val: boolean) => void, stations: Station[], setStations: React.Dispatch<SetStateAction<Station[]>> }
+type UploadModalProps = {
+  open: boolean; setOpen: (val: boolean) => void, stations: Station[], setStations: React.Dispatch<SetStateAction<Station[]>>, fetchData: () => Promise<void>,
+  setOriginalStations: React.Dispatch<React.SetStateAction<OriginalStation[]>>
+}
 
-const UploadModal = ({ open, setOpen, stations, setStations }: UploadModalProps) => {
+const UploadModal = ({ open, setOpen, stations, setStations, fetchData,setOriginalStations }: UploadModalProps) => {
   const [files, setFiles] = useState<UploadFile[]>([])
   const [dragging, setDragging] = useState(false)
   const [stationSearch, setStationSearch] = useState('')
@@ -68,7 +73,7 @@ const UploadModal = ({ open, setOpen, stations, setStations }: UploadModalProps)
     ))
 
     try {
-      await api.post('/stations/upload/images', formData, {
+     const response =  await api.post('/stations/upload/images', formData, {
         onUploadProgress: (e) => {
           const percent = Math.round((e.loaded * 100) / (e.total ?? 1))
           setFiles(prev => prev.map(p =>
@@ -80,15 +85,17 @@ const UploadModal = ({ open, setOpen, stations, setStations }: UploadModalProps)
       setFiles(prev => prev.map(p =>
         p.status === 'uploading' ? { ...p, status: 'done', progress: 100 } : p
       ))
-      if (selectedStation) {
-        setStations(prev => prev.map(p =>
-          p.id === selectedStation
-            ? { ...p, imageCount: p.imageCount + pendingFiles.length }
-            : p
-        ))
-      }
+      await fetchData()
+       setOriginalStations(prev => prev.map(p =>
+                p.id === selectedStation
+                    ? { ...p, images: [...(p.images ?? []), ...(response.data.images.url ?? [])] }
+                    : p
+            ))
+
+      toast.success("Uploaded Successfully")
 
     } catch (err) {
+      toast.error("Failed")
       console.error('Upload failed:', err)
       setFiles(prev => prev.map(p =>
         p.status === 'uploading' ? { ...p, status: 'error', progress: 0 } : p

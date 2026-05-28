@@ -8,7 +8,7 @@ import { AlertTriangle, Trash2 } from 'lucide-react'
 type DeleteModalProps = {
     confirmDelete: Faq | null,
     setConfirmDelete: (val: Faq | null)=> void,
-    confirmAndDelete:()=> Promise<void>
+    confirmAndDelete:()=> void
 }
 
 const DeleteModal = (props: DeleteModalProps) => {

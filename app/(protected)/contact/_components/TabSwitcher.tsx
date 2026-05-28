@@ -7,7 +7,7 @@ import { C } from "@/constants/colors"
 export type TabSwitcherProps = {
   tab:Tab,
   tabOptions: Array<[Tab, string]>,
-  setTab: React.Dispatch<React.SetStateAction<Tab>>
+  setTab: (t:Tab)=>void
 }
 export const TabSwitcher = ( props : TabSwitcherProps ) => {
   const { tab,setTab, tabOptions } = props

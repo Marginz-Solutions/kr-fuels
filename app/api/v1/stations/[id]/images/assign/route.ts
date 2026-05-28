@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } =await params;
+    const { id } = await params;
 
     let body;
     try {
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { imageUrls } = body;
+    const { imageUrls, imageIds } = body;
 
     if (!Array.isArray(imageUrls) || imageUrls.some(url => typeof url !== "string")) {
       return NextResponse.json(
@@ -38,8 +38,22 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     // ✅ safer: atomic update (prevents race conditions)
     await ref.update({
-      images:FieldValue.arrayUnion(...imageUrls),
+      images: FieldValue.arrayUnion(...imageUrls),
     });
+
+    // After the arrayUnion update, add:
+
+    if (Array.isArray(imageIds) && imageIds.length > 0) {
+      const batch = adminDb.batch()
+
+      imageIds.forEach((imageId: string) => {
+        const imageRef = adminDb.collection("stationImages").doc(imageId)
+        batch.update(imageRef, { stationId: id })
+      })
+
+      await batch.commit()
+    }
+
 
     const updatedDoc = await ref.get();
 

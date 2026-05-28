@@ -21,7 +21,22 @@ export async function DELETE(request: NextRequest, { params }: Params) {
         return NextResponse.json({ error: "Station not found" }, { status: 404 });
     }
 
-    ref.update({ images: FieldValue.arrayRemove(imageUrl) })
+    await Promise.all([
+        ref.update({ images: FieldValue.arrayRemove(imageUrl) }),
+
+        // Find the stationImage doc by stationId and url, then reset
+        adminDb.collection("stationImages")
+            .where("stationId", "==", id)
+            .where("url", "==", imageUrl)
+            .get()
+            .then(snap => {
+                if (!snap.empty) {
+                    const batch = adminDb.batch()
+                    snap.docs.forEach(doc => batch.update(doc.ref, { stationId: null }))
+                    return batch.commit()
+                }
+            })
+    ])
 
     return NextResponse.json({ success: true });
 }
