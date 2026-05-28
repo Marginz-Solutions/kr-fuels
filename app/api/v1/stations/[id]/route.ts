@@ -106,31 +106,16 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Station not found" }, { status: 404 });
   }
 
+  // Reset stationId to null for all related stationImages
+  const imagesSnap = await adminDb
+    .collection("stationImages")
+    .where("stationId", "==", id)
+    .get()
 
-  const images: string[] = doc.data()?.images ?? [];
-
-  if (images.length > 0) {
-    const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
-
-    await Promise.all(
-      images.map(async (url) => {
-        try {
-          // Extract: "stations/filename.jpg" from full URL
-          const filePath = decodeURIComponent(
-            url.split(`${bucket.name}/`)[1]
-          );
-
-          console.log("url       →", url);
-          console.log("bucket    →", bucket.name);
-          console.log("filePath  →", filePath);
-
-          await bucket.file(filePath).delete();
-          console.log("✅ Deleted:", filePath);
-        } catch (err: any) {
-          console.error("❌ Error:", err.code, err.message);
-        }
-      })
-    );
+  if (!imagesSnap.empty) {
+    const batch = adminDb.batch()
+    imagesSnap.docs.forEach(doc => batch.update(doc.ref, { stationId: null }))
+    await batch.commit()
   }
 
   await ref.delete();
@@ -138,7 +123,6 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   return NextResponse.json({
     success: true,
     message: "Station deleted",
-    deletedImages: images.length,
+    updatedImages: imagesSnap.size,
   });
 }
-

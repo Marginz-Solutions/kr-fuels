@@ -219,7 +219,7 @@ const Drawer = (props: DrawerProps) => {
                                 onDragLeave={() => setDragging(false)}
                                 onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
                                 style={{
-                                    border: `2px dashed ${dragging ? C.p : C.bd}`,
+                                    border: `${dragging ? C.p : C.bd}`,
                                     borderRadius: 12,
                                     padding: "20px 0",
                                     textAlign: "center",
