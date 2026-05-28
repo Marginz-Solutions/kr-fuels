@@ -142,10 +142,9 @@ export type PageId =
   | "testimonials"
   | "clients"
   | "stations"
-  | "products"
   | "faq"
   | "contact"
-  | "settings"
+  | "seo-settings"
   | "profile";
 
 export interface NavItem {
@@ -282,4 +281,54 @@ export type FAQFormDraft = Pick<FAQ, "question" | "answer" | "isLink">;
 export interface TestimonialsResponse {
   success: boolean;
   message: Testimonial[]; // your API returns { success, message: [...] }
+}
+
+export interface SeoSettings {
+  id: string;
+
+  metaTitle: string;
+
+  metaDescription: string;
+
+  keywords: string[];
+
+  ogImage: string;
+
+  createdAt: string;
+
+  updatedAt: string;
+}
+
+export interface SeoSettingsResponse {
+  success: boolean;
+
+  message: SeoSettings | null;
+}
+
+export interface PrivacyPolicySection {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface PrivacyPolicyBanner {
+  title: string;
+  subtitle: string;
+}
+
+export interface PrivacyPolicy {
+  id: string;
+  title: string;
+  slug: string;
+  status: "published" | "draft";
+  banner: PrivacyPolicyBanner;
+  sections: PrivacyPolicySection[];
+  publishedAt: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface PrivacyPolicyResponse {
+  success: boolean;
+  message: PrivacyPolicy | null;
 }
