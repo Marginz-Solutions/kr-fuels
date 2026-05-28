@@ -4,6 +4,7 @@ import { Sidebar, Topbar } from "@/components/layout";
 import { C } from "@/constants/colors";
 import { defaultFuelPrices } from "@/constants/mockData";
 import type { FuelPrices } from "@/types";
+import { Toaster } from "sonner";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -26,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Topbar fuels={prices} /> {/* page prop removed ✅ */}
         <main style={{ flex: 1, overflowY: "auto" }}>
           {children}
+          <Toaster position="top-right" richColors/>
         </main>
       </div>
     </div>

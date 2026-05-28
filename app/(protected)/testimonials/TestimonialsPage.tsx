@@ -23,6 +23,7 @@ import { fetchTestimonials, createTestimonial, updateTestimonial, toggleTestimon
 import TestimonialAvatar from "./components/Testimonialavatar";
 import StarRating from "./components/Starrating";
 import { uploadTestimonialImage } from "@/lib/api/testimonials";
+import { toast } from "sonner";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
@@ -215,7 +216,7 @@ const handleSave = async () => {
               />
             </div>
             <div>
-              <FieldLabel htmlFor="m-designation">Designation</FieldLabel>
+              <FieldLabel htmlFor="m-designation">Designation *</FieldLabel>
               <input
                 id="m-designation"
                 className={inputCls}
@@ -227,7 +228,7 @@ const handleSave = async () => {
           </div>
 
           <div>
-            <FieldLabel htmlFor="m-company">Company</FieldLabel>
+            <FieldLabel htmlFor="m-company">Company *</FieldLabel>
             <input
               id="m-company"
               className={inputCls}
@@ -325,7 +326,7 @@ const handleSave = async () => {
           </button>
           <button
             onClick={handleSave}
-            disabled={!form.name.trim() || !form.message.trim() || isSaving}
+            disabled={!form.name.trim() || !form.message.trim() || isSaving || !form.designation.trim() || !form.company.trim()}
             className="flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
             {isSaving ? (
@@ -368,9 +369,13 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
       setModalOpen(false);
+
+      toast.success("Testimonial added successfully!");
     },
     onError: (error: Error) => {
       console.error("Create failed:", error.message);
+
+      toast.error("Failed to add testimonial: " + error.message);
     },
   });
 
@@ -410,11 +415,13 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
       queryClient.setQueryData(["testimonials"], context.previous);
     }
     setModalOpen(true); // ← reopen modal on failure
+    toast.error("Failed to update testimonial: " + error.message);
     console.error("Update failed:", error.message);
   },
 
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+    toast.success("Testimonial updated successfully!");
   },
 });
 
@@ -438,11 +445,14 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
       if (context?.previous) {
         queryClient.setQueryData(["testimonials"], context.previous);
       }
+      toast.error("Failed to toggle testimonial: " + error.message);
       console.error("Toggle failed:", error.message);
     },
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+
+      toast.success("Testimonial status updated!");
     },
   });
 
@@ -468,11 +478,13 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
       }
       const restored = context?.previous?.find((t) => t.id === id) ?? null;
       setDeleteTarget(restored); // ← reopen dialog for same testimonial
+      toast.error("Failed to delete testimonial: " + error.message);
       console.error("Delete failed:", error.message);
     },
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      toast.success("Testimonial deleted successfully!");
     },
   });
 
