@@ -1,80 +1,201 @@
 "use client"
-import { useState, type FC } from "react";
-import { Plus, Search, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Save } from "lucide-react";
-import { Image as ImgIcon } from "lucide-react";
-
+import { useState, useEffect, type FC } from "react";
+import { Plus, Search, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock } from "lucide-react";
 import { C } from "../../../constants/colors";
-import { mockStations } from "../../../constants/mockData";
 import { card, btn, inp } from "../../../styles/shared";
 import { Badge, StatCard } from "../../../components/ui";
-import type { Station, StationFormDraft } from "../../../types";
-
-const DISTRICTS = ["Madurai", "Chennai", "Coimbatore", "Trichy", "Salem", "Tirunelveli", "Other"] as const;
+import type { StationFormDraft } from "../../../types";
+import Folder from "./_components/Folder";
+import ImagesModal from "./_components/ImagesModal";
+import { StationResponse, Station } from "@/types/dust";
+import Drawer from "./_components/Drawer";
+import { api } from "@/lib/axios";
+import Pagination from "@/components/ui/Pagination";
+import { Spin } from "antd";
 
 const EMPTY_FORM: StationFormDraft = {
-  name: "", address: "", phone: "", district: "Madurai", hours: "", mapLink: "",
-};
+  id: "",
+  stationName: "", area: "", address: { street: "", doorNo: "", pincode: "" },
+  contactPerson: "", mobileNumber: "", telephone: "", emailID: "",
+  district: "Madurai", workingHours: "",
+  location: { latitude: 0, longitude: 0 }, mapLink: "",
+  images: []
+}
 
-const StationsPage: FC = () => {
-  const [list, setList] = useState<Station[]>(mockStations);
+const LIMIT_OPTIONS = [10, 25, 50]
+
+const StationsPage: FC<StationResponse> = (props) => {
+  const { data, meta: initialMeta, stats } = props;
+
+  const [list, setList] = useState<Station[]>(data ?? []);
+  const [meta, setMeta] = useState(initialMeta);
+  const [districts, setDistricts] = useState(stats?.districts ?? []);
   const [view, setView] = useState<"table" | "grid">("table");
   const [search, setSearch] = useState("");
   const [district, setDistrict] = useState("All");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [loading, setLoading] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [editing, setEditing] = useState<Station | null>(null);
   const [form, setForm] = useState<StationFormDraft>(EMPTY_FORM);
+  const [imagesOpen, setImagesOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Station | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const allDistricts = ["All", ...new Set(list.map((s) => s.district))];
+  const allDistricts = ["All", ...districts];
 
-  const filtered = list.filter(
-    (s) =>
-      (district === "All" || s.district === district) &&
-      (s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.address.toLowerCase().includes(search.toLowerCase())),
-  );
-
-  const openEdit = (s: Station) => {
-    setEditing(s);
-    setForm({ name: s.name, address: s.address, phone: s.phone, district: s.district, hours: s.hours, mapLink: s.mapLink });
-    setDrawer(true);
-  };
-
-  const openAdd = () => { setEditing(null); setForm(EMPTY_FORM); setDrawer(true); };
-
-  const save = () => {
-    if (editing) {
-      setList((l) => l.map((s) => (s.id === editing.id ? { ...s, ...form } : s)));
-    } else {
-      setList((l) => [...l, { id: Date.now(), ...form, status: "active", images: 0 }]);
+  // ── fetch ──────────────────────────────────────────────
+  const fetchStations = async (p = page, l = limit) => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        page: String(p),
+        limit: String(l),
+        ...(search && { search }),
+        ...(district !== "All" && { district }),
+      })
+      const response = await api.get(`/stations?${params}`)
+      setList(response.data.data)
+      setMeta(response.data.meta)
+    } catch (err) {
+      console.error("Fetch failed:", err)
+    } finally {
+      setLoading(false)
     }
-    setDrawer(false);
-  };
+  }
 
-  const remove = (id: number) => setList((l) => l.filter((s) => s.id !== id));
+  const remove = async (station: Station) => {
+
+    setDeleteLoading(true)
+
+    try {
+      await api.delete(`/stations/${station.id}`)
+      setList(l => l.filter(s => s.id !== station.id))
+      setDeleteTarget(null)
+      setDeleteLoading(false)
+    } catch (err) {
+      console.error("Delete failed:", err)
+      setDeleteLoading(false)
+    }
+  }
+
+  // refetch when page or limit changes
+  useEffect(() => { fetchStations(page, limit) }, [page, limit])
+
+  // reset to page 1 when search or district filter changes
+  useEffect(() => {
+    setPage(1)
+    fetchStations(1, limit)
+  }, [search, district])
+
+  const handlePageChange = (p: number) => setPage(p)
+
+  const handleLimitChange = (l: number) => {
+    setLimit(l)
+    setPage(1)
+  }
+
+  // ── crud ───────────────────────────────────────────────
+  const openEdit = (s: Station) => {
+    setPendingFiles([])
+    setEditing(s)
+    setForm({
+      id: s.id, stationName: s.stationName, area: s.area,
+      address: s.address, contactPerson: s.contactPerson,
+      mobileNumber: s.mobileNumber, telephone: s.telephone ?? "",
+      emailID: s.emailID ?? "", district: s.district,
+      workingHours: s.workingHours, location: s.location,
+      mapLink: "", images: s.images ?? [],
+    })
+    setDrawer(true)
+  }
+
+  const openAdd = () => {
+    setPendingFiles([])
+    setEditing(null)
+    setForm({ ...EMPTY_FORM, images: [] })
+    setDrawer(true)
+  }
+
+  const save = async () => {
+    const formData = new FormData()
+    formData.append("data", JSON.stringify({
+      stationName: form.stationName, area: form.area,
+      contactPerson: form.contactPerson, mobileNumber: form.mobileNumber,
+      telephone: form.telephone ?? "", emailID: form.emailID ?? "",
+      district: form.district, workingHours: form.workingHours,
+      mapLink: form.mapLink ?? "", address: form.address, location: form.location,
+    }))
+    pendingFiles.forEach(f => formData.append("images", f))
+    try {
+      setSaveLoading(true)
+      if (editing) {
+        const response = await api.patch(`/stations/${editing.id}`, formData)
+        setList(l => l.map(s => s.id === editing.id ? { ...s, ...response.data.data } : s))
+      } else {
+        await api.post("/stations", formData)
+        fetchStations(1, limit) // refetch to get updated list + meta
+        setPage(1)
+      }
+      setPendingFiles([])
+      setDrawer(false)
+    } catch (err) {
+      console.error("Save failed:", err)
+    } finally {
+      setSaveLoading(false)
+    }
+  }
+
+  const formatAddress = (s: Station) =>
+    [s.address.street, s.area, s.address.doorNo, s.address.pincode].filter(Boolean).join(", ")
 
   return (
     <div style={{ padding: 24 }}>
       {/* KPI row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12, marginBottom: 20 }}>
-        <StatCard icon={<Store size={18} />} label="Total Stations" value={list.length} sub="Active network" />
-        <StatCard icon={<Check size={18} />} label="Active Stations" value={list.filter((s) => s.status === "active").length} sub="Operational" />
-        <StatCard icon={<Map size={18} />} label="Districts Covered" value={new Set(list.map((s) => s.district)).size} sub="Across Tamil Nadu" />
-        <StatCard icon={<AlertCircle size={18} />} label="Inactive" value={list.filter((s) => s.status === "inactive").length} sub="Needs attention" />
+        <StatCard icon={<Store size={18} />} label="Total Stations" value={meta?.total} sub="Active network" />
+        <StatCard icon={<Check size={18} />} label="Active Stations" value={stats?.active} sub="Operational" />
+        <StatCard icon={<Map size={18} />} label="Districts Covered" value={stats?.totalDistricts} sub="Across Tamil Nadu" />
+        <StatCard icon={<AlertCircle size={18} />} label="Inactive" value={stats?.inactive} sub="Needs attention" />
+        <div className="flex items-center lg:justify-end justify-center mt-2">
+          <Folder label="Images" color="amber" onClick={() => setImagesOpen(true)} />
+        </div>
       </div>
 
-      {/* Table / Grid card */}
       <div style={{ ...card(), padding: 0, overflow: "hidden" }}>
         {/* Toolbar */}
         <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.bd}`, display: "flex", gap: 10, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 200, display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 10, padding: "7px 12px" }}>
             <Search size={14} color={C.tm} />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search stations..." style={{ border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit", width: "100%", color: C.t }} />
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, area, address..."
+              style={{ border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit", width: "100%", color: C.t }}
+            />
           </div>
-          <select value={district} onChange={(e) => setDistrict(e.target.value)} style={{ ...inp({ width: "auto", padding: "7px 12px" }), minWidth: 140 }}>
-            {allDistricts.map((d) => <option key={d}>{d}</option>)}
+          <select value={district} onChange={e => setDistrict(e.target.value)} style={{ ...inp({ width: "auto", padding: "7px 12px" }), minWidth: 140 }}>
+            {allDistricts.map(d => <option key={d}>{d}</option>)}
           </select>
+
+          {/* limit selector */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 12, color: C.tm }}>Show</span>
+            {LIMIT_OPTIONS.map(opt => (
+              <button
+                key={opt}
+                onClick={() => handleLimitChange(opt)}
+                style={{ ...btn(limit === opt ? 'primary' : 'ghost'), padding: "5px 10px", fontSize: 12 }}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: "flex", gap: 4 }}>
-            {(["table", "grid"] as const).map((v) => (
+            {(["table", "grid"] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{ ...btn("ghost"), padding: 8, background: view === v ? C.pXLight : "transparent", color: view === v ? C.p : C.tm }}>
                 {v === "table" ? <List size={16} /> : <Grid size={16} />}
               </button>
@@ -83,120 +204,223 @@ const StationsPage: FC = () => {
           <button style={btn()} onClick={openAdd}><Plus size={14} />Add Station</button>
         </div>
 
+        {/* loading overlay */}
+        {loading && (
+          <>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: C.bg }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <th key={i} style={{ padding: "10px 16px" }}>
+                      <div className="sk" style={{ height: 11, width: i === 0 ? 60 : i === 5 - 1 ? 50 : 80 }} />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              {/* Table rows */}
+              <tbody>
+                {Array.from({ length: 5 }).map((_, ri) => (
+                  <tr
+                    key={ri}
+                    style={{
+                      borderTop: `1px solid ${C.bd}`,
+                      background: ri % 2 === 0 ? C.white : "#fafcfb",
+                    }}
+                  >
+                    {Array.from({ length: 5 }).map((_, ci) => (
+                      <td key={ci} style={{ padding: "12px 16px" }}>
+                        <div
+                          className="sk"
+                          style={{
+                            height: 13,
+                            // vary widths so it looks organic
+                            width: ci === 0 ? "70%"
+                              : ci === 5 - 1 ? "60%"
+                                : ci % 2 === 0 ? "80%"
+                                  : "55%",
+                            // stagger animation delay per row
+                            animationDelay: `${ri * 0.07}s`,
+                          }}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.bd}`, display: "flex", justifyContent: "flex-end", gap: 6, alignItems: "center" }}>
+              <div className="sk" style={{ height: 13, width: 80, marginRight: 8 }} />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="sk" style={{ height: 28, width: 32, borderRadius: 8 }} />
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Table view */}
-        {view === "table" ? (
+        {!loading && view === "table" && (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: C.bg }}>
-                {["Station Name", "District", "Address", "Phone", "Hours", "Status", "Actions"].map((h) => (
+                {["Station Name", "Area", "District", "Contact", "Mobile", "Hours", "Status", "Actions"].map(h => (
                   <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 12, fontWeight: 600, color: C.tm, whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((s, i) => (
+              {list.map((s, i) => (
                 <tr key={s.id} style={{ borderTop: `1px solid ${C.bd}`, background: i % 2 === 0 ? C.white : "#fafcfb" }}>
-                  <td style={{ padding: "12px 16px", fontWeight: 500, color: C.t, fontSize: 13 }}>{s.name}</td>
+                  <td style={{ padding: "12px 16px", fontWeight: 500, color: C.t, fontSize: 13, whiteSpace: "nowrap" }}>{s.stationName}</td>
+                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.area}</td>
                   <td style={{ padding: "12px 16px" }}><Badge color="blue">{s.district}</Badge></td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, maxWidth: 200 }}>
-                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.address}</div>
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.phone}</td>
+                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.contactPerson}</td>
+                  <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm }}>{s.mobileNumber}</td>
                   <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>
-                    <Clock size={11} style={{ marginRight: 4 }} />{s.hours}
+                    <Clock size={11} style={{ marginRight: 4 }} />{s.workingHours}
                   </td>
                   <td style={{ padding: "12px 16px" }}><Badge color={s.status === "active" ? "green" : "red"}>{s.status}</Badge></td>
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => openEdit(s)} style={{ ...btn("ghost"), padding: "4px 8px" }}><Edit2 size={13} /></button>
-                      <button onClick={() => remove(s.id)} style={{ ...btn("ghost"), padding: "4px 8px", color: C.red }}><Trash2 size={13} /></button>
+                      <button
+                        onClick={() => setDeleteTarget(s)}
+                        style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        ) : (
-          /* Grid view */
+        )}
+
+        {/* Grid view */}
+        {!loading && view === "grid" && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16, padding: 16 }}>
-            {filtered.map((s) => (
+            {list.map(s => (
               <div key={s.id} style={{ border: `1px solid ${C.bd}`, borderRadius: 14, overflow: "hidden" }}>
                 <div style={{ height: 80, background: `linear-gradient(135deg, ${C.p}22, ${C.p}44)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <MapPin size={28} color={C.p} />
                 </div>
                 <div style={{ padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                    <div style={{ fontWeight: 600, color: C.t, fontSize: 13 }}>{s.name}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                    <div style={{ fontWeight: 600, color: C.t, fontSize: 13 }}>{s.stationName}</div>
                     <Badge color={s.status === "active" ? "green" : "red"}>{s.status}</Badge>
                   </div>
-                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 4 }}>{s.address}</div>
-                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 10 }}>{s.phone} · {s.hours}</div>
+                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{s.area} · <Badge color="blue">{s.district}</Badge></div>
+                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{formatAddress(s)}</div>
+                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 10 }}>{s.contactPerson} · {s.mobileNumber}</div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => openEdit(s)} style={{ ...btn("ghost"), padding: "5px 10px", fontSize: 12, flex: 1, justifyContent: "center" }}><Edit2 size={12} />Edit</button>
-                    <button onClick={() => remove(s.id)} style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}><Trash2 size={12} /></button>
+                    <button
+                      onClick={() => setDeleteTarget(s)}
+                      style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+
+        {/* Pagination */}
+        {meta && (
+          <div style={{ padding: "0 16px", borderTop: `1px solid ${C.bd}` }}>
+            <Pagination
+              meta={meta}
+              page={page}
+              loading={loading}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Side Drawer */}
+      <ImagesModal open={imagesOpen} setOpen={setImagesOpen} setOriginalStations={setList} />
+
       {drawer && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 1000, display: "flex", justifyContent: "flex-end" }}>
-          <div style={{ width: 440, background: C.white, height: "100%", boxShadow: "-4px 0 20px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${C.bd}` }}>
-              <span style={{ fontWeight: 600, fontSize: 16, color: C.t }}>{editing ? "Edit Station" : "Add New Station"}</span>
-              <button onClick={() => setDrawer(false)} style={{ ...btn("ghost"), padding: 6 }}>✕</button>
-            </div>
-            <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
-              {(
-                [
-                  ["name", "Station Name", "text", "KR Fuels ..."],
-                  ["address", "Full Address", "text", "Street, City, PIN"],
-                  ["phone", "Contact Number", "tel", "+91 98421 ..."],
-                  ["hours", "Opening Hours", "text", "6:00 AM - 10:00 PM"],
-                  ["mapLink", "Google Maps Link", "url", "https://maps.google.com/..."],
-                ] as const
-              ).map(([key, label, type, placeholder]) => (
-                <div key={key} style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 4, display: "block" }}>{label}</label>
-                  <input
-                    style={inp()}
-                    type={type}
-                    value={form[key]}
-                    onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
-                    placeholder={placeholder}
-                  />
-                </div>
-              ))}
+        <Drawer
+          districts={districts} editing={editing} form={form}
+          save={save} setDrawer={setDrawer} setForm={setForm}
+          setStations={setList} pendingFiles={pendingFiles}
+          setPendingFiles={setPendingFiles} loading={saveLoading}
+        />
+      )}
 
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 4, display: "block" }}>District</label>
-                <select style={inp()} value={form.district} onChange={(e) => setForm((p) => ({ ...p, district: e.target.value }))}>
-                  {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
-                </select>
-              </div>
+      {deleteTarget && (
+        <div style={{
+          position: "fixed", inset: 0,
+          background: "rgba(0,0,0,0.4)",
+          zIndex: 1100,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            background: C.white,
+            borderRadius: 16,
+            padding: 28,
+            width: 380,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: 48, height: 48, borderRadius: "50%",
+              background: `${C.red}15`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px",
+            }}>
+              <Trash2 size={22} color={C.red} />
+            </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 4, display: "block" }}>Station Images</label>
-                <div style={{ border: `2px dashed ${C.bd}`, borderRadius: 12, padding: "20px 0", textAlign: "center", color: C.tm, fontSize: 13 }}>
-                  <ImgIcon size={22} style={{ margin: "0 auto 8px" }} /><br />
-                  Upload multiple station images<br />
-                  <span style={{ color: C.p, cursor: "pointer" }}>Click to browse</span> or drag & drop
-                </div>
+            {/* Text */}
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: C.t, marginBottom: 6 }}>
+                Delete Station
+              </div>
+              <div style={{ fontSize: 13, color: C.tm, lineHeight: 1.5 }}>
+                Are you sure you want to delete{" "}
+                <span style={{ fontWeight: 600, color: C.t }}>
+                  {deleteTarget.stationName}
+                </span>
+                ? This action cannot be undone.
               </div>
             </div>
-            <div style={{ padding: "14px 20px", borderTop: `1px solid ${C.bd}`, display: "flex", gap: 8 }}>
-              <button style={{ ...btn("ghost"), flex: 1, justifyContent: "center" }} onClick={() => setDrawer(false)}>Cancel</button>
-              <button style={{ ...btn(), flex: 1, justifyContent: "center" }} onClick={save}><Save size={14} />Save Station</button>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                style={{ ...btn("ghost"), flex: 1, justifyContent: "center" }}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deleteLoading}
+                onClick={() => remove(deleteTarget)}
+                style={{
+                  ...btn(),
+                  flex: 1,
+                  justifyContent: "center",
+                  background: C.red,
+                  borderColor: C.red,
+                }}
+              >
+                {deleteLoading ? (<Spin />) : (
+                  <><Trash2 size={14} /> Delete</>)}
+
+              </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default StationsPage;
+export default StationsPage
