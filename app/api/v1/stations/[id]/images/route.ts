@@ -13,6 +13,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     const { imageUrl } = await request.json();
+    console.log(imageUrl)
 
     const ref = adminDb.collection("stations").doc(id);
     const doc = await ref.get();
@@ -20,10 +21,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
         return NextResponse.json({ error: "Station not found" }, { status: 404 });
     }
 
-    const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
-    const filePath = decodeURIComponent(imageUrl.split(`${bucket.name}/`)[1]);
-    await bucket.file(filePath).delete();
-    await ref.update({ images: FieldValue.arrayRemove(imageUrl) });
+    ref.update({ images: FieldValue.arrayRemove(imageUrl) })
 
     return NextResponse.json({ success: true });
 }

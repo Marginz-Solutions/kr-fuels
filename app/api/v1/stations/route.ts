@@ -1,72 +1,95 @@
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { verifySession } from "@/lib/auth/verify-session";
 import { NextRequest, NextResponse } from "next/server";
-import type { Query, DocumentData } from "firebase-admin/firestore";
-import { Station } from "@/types/dust";
+import { type Query, type DocumentData, FieldValue } from "firebase-admin/firestore";
 import { StationSchema } from "@/lib/validators/station.schema";
-import { error } from "console";
 import { DecodedIdToken } from "firebase-admin/auth";
 import AppError from "@/utils/appError";
 
 export async function GET(request: NextRequest) {
-    const user = await verifySession(request);
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  try{
+  const user = await verifySession(request);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
 
-    const page = Math.max(parseInt(searchParams.get("page") ?? "1"), 1);
-    const limit = Math.min(parseInt(searchParams.get("limit") ?? "10"), 100);
-    const skip = (page - 1) * limit;
+  const page     = Math.max(Number.parseInt(searchParams.get("page")     ?? "1"),   1);
+  const limit    = Math.min(Number.parseInt(searchParams.get("limit")    ?? "10"), 100);
+  const skip     = (page - 1) * limit;
+  const district = searchParams.get("district") ?? "";
+  const area      = searchParams.get("area")     ?? "";
+  const search    = searchParams.get("search")   ?? "";
 
-    const district = searchParams.get("district") ?? "";
-    const area = searchParams.get("area") ?? "";
-    const search = searchParams.get("search") ?? "";
+  let query: Query<DocumentData> = adminDb.collection("stations");
 
-    let query: Query<DocumentData> = adminDb.collection("stations");
+  if (district) query = query.where("district", "==", district);
+  if (area)     query = query.where("area",     "==", area);
+  if (search) {
+    query = query
+      .where("stationName", ">=", search)
+      .where("stationName", "<=", search + "\uf8ff");
+  }
 
-    if (district) {
-        query = query.where("district", "==", district);
-    }
-    if (area) {
-        query = query.where("area", "==", area);
-    }
+  const baseCollection = adminDb.collection("stations");
 
-    if (search) {
-        const searchEnd = search + "\uf8ff";
-        query = query
-            .where("stationName", ">=", search)
-            .where("stationName", "<=", searchEnd);
-    }
+  const [
+    countSnap,
+    activeSnap,
+    inactiveSnap,
+    districtsSnap,
+    paginatedSnap,
+  ] = await Promise.all([
 
-    const countSnap = await query.count().get();
-    const total = countSnap.data().count;
-    const totalPages = Math.ceil(total / limit);
+    query.count().get(),
+
+    baseCollection.where("status", "==", "active").count().get(),
+   
+    baseCollection.where("status", "==", "inactive").count().get(),
+
+    baseCollection.select("district").get(),
+
+    query.orderBy("stationName").offset(skip).limit(limit).get(),
+  ]);
+
+ 
+  const uniqueDistricts = [
+    ...new Set(districtsSnap.docs.map(doc => doc.data().district).filter(Boolean))
+  ].sort();
 
 
-    const snap = await query
-        .orderBy("stationName")
-        .offset(skip)
-        .limit(limit)
-        .get();
+  const total      = countSnap.data().count;
+  const totalPages = Math.ceil(total / limit);
 
-    const stations = snap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-    }));
+  const stations = paginatedSnap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
-    return NextResponse.json({
-        data: stations,
-        meta: {
-            total,
-            page,
-            limit,
-            totalPages,
-            hasNextPage: page < totalPages,
-            hasPrevPage: page > 1,
-        },
-    });
+  console.log(stations)
+
+  return NextResponse.json({
+    data: stations,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+    stats: {
+      active:          activeSnap.data().count,
+      inactive:        inactiveSnap.data().count,
+      totalDistricts:  uniqueDistricts.length,
+      districts:       uniqueDistricts,
+    },
+  });
+}
+catch(err:any){
+  return NextResponse.json({error:err.message},{status:500})
+}
 }
 
 export async function POST(request: NextRequest) {
@@ -90,7 +113,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON in data field" }, { status: 400 });
     }
 
-    const result = StationSchema.safeParse(body);
+    
+
+    const result = StationSchema.safeParse({...body,status:"active"});
     if (!result.success) {
       return NextResponse.json(
         {
@@ -107,7 +132,7 @@ export async function POST(request: NextRequest) {
     const docData = {
       ...result.data,
       images: imageUrls,
-      createdAt: new Date().toISOString(),
+      createdAt: FieldValue.serverTimestamp(),
       createdBy: user.uid,
     };
 

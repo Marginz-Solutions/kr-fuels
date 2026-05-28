@@ -4,7 +4,7 @@ import z from "zod";
 export interface StationAddress {
     doorNo?: string;
     street?: string;
-    pincode: number;
+    pincode: string;
 }
 
 export interface StationLocation {
@@ -22,7 +22,132 @@ export interface Station {
     telephone?: string;
     emailID?: string;
     address: StationAddress;
+    status: "active" | "inactive";
+    workingHours:string,
+    images:string[],
     location: StationLocation;
+    imageCount?:number
 }
 
 export type StationRow = z.infer<typeof StationRowSchema>
+
+export interface Testimonial {
+    id?: string,
+    name: string,
+    designation: string,
+    review: string,
+    imageUrl?: string,
+    date: Date,
+    createdAt: Date,
+    updatedAt: Date,
+}
+
+export interface Faq {
+    id?: string,
+    question: string,
+    isLink:boolean
+    answer: string,
+    createdAt: Date,
+    updatedAt: Date
+}
+
+export interface Feedback {
+    id?: string
+    name: string
+    email: string
+    phoneNo: string
+    message: string
+    category: string
+    rating: number
+    safetyAwareness: boolean
+    stationId: string
+    stationName:string,
+    status: "pending" | "in-progress" | "resolved"
+    createdAt?: Date
+    updatedAt?: Date
+}
+
+export interface Enquiry {
+    id?: string,
+    name: string,
+    email: string,
+    message: string,
+    createdAt?: Date
+}
+
+export interface AdminContactEssentials {
+    companyName: string,
+    emails: {
+        info: string,
+        support: string
+    },
+    phoneNos: {
+        office: string,
+        whatsapp: string
+    },
+    tagline: string,
+    createdAt: Date,
+    updatedAt: Date
+}
+
+export interface AdminContactPresents {
+    address: {
+        city: string,
+        pincode: string,
+        state: string,
+        street: string
+    },
+    exactLoaction: {
+        lat: string,
+        lng: string
+    },
+    socialLinks: {
+        facebook: string,
+        instagram: string,
+        twitter: string,
+        youtube: string
+    },
+    workingHours: Date
+    createdAt: Date,
+    updatedAt: Date
+
+}
+
+export interface Pagination {
+    total: number,
+    limit: number,
+    page: number,
+    totalPages: number,
+    hasNextPage: boolean,
+    hasPrevPage: boolean
+}
+
+export interface StationResponse {
+    data: Station[],
+    meta: Pagination,
+    stats: {
+        active: number,
+        districts: string[],
+        inactive: number,
+        totalDistricts: number
+    }
+}
+
+export interface FaqResponse{
+    data: Faq[],
+    meta:Pagination
+}
+
+export interface EnquiryResponse{
+    data:Enquiry[],
+    meta:Pagination
+}
+
+export interface FeedbackResponse{
+    data: Feedback[],
+    meta:Pagination
+}
+export interface AdminContactResponse{
+    essentials:AdminContactEssentials,
+    presents:AdminContactPresents
+}

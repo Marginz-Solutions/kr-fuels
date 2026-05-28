@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
                 ...(row.street && { street: row.street }),
                 pincode: row.pincode
             },
+            status:"active",
             location: {
                 latitude: row.latitude,
                 longitude: row.longitude

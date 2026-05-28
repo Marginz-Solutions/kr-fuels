@@ -2,6 +2,7 @@ import { verifySession } from "@/lib/auth/verify-session";
 import { NextRequest, NextResponse } from "next/server";
 import { pushImagesToStorage } from "../../route";
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function POST(req: NextRequest) {
     try {
@@ -15,26 +16,51 @@ export async function POST(req: NextRequest) {
         const imageUrls = await pushImagesToStorage(formData, user);
 
         const raw = formData.get("data");
+        
+        const stationId = raw && typeof raw === "string"
+            ? JSON.parse(raw).stationId
+            : null
 
-        if (raw && typeof raw === "string") {
-            const { stationId } = JSON.parse(raw)
-            const ref = adminDb.collection("stations").doc(stationId)
-            const doc = await ref.get()
-            if (!doc.exists) {
+        // save each image to stationImages collection
+        const batch = adminDb.batch()
+
+        const savedImages = imageUrls.map((url: string) => {
+            const ref = adminDb.collection("stationImages").doc()
+            const payload = {
+                id:         ref.id,
+                url,
+                stationId:  stationId ?? null,
+                uploadedBy: user.uid,
+                createdAt:  FieldValue.serverTimestamp(),
+            }
+            batch.set(ref, payload)
+            return { ...payload }
+        })
+
+        // if stationId provided, update station's images array too
+        if (stationId) {
+            const stationRef = adminDb.collection("stations").doc(stationId)
+            const stationDoc = await stationRef.get()
+
+            if (!stationDoc.exists) {
                 return NextResponse.json({ error: "Station not found" }, { status: 404 });
             }
-            const existing: string[] = doc.data()?.images ?? []
-            await ref.update({ images: [...existing, ...imageUrls] })
+
+            const existing: string[] = stationDoc.data()?.images ?? []
+            batch.update(stationRef, { images: [...existing, ...imageUrls] })
         }
 
-        return NextResponse.json({ success: true, images: imageUrls, ...(raw && { message: "Images is add to station" }) });
+        await batch.commit()
 
+        return NextResponse.json({
+            success: true,
+            images:  savedImages,
+            ...(stationId && { message: "Images added to station" })
+        }, { status: 201 })
     }
     catch (error: any) {
         return NextResponse.json(
-            {
-                error: error.message || "Internal Server Error",
-            },
+            { error: error.message || "Internal Server Error" },
             { status: 500 }
         );
     }
