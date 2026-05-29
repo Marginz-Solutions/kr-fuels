@@ -1,14 +1,24 @@
-import { adminDb } from "@/lib/firebase/admin";
+
 import DashboardClient from "./DashboardClient";
 import type { FuelPrices, DashboardData } from "@/types";
 import { serverFetch } from "@/lib/server-fetch";
 
 // Fetch initial prices server-side
 async function getFuelPrices(): Promise<FuelPrices> {
-    const doc = await adminDb.collection("config").doc("fuelPrices").get();
-    return doc.exists
-        ? (doc.data() as FuelPrices)
-        : { diesel: 0, petrol: 0, autoLPG: 0 }; // fallback
+    try {
+        const res = await serverFetch("/dashboard/fuel-prices");
+        console.log(res.data);
+        return res.data;
+    }
+    catch(error: any) {
+        console.error("Error fetching fuel prices:", error);
+        return { 
+            diesel: 0, 
+            petrol: 0, 
+            autoLPG: 0,
+            verified: undefined
+        };
+    }
 }
 
 async function getDashboardData(): Promise<DashboardData> {

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     ] = await Promise.all([
       (await adminDb.collection("stations").get()).docs,
       (await adminDb.collection("feedbacks").orderBy("createdAt", "desc").get()).docs,
-      (await adminDb.collection("convertionKits").get()).docs
+      (await adminDb.collection("conversionKits").get()).docs
     ]);
 
     const totalFeedback = feedbacksSnap.length;

@@ -1,4 +1,6 @@
 import { verifySession } from "@/lib/auth/verify-session";
+import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -13,7 +15,25 @@ export async function GET(req: NextRequest) {
     }
 
     try {
+        const response = await adminDb.collection('fuelsPrices').doc('5yPqPwV3Qc1H7NPajXoS').get();
+
+        if(!response.exists) {
+            return NextResponse.json({ error: "Fuel prices not found" }, { status: 404 });
+        }
+
+        const data = response.data();
+
+        if(!data) {
+            return NextResponse.json({ error: "Fuel prices data not found" }, { status: 404 });
+        }
+
         return NextResponse.json({
+            data: {
+                autoLPG: data.autoLPG,
+                petrol: data.petrol,
+                diesel: data.diesel,
+                verified: data.verifiedBy,
+            }
         }, { status: 200 })
     }
     catch(error: any) {
@@ -22,10 +42,10 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * @method POST /api/v1/dashboard/fuel-prices
+ * @method PUT /api/v1/dashboard/fuel-prices
  * @returns 
  */
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function PUT(req: NextRequest) {
     const user = await verifySession(req);
 
     if(!user) {
@@ -33,8 +53,17 @@ export async function POST(req: NextRequest, res: NextResponse) {
     }
 
     try {
-        return NextResponse.json({
-        }, { status: 200 })
+        const body = await req.json();
+        const { autoLPG, diesel, petrol } = body;
+
+        await adminDb.collection('fuelsPrices').doc('5yPqPwV3Qc1H7NPajXoS').update({
+            autoLPG,
+            diesel,
+            petrol,
+            priceUpdatedAt: FieldValue.serverTimestamp(),
+        });
+        
+        return NextResponse.json({ message: "Fuel prices updated successfully" }, { status: 200 })
     }
     catch(error: any) {
         return NextResponse.json({ error: error.message}, { status: 500 });

@@ -52,6 +52,7 @@ export interface FuelPrices {
   diesel: number;
   petrol: number;
   autoLPG: number;
+  verified?: string;
 }
 
 // ─── Chart / Analytics ────────────────────────────────────
@@ -325,6 +326,8 @@ export interface DashboardData {
 export interface DashboardResponse {
   success: boolean;
   data: DashboardData;
+}
+
 export interface SeoSettings {
   id: string;
 
