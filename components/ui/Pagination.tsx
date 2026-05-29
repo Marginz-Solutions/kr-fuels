@@ -31,7 +31,7 @@ const Pagination: FC<PaginationProps> = ({ meta, page, loading = false, onPageCh
   if (meta.totalPages <= 1) return null
 
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, padding: "12px 0" }}>
+    <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, padding: "12px 0",flexWrap:"wrap" }}>
 
       {/* Range info */}
       <span style={{ fontSize: 12, color: C.tm, marginRight: 8 }}>

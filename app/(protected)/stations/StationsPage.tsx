@@ -35,6 +35,7 @@ const StationsPage: FC<StationResponse> = (props) => {
   const [stats, setStats] = useState(initialStats)
   const [districts, setDistricts] = useState(stats?.districts ?? []);
   const [view, setView] = useState<"table" | "grid">("table");
+  const [isMobile, setIsMobile] = useState(false)
   const [search, setSearch] = useState("");
   const [district, setDistrict] = useState("All");
   const [page, setPage] = useState(1);
@@ -51,6 +52,18 @@ const StationsPage: FC<StationResponse> = (props) => {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   const allDistricts = ["All", ...districts];
+
+  // ── mobile detection ───────────────────────────────────
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      if (mobile) setView("grid")
+    }
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
 
   // ── fetch ──────────────────────────────────────────────
   const fetchStations = async (p = page, l = limit) => {
@@ -74,9 +87,7 @@ const StationsPage: FC<StationResponse> = (props) => {
   }
 
   const remove = async (station: Station) => {
-
     setDeleteLoading(true)
-
     try {
       await api.delete(`/stations/${station.id}`)
       setList(l => l.filter(s => s.id !== station.id))
@@ -90,10 +101,8 @@ const StationsPage: FC<StationResponse> = (props) => {
     }
   }
 
-  // refetch when page or limit changes
   useEffect(() => { fetchStations(page, limit) }, [page, limit])
 
-  // reset to page 1 when search or district filter changes
   useEffect(() => {
     setPage(1)
     fetchStations(1, limit)
@@ -139,7 +148,6 @@ const StationsPage: FC<StationResponse> = (props) => {
       status: form.status,
       mapLink: form.mapLink ?? "", address: form.address, location: form.location,
     }))
-    console.log(formData.entries())
     pendingFiles.forEach(f => formData.append("images", f))
     try {
       setSaveLoading(true)
@@ -149,7 +157,7 @@ const StationsPage: FC<StationResponse> = (props) => {
         toast.success("Edited Successfully")
       } else {
         await api.post("/stations", formData)
-        fetchStations(1, limit) // refetch to get updated list + meta
+        fetchStations(1, limit)
         setPage(1)
         toast.success("Added Successfully")
       }
@@ -167,9 +175,10 @@ const StationsPage: FC<StationResponse> = (props) => {
     [s.address.street, s.area, s.address.doorNo, s.address.pincode].filter(Boolean).join(", ")
 
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: isMobile ? 12 : 24 }}>
+
       {/* KPI row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 12, marginBottom: 20 }}>
         <StatCard icon={<Store size={18} />} label="Total Stations" value={meta?.total} sub="Active network" />
         <StatCard icon={<Check size={18} />} label="Active Stations" value={stats?.active} sub="Operational" />
         <StatCard icon={<Map size={18} />} label="Districts Covered" value={stats?.totalDistricts} sub="Across Tamil Nadu" />
@@ -180,17 +189,21 @@ const StationsPage: FC<StationResponse> = (props) => {
       </div>
 
       <div style={{ ...card(), padding: 0, overflow: "hidden" }}>
+
         {/* Toolbar */}
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.bd}`, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {/* <div style={{ flex: 1, minWidth: 200, display: "flex", alignItems: "center", gap: 8, background: C.bg, borderRadius: 10, padding: "7px 12px" }}>
-            <Search size={14} color={C.tm} />
-            <input
-              value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name, area, address..."
-              style={{ border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "inherit", width: "100%", color: C.t }}
-            />
-          </div> */}
-          <select value={district} onChange={e => setDistrict(e.target.value)} style={{ ...inp({ width: "auto", padding: "7px 12px" }), minWidth: 140 }}>
+        <div style={{
+          padding: "14px 16px",
+          borderBottom: `1px solid ${C.bd}`,
+          display: "flex",
+          gap: 10,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}>
+          <select
+            value={district}
+            onChange={e => setDistrict(e.target.value)}
+            style={{ ...inp({ width: "auto", padding: "7px 12px" }), minWidth: 140 }}
+          >
             {allDistricts.map(d => <option key={d}>{d}</option>)}
           </select>
 
@@ -208,19 +221,28 @@ const StationsPage: FC<StationResponse> = (props) => {
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 4 }}>
-            {(["table", "grid"] as const).map(v => (
-              <button key={v} onClick={() => setView(v)} style={{ ...btn("ghost"), padding: 8, background: view === v ? C.pXLight : "transparent", color: view === v ? C.p : C.tm }}>
-                {v === "table" ? <List size={16} /> : <Grid size={16} />}
-              </button>
-            ))}
-          </div>
+          {/* View toggle — desktop only */}
+          {!isMobile && (
+            <div style={{ display: "flex", gap: 4 }}>
+              {(["table", "grid"] as const).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  style={{ ...btn("ghost"), padding: 8, background: view === v ? C.pXLight : "transparent", color: view === v ? C.p : C.tm }}
+                >
+                  {v === "table" ? <List size={16} /> : <Grid size={16} />}
+                </button>
+              ))}
+            </div>
+          )}
+
           <button style={btn()} onClick={openAdd}><Plus size={14} />Add Station</button>
-          <button style={btn()} onClick={() => { setExcelOpen(true) }}><Upload size={14} />Upload</button>
+          <button style={btn()} onClick={() => setExcelOpen(true)}><Upload size={14} />Upload</button>
         </div>
+
         <ExcelUploadModal open={excelOpen} setOpen={setExcelOpen} fetchList={fetchStations} />
 
-        {/* loading overlay */}
+        {/* Loading skeleton */}
         {loading && (
           <>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -228,34 +250,21 @@ const StationsPage: FC<StationResponse> = (props) => {
                 <tr style={{ background: C.bg }}>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <th key={i} style={{ padding: "10px 16px" }}>
-                      <div className="sk" style={{ height: 11, width: i === 0 ? 60 : i === 5 - 1 ? 50 : 80 }} />
+                      <div className="sk" style={{ height: 11, width: i === 0 ? 60 : i === 4 ? 50 : 80 }} />
                     </th>
                   ))}
                 </tr>
               </thead>
-
-              {/* Table rows */}
               <tbody>
                 {Array.from({ length: 5 }).map((_, ri) => (
-                  <tr
-                    key={ri}
-                    style={{
-                      borderTop: `1px solid ${C.bd}`,
-                      background: ri % 2 === 0 ? C.white : "#fafcfb",
-                    }}
-                  >
+                  <tr key={ri} style={{ borderTop: `1px solid ${C.bd}`, background: ri % 2 === 0 ? C.white : "#fafcfb" }}>
                     {Array.from({ length: 5 }).map((_, ci) => (
                       <td key={ci} style={{ padding: "12px 16px" }}>
                         <div
                           className="sk"
                           style={{
                             height: 13,
-                            // vary widths so it looks organic
-                            width: ci === 0 ? "70%"
-                              : ci === 5 - 1 ? "60%"
-                                : ci % 2 === 0 ? "80%"
-                                  : "55%",
-                            // stagger animation delay per row
+                            width: ci === 0 ? "70%" : ci === 4 ? "60%" : ci % 2 === 0 ? "80%" : "55%",
                             animationDelay: `${ri * 0.07}s`,
                           }}
                         />
@@ -265,7 +274,6 @@ const StationsPage: FC<StationResponse> = (props) => {
                 ))}
               </tbody>
             </table>
-
             <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.bd}`, display: "flex", justifyContent: "flex-end", gap: 6, alignItems: "center" }}>
               <div className="sk" style={{ height: 13, width: 80, marginRight: 8 }} />
               {Array.from({ length: 5 }).map((_, i) => (
@@ -275,8 +283,8 @@ const StationsPage: FC<StationResponse> = (props) => {
           </>
         )}
 
-        {/* Table view */}
-        {!loading && view === "table" && (
+        {/* Table view — desktop only */}
+        {!loading && view === "table" && !isMobile && (
           <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse" }}>
               <thead>
@@ -305,20 +313,11 @@ const StationsPage: FC<StationResponse> = (props) => {
               <tbody>
                 {list.map((s, i) => (
                   <tr key={s.id} style={{ borderTop: `1px solid ${C.bd}`, background: i % 2 === 0 ? C.white : "#fafcfb" }}>
-                    <td
-                      style={{
-                        padding: "12px 16px",
-                        fontWeight: 500,
-                        color: C.t,
-                        fontSize: 13,
-                        whiteSpace: "nowrap",
-                        position: "sticky",
-                        left: 0,
-                        background: i % 2 === 0 ? C.white : "#fafcfb",
-                        zIndex: 1,
-                        boxShadow: "2px 0 4px -2px rgba(0,0,0,0.08)",
-                      }}
-                    >
+                    <td style={{
+                      padding: "12px 16px", fontWeight: 500, color: C.t, fontSize: 13, whiteSpace: "nowrap",
+                      position: "sticky", left: 0, background: i % 2 === 0 ? C.white : "#fafcfb",
+                      zIndex: 1, boxShadow: "2px 0 4px -2px rgba(0,0,0,0.08)",
+                    }}>
                       {s.stationName}
                     </td>
                     <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.area}</td>
@@ -332,10 +331,7 @@ const StationsPage: FC<StationResponse> = (props) => {
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", gap: 6 }}>
                         <button onClick={() => openEdit(s)} style={{ ...btn("ghost"), padding: "4px 8px" }}><Edit2 size={13} /></button>
-                        <button
-                          onClick={() => setDeleteTarget(s)}
-                          style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}
-                        >
+                        <button onClick={() => setDeleteTarget(s)} style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}>
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -347,31 +343,57 @@ const StationsPage: FC<StationResponse> = (props) => {
           </div>
         )}
 
-        {/* Grid view */}
-        {!loading && view === "grid" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16, padding: 16 }}>
+        {/* Grid view — always on mobile, optional on desktop */}
+        {!loading && (view === "grid" || isMobile) && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "repeat(auto-fill, minmax(min(100%, 160px), 1fr))"
+              : "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: isMobile ? 10 : 16,
+            padding: isMobile ? 10 : 16,
+          }}>
             {list.map(s => (
               <div key={s.id} style={{ border: `1px solid ${C.bd}`, borderRadius: 14, overflow: "hidden" }}>
-                <div style={{ height: 80, background: `linear-gradient(135deg, ${C.p}22, ${C.p}44)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <MapPin size={28} color={C.p} />
+                <div style={{
+                  height: isMobile ? 52 : 80,
+                  background: `linear-gradient(135deg, ${C.p}22, ${C.p}44)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <MapPin size={isMobile ? 20 : 28} color={C.p} />
                 </div>
-                <div style={{ padding: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                    <div style={{ fontWeight: 600, color: C.t, fontSize: 13 }}>{s.stationName}</div>
+                <div style={{ padding: isMobile ? 10 : 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, gap: 6 }}>
+                    <div style={{ fontWeight: 600, color: C.t, fontSize: isMobile ? 12 : 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {s.stationName}
+                    </div>
                     <Badge color={s.status === "active" ? "green" : "red"}>{s.status}</Badge>
                   </div>
-                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{s.area} · <Badge color="blue">{s.district}</Badge></div>
-                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{formatAddress(s)}</div>
-                  <div style={{ fontSize: 12, color: C.tm, marginBottom: 10 }}>{s.contactPerson} · {s.mobileNumber}</div>
+                  {!isMobile && (
+                    <>
+                      <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{s.area} · <Badge color="blue">{s.district}</Badge></div>
+                      <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{formatAddress(s)}</div>
+                      <div style={{ fontSize: 12, color: C.tm, marginBottom: 10 }}>{s.contactPerson} · {s.mobileNumber}</div>
+                    </>
+                  )}
+                  {isMobile && (
+                    <div style={{ fontSize: 11, color: C.tm, marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {s.area}
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={() => openEdit(s)} style={{ ...btn("ghost"), padding: "5px 10px", fontSize: 12, flex: 1, justifyContent: "center" }}><Edit2 size={12} />Edit</button>
+                    <button
+                      onClick={() => openEdit(s)}
+                      style={{ ...btn("ghost"), padding: isMobile ? "4px 6px" : "5px 10px", fontSize: 12, flex: 1, justifyContent: "center" }}
+                    >
+                      <Edit2 size={12} />{!isMobile && "Edit"}
+                    </button>
                     <button
                       onClick={() => setDeleteTarget(s)}
-                      style={{ ...btn("ghost"), padding: "5px 8px", color: C.red }}
+                      style={{ ...btn("ghost"), padding: isMobile ? "4px 6px" : "5px 8px", color: C.red }}
                     >
                       <Trash2 size={12} />
                     </button>
-
                   </div>
                 </div>
               </div>
@@ -381,7 +403,7 @@ const StationsPage: FC<StationResponse> = (props) => {
 
         {/* Pagination */}
         {meta && (
-          <div style={{ padding: "0 16px", borderTop: `1px solid ${C.bd}` }}>
+          <div style={{ borderTop: `1px solid ${C.bd}` }} className="ms-5 me-5">
             <Pagination
               meta={meta}
               page={page}
@@ -403,21 +425,23 @@ const StationsPage: FC<StationResponse> = (props) => {
         />
       )}
 
+      {/* Delete confirm modal */}
       {deleteTarget && (
         <div style={{
           position: "fixed", inset: 0,
           background: "rgba(0,0,0,0.4)",
           zIndex: 1100,
           display: "flex", alignItems: "center", justifyContent: "center",
+          padding: isMobile ? 16 : 0,
         }}>
           <div style={{
             background: C.white,
             borderRadius: 16,
-            padding: 28,
-            width: 380,
+            padding: isMobile ? 20 : 28,
+            width: "100%",
+            maxWidth: 380,
             boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
           }}>
-            {/* Icon */}
             <div style={{
               width: 48, height: 48, borderRadius: "50%",
               background: `${C.red}15`,
@@ -426,22 +450,14 @@ const StationsPage: FC<StationResponse> = (props) => {
             }}>
               <Trash2 size={22} color={C.red} />
             </div>
-
-            {/* Text */}
             <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontWeight: 700, fontSize: 16, color: C.t, marginBottom: 6 }}>
-                Delete Station
-              </div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: C.t, marginBottom: 6 }}>Delete Station</div>
               <div style={{ fontSize: 13, color: C.tm, lineHeight: 1.5 }}>
                 Are you sure you want to delete{" "}
-                <span style={{ fontWeight: 600, color: C.t }}>
-                  {deleteTarget.stationName}
-                </span>
+                <span style={{ fontWeight: 600, color: C.t }}>{deleteTarget.stationName}</span>
                 ? This action cannot be undone.
               </div>
             </div>
-
-            {/* Actions */}
             <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={() => setDeleteTarget(null)}
@@ -452,17 +468,9 @@ const StationsPage: FC<StationResponse> = (props) => {
               <button
                 disabled={deleteLoading}
                 onClick={() => remove(deleteTarget)}
-                style={{
-                  ...btn(),
-                  flex: 1,
-                  justifyContent: "center",
-                  background: C.red,
-                  borderColor: C.red,
-                }}
+                style={{ ...btn(), flex: 1, justifyContent: "center", background: C.red, borderColor: C.red }}
               >
-                {deleteLoading ? (<Spin />) : (
-                  <><Trash2 size={14} /> Delete</>)}
-
+                {deleteLoading ? <Spin /> : <><Trash2 size={14} /> Delete</>}
               </button>
             </div>
           </div>

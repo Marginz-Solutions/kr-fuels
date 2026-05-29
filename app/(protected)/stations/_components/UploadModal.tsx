@@ -5,6 +5,7 @@ import React, { useState, useRef, useCallback, DragEvent, ChangeEvent, SetStateA
 import { Station } from './ImagesModal'
 import { api } from '@/lib/axios'
 import { toast } from 'sonner'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Station as OriginalStation } from "@/types/dust"
 
 type UploadFile = {
@@ -24,12 +25,13 @@ type UploadModalProps = {
   setOriginalStations: React.Dispatch<React.SetStateAction<OriginalStation[]>>
 }
 
-const UploadModal = ({ open, setOpen, stations, setStations, fetchData,setOriginalStations }: UploadModalProps) => {
+const UploadModal = ({ open, setOpen, stations, setStations, fetchData, setOriginalStations }: UploadModalProps) => {
   const [files, setFiles] = useState<UploadFile[]>([])
   const [dragging, setDragging] = useState(false)
   const [stationSearch, setStationSearch] = useState('')
   const [selectedStation, setSelectedStation] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const filteredStations = stations?.filter(s =>
     s.stationName.toLowerCase().includes(stationSearch.toLowerCase())
@@ -73,7 +75,7 @@ const UploadModal = ({ open, setOpen, stations, setStations, fetchData,setOrigin
     ))
 
     try {
-     const response =  await api.post('/stations/upload/images', formData, {
+      const response = await api.post('/stations/upload/images', formData, {
         onUploadProgress: (e) => {
           const percent = Math.round((e.loaded * 100) / (e.total ?? 1))
           setFiles(prev => prev.map(p =>
@@ -86,13 +88,15 @@ const UploadModal = ({ open, setOpen, stations, setStations, fetchData,setOrigin
         p.status === 'uploading' ? { ...p, status: 'done', progress: 100 } : p
       ))
       await fetchData()
-       setOriginalStations(prev => prev.map(p =>
-                p.id === selectedStation
-                    ? { ...p, images: [...(p.images ?? []), ...(response.data.images.url ?? [])] }
-                    : p
-            ))
+      setOriginalStations(prev => prev.map(p =>
+        p.id === selectedStation
+          ? { ...p, images: [...(p.images ?? []), ...(response.data.images.url ?? [])] }
+          : p
+      ))
 
       toast.success("Uploaded Successfully")
+
+      setFiles([])
 
     } catch (err) {
       toast.error("Failed")
@@ -118,76 +122,99 @@ const UploadModal = ({ open, setOpen, stations, setStations, fetchData,setOrigin
 
         {/* ── LEFT: station list ──────────────────────── */}
         <div style={{
-          width: 210,
-          minWidth: 160,
+          width: sidebarOpen ? 210 : 40,
+          minWidth: sidebarOpen ? 160 : 40,
           flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
           border: `1px solid ${C.bd}`,
           borderRadius: 8,
           overflow: 'hidden',
+          transition: 'width 0.2s ease, min-width 0.2s ease',
         }}>
-          <div style={{ padding: '10px 12px', borderBottom: `1px solid ${C.bd}` }}>
-            <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.t, opacity: 0.45 }}>
-              Station <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-            </p>
-            <input
-              value={stationSearch}
-              onChange={e => setStationSearch(e.target.value)}
-              placeholder="Search…"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '5px 8px',
-                fontSize: 12,
-                border: `1px solid ${C.bd}`,
-                borderRadius: 6,
-                background: 'transparent',
-                color: C.t,
-                outline: 'none',
-              }}
-            />
-          </div>
-          <div style={{ overflowY: 'auto', flex: 1 }}>
-            {filteredStations.map(station => {
-              const active = selectedStation === station.id
-              return (
-                <div
-                  key={station.id}
-                  onClick={() => setSelectedStation(prev => prev === station.id ? null : station.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '9px 12px 9px 14px',
-                    cursor: 'pointer',
-                    borderLeft: `3px solid ${active ? ACCENT : 'transparent'}`,
-                    borderBottom: `1px solid ${C.bd}`,
-                    background: active ? `${ACCENT}12` : 'transparent',
-                    transition: 'background 0.12s',
-                  }}
-                >
-                  <span style={{ fontSize: 13, color: C.t, fontWeight: active ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {station.stationName}
-                  </span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 500,
-                    color: active ? ACCENT : C.t,
-                    opacity: active ? 1 : 0.4,
-                    background: active ? `${ACCENT}20` : C.bd,
-                    padding: '2px 6px', borderRadius: 10, marginLeft: 6, flexShrink: 0,
-                  }}>
-                    {station.imageCount}
-                  </span>
-                </div>
-              )
-            })}
-            {filteredStations.length === 0 && (
-              <p style={{ fontSize: 12, color: C.t, opacity: 0.4, textAlign: 'center', padding: '20px 12px', margin: 0 }}>
-                No stations found
-              </p>
+          {/* Header */}
+          <div style={{
+            padding: '10px 12px',
+            borderBottom: `1px solid ${C.bd}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: sidebarOpen ? 'space-between' : 'center',
+            gap: 8,
+          }}>
+            {sidebarOpen ? (
+              <>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.t, opacity: 0.45, whiteSpace: 'nowrap' }}>
+                  Station <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                </p>
+                <button onClick={() => setSidebarOpen(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: C.t, opacity: 0.45, display: 'flex', flexShrink: 0 }}>
+                  <PanelLeftClose size={15} />
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setSidebarOpen(true)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: C.t, opacity: 0.45, display: 'flex' }}>
+                <PanelLeftOpen size={15} />
+              </button>
             )}
           </div>
+
+          {sidebarOpen && (
+            <>
+              {/* Search */}
+              <div style={{ padding: '8px 12px', borderBottom: `1px solid ${C.bd}` }}>
+                <input
+                  value={stationSearch}
+                  onChange={e => setStationSearch(e.target.value)}
+                  placeholder="Search…"
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '5px 8px', fontSize: 12,
+                    border: `1px solid ${C.bd}`, borderRadius: 6,
+                    background: 'transparent', color: C.t, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* List */}
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {filteredStations.map(station => {
+                  const active = selectedStation === station.id
+                  return (
+                    <div
+                      key={station.id}
+                      onClick={() => setSelectedStation(prev => prev === station.id ? null : station.id)}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '9px 12px 9px 14px', cursor: 'pointer',
+                        borderLeft: `3px solid ${active ? ACCENT : 'transparent'}`,
+                        borderBottom: `1px solid ${C.bd}`,
+                        background: active ? `${ACCENT}12` : 'transparent',
+                        transition: 'background 0.12s',
+                      }}
+                    >
+                      <span style={{ fontSize: 13, color: C.t, fontWeight: active ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {station.stationName}
+                      </span>
+                      <span style={{
+                        fontSize: 10, fontWeight: 500,
+                        color: active ? ACCENT : C.t, opacity: active ? 1 : 0.4,
+                        background: active ? `${ACCENT}20` : C.bd,
+                        padding: '2px 6px', borderRadius: 10, marginLeft: 6, flexShrink: 0,
+                      }}>
+                        {station.imageCount}
+                      </span>
+                    </div>
+                  )
+                })}
+                {filteredStations.length === 0 && (
+                  <p style={{ fontSize: 12, color: C.t, opacity: 0.4, textAlign: 'center', padding: '20px 12px', margin: 0 }}>
+                    No stations found
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── RIGHT: upload ───────────────────────────── */}

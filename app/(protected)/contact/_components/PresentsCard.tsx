@@ -94,7 +94,11 @@ const PresentsCard = (props: PresentsCardProps) => {
               onChange={(e) => setPresents({ ...presents, address: { ...presents.address, street: e.target.value } })} />
           </FormField>
 
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12 }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))",
+            gap: 12,
+          }}>
             <FormField label="City">
               <input style={inp()} value={presents.address.city}
                 onChange={(e) => setPresents({ ...presents, address: { ...presents.address, city: e.target.value } })} />
@@ -178,8 +182,10 @@ const PresentsCard = (props: PresentsCardProps) => {
           borderTop: "0.5px solid rgba(0,0,0,0.08)",
           background: "rgba(0,0,0,0.02)",
         }}>
-          <button style={{ ...btn(), opacity: savingPre ? 0.7 : 1 }} onClick={()=> {savePresents() 
-            console.log(presents)}} disabled={savingPre}>
+          <button style={{ ...btn(), opacity: savingPre ? 0.7 : 1 }} onClick={() => {
+            savePresents()
+            console.log(presents)
+          }} disabled={savingPre}>
             {savingPre
               ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
               : <Save size={14} />}

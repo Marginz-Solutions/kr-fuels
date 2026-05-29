@@ -215,7 +215,11 @@ const ContactPage: FC<EnquiryResponse> = (props) => {
           )}
 
           {!contactLoading && essentials && presents && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))",
+              gap: 20,
+            }}>
               <EssentialsCard
                 essentials={essentials}
                 saveEssentials={() => saveEssentialsMutation.mutate()}
