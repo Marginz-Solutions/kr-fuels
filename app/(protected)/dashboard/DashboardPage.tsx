@@ -372,7 +372,7 @@ const DashboardPage: FC<DashboardPageProps> = ({
             </div>
 
             {/* Row 4: Low-Rated Stations (Radar Chart) */}
-            <TilesLayout
+            {/* <TilesLayout
                 title="Low-Rated Stations Performance"
                 description="Bottom 4–6 stations plotted across 6 performance categories (1.0 - 5.0 rating scale)"
                 className="min-w-0"
@@ -408,7 +408,7 @@ const DashboardPage: FC<DashboardPageProps> = ({
                         <div className="text-xs text-[#5a7872] mt-1">No low-rated station feedback or review records found.</div>
                     </div>
                 )}
-            </TilesLayout>
+            </TilesLayout> */}
 
             {/* Row 5: Recent Feedback + Recent Enquiries */}
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-5">
