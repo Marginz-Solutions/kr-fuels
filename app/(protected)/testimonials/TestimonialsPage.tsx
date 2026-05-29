@@ -33,16 +33,8 @@ import { toast } from "sonner";
 import { C } from "../../../constants/colors";
 import { card, btn, inp } from "../../../styles/shared";
 import { Badge, StatCard } from "../../../components/ui";
-
-// ─── Utility ──────────────────────────────────────────────────────────────────
-
-function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { fmtDate } from "../contact/ContactPage";
+import { FieldValue } from "firebase-admin/firestore";
 
 interface TestimonialsPageProps {
   initialTestimonials: Testimonial[];
@@ -599,7 +591,7 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
                 image: form.image,
                 rating: form.rating === "" ? undefined : Number(form.rating),
                 isActive: form.isActive,
-                updatedAt: Date.now(),
+                updatedAt: new Date(), 
               }
             : t
         )
@@ -669,6 +661,7 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
   // ── Derived list ───────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
+    console.log(list);
     return list.filter((t) => {
       const matchSearch =
         !q ||
@@ -1052,7 +1045,7 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {formatDate(t.updatedAt)}
+                        {fmtDate(t.updatedAt)}
                       </td>
 
                       {/* Actions */}
@@ -1183,7 +1176,7 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
                         <span />
                       )}
                       <div style={{ fontSize: 11, color: C.tm, marginTop: 3 }}>
-                        {formatDate(t.updatedAt)}
+                        {fmtDate(t.updatedAt)}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 4 }}>

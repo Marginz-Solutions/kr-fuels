@@ -25,6 +25,7 @@ import {
   PrivacyPolicySection,
 } from "@/types";
 import { createPrivacyPolicy, fetchPrivacyPolicy, updatePrivacyPolicy } from "@/lib/api/privacy-policy";
+import { fmtDate } from "../contact/ContactPage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,13 +67,6 @@ function toFormState(p: PrivacyPolicy): FormState {
     banner: { ...p.banner },
     sections: p.sections.map((s) => ({ ...s })),
   };
-}
-
-function formatTs(ts: string) {
-  return new Date(ts).toLocaleString("en-IN", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -408,13 +402,13 @@ const PrivacyPolicyPage: FC<{ initialData: PrivacyPolicy | null }> = ({ initialD
               {policy?.publishedAt && (
                 <div style={{ borderTop: `1px solid ${C.bd}`, paddingTop: 12 }}>
                   <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>Published</div>
-                  <div style={{ fontSize: 12, color: C.t, fontWeight: 500 }}>{formatTs(policy.publishedAt)}</div>
+                  <div style={{ fontSize: 12, color: C.t, fontWeight: 500 }}>{fmtDate(policy.publishedAt)}</div>
                 </div>
               )}
               {policy?.updatedAt && (
                 <div style={{ borderTop: `1px solid ${C.bd}`, paddingTop: 12 }}>
                   <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>Last updated</div>
-                  <div style={{ fontSize: 12, color: C.t, fontWeight: 500 }}>{formatTs(policy.updatedAt)}</div>
+                  <div style={{ fontSize: 12, color: C.t, fontWeight: 500 }}>{fmtDate(policy.updatedAt)}</div>
                 </div>
               )}
               {policy?.updatedBy && (
