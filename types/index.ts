@@ -294,11 +294,11 @@ export interface DashboardData {
     pending: number;
     inProgress: number;
     resolved: number;
-    avgRating: number;
-    safetyAwarenessPercent: number;
-    resolutionRate: number;
-    byCategory: Record<string, number>;
-    byStation: Array<{
+    avgRating: number | string;
+    safetyAwarenessPercent: number | string;
+    resolutionRate: number | string;
+    byCategory: Array<{ name: string; count: number }> | Record<string, number>;
+    byStation?: Array<{
       stationId: string;
       stationName: string;
       avgRating: number;
@@ -307,18 +307,20 @@ export interface DashboardData {
     }>;
   };
   enquiries: {
-    total: number;
+    total?: number;
+    new?: number;
     thisMonth: number;
   };
   products: {
     total: number;
-    active: number;
+    active?: number;
     categories: number;
-    byCategory: Record<string, number>;
+    byCategory?: Record<string, number>;
   };
-  recentFeedback: Feedback[];
-  recentEnquiries: Enquiry[];
+  recentFeedback: any[];
+  recentEnquiries: any[];
 }
+
 
 export interface DashboardResponse {
   success: boolean;
