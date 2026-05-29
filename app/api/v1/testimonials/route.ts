@@ -1,5 +1,6 @@
 import { verifySession } from "@/lib/auth/verify-session";
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -21,10 +22,16 @@ export async function GET(request: NextRequest) {
       .get();
 
     // Convert firestore docs to array
-    const testimonials = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const testimonials = snapshot.docs.map((doc) => {
+  const data = doc.data();
+
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
+    updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? null,
+  };
+});
 
     return NextResponse.json(
       {
@@ -94,8 +101,8 @@ export async function POST(request: NextRequest) {
       image: image || "",
       rating: rating || 5,
       isActive: isActive ?? true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     // Save to Firestore

@@ -1,5 +1,6 @@
 import { verifySession } from "@/lib/auth/verify-session";
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
@@ -23,7 +24,7 @@ export async function PUT(
       );
     }
 
-    const updatedAt = new Date().toISOString();
+    const updatedAt = FieldValue.serverTimestamp();
 
     const updateData = {
       title,

@@ -3,6 +3,7 @@
 
 import { verifySession } from "@/lib/auth/verify-session";
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
@@ -34,7 +35,7 @@ export async function PATCH(
 
     await docRef.update({
       isActive: newIsActive,
-      updatedAt: new Date().toISOString(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json(

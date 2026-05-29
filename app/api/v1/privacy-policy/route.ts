@@ -1,5 +1,6 @@
 import { verifySession } from "@/lib/auth/verify-session";
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const docRef = adminDb.collection("privacyPolicy").doc();
-    const now = new Date().toISOString();
+    const now = FieldValue.serverTimestamp();
 
     const privacyPolicyData = {
       id: docRef.id,

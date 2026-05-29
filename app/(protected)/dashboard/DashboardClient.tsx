@@ -3,6 +3,7 @@
 import { useState } from "react";
 import DashboardPage from "./DashboardPage";
 import type { FuelPrices, DashboardData } from "@/types";
+import { toast } from "sonner";
 
 export default function DashboardClient({
     initialPrices,
@@ -17,12 +18,18 @@ export default function DashboardClient({
 
     async function handleEditPrice(p: FuelPrices) {
         setPrices(p);
-        // Save back to Firestore
-        await fetch("/api/v1/fuel-prices", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(p),
-        });
+
+        try {
+            await fetch("/api/v1/dashboard/fuel-prices", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(p),
+            });
+            toast.success("Price Updated");
+        }
+        catch(error: any) {
+            toast.error(error.message);
+        }
     }
 
     async function handleRefresh() {
@@ -30,12 +37,14 @@ export default function DashboardClient({
         try {
             const res = await fetch("/api/v1/dashboard");
             const json = await res.json();
-            if (json.success && json.data) {
+            if(json.success && json.data) {
                 setDashboardData(json.data);
             }
+
+            toast.success("Data refreshed...");
         } 
-        catch(error) {
-            console.error("Failed to refresh dashboard:", error);
+        catch(error: any) {
+            toast.error(error.message);
         } 
         finally {
             setLoading(false);

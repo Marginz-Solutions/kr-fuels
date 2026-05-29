@@ -1,16 +1,11 @@
-import {
-  SeoSettingsResponse,
-} from "@/types";
-
 import SeoSettingsPage from "./SeoSettingsPage";
-
-import { fetchServerApi } from "@/hooks/server-fetch";
+import { serverFetch } from "@/lib/server-fetch";
 
 export default async function Page() {
 
   const res =
-    await fetchServerApi<SeoSettingsResponse>(
-      "/api/v1/seo-settings"
+    await serverFetch(
+      "/seo-settings"
     );
 
   return (

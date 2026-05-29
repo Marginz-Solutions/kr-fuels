@@ -1,11 +1,11 @@
-import { fetchServerApi } from "@/hooks/server-fetch";
 import ProductsPage from "./ProductsPage";
 import { CategoriesResponse, ProductsResponse } from "@/types";
+import { serverFetch } from "@/lib/server-fetch";
 
 export default async function Page() {
   const [productsRes, categoriesRes] = await Promise.all([
-    fetchServerApi<ProductsResponse>("/api/v1/products"),
-    fetchServerApi<CategoriesResponse>("/api/v1/products/categories"),
+    serverFetch("/api/v1/products"),
+    serverFetch("/api/v1/products/categories"),
   ]);
 
   return (
