@@ -37,9 +37,11 @@ export default function DashboardClient({
         try {
             const res = await fetch("/api/v1/dashboard");
             const json = await res.json();
-            if (json.success && json.data) {
+            if(json.success && json.data) {
                 setDashboardData(json.data);
             }
+
+            toast.success("Data refreshed...");
         } 
         catch(error: any) {
             toast.error(error.message);

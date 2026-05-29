@@ -7,7 +7,6 @@ import { serverFetch } from "@/lib/server-fetch";
 async function getFuelPrices(): Promise<FuelPrices> {
     try {
         const res = await serverFetch("/dashboard/fuel-prices");
-        console.log(res.data);
         return res.data;
     }
     catch(error: any) {
