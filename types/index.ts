@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Station } from "./dust";
+import { Station, Feedback, Enquiry } from "./dust";
 
 // ─── Domain Models ────────────────────────────────────────
 
@@ -283,6 +283,48 @@ export interface TestimonialsResponse {
   message: Testimonial[]; // your API returns { success, message: [...] }
 }
 
+export interface DashboardData {
+  stations: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
+  feedback: {
+    total: number;
+    pending: number;
+    inProgress: number;
+    resolved: number;
+    avgRating: number | string;
+    safetyAwarenessPercent: number | string;
+    resolutionRate: number | string;
+    byCategory: Array<{ name: string; count: number }> | Record<string, number>;
+    byStation?: Array<{
+      stationId: string;
+      stationName: string;
+      avgRating: number;
+      totalFeedbacks: number;
+      categoryRatings: Record<string, number>;
+    }>;
+  };
+  enquiries: {
+    total?: number;
+    new?: number;
+    thisMonth: number;
+  };
+  products: {
+    total: number;
+    active?: number;
+    categories: number;
+    byCategory?: Record<string, number>;
+  };
+  recentFeedback: any[];
+  recentEnquiries: any[];
+}
+
+
+export interface DashboardResponse {
+  success: boolean;
+  data: DashboardData;
 export interface SeoSettings {
   id: string;
 
