@@ -19,11 +19,20 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EMPTY_DRAFT, Testimonial, TestimonialFormDraft } from "@/types";
-import { fetchTestimonials, createTestimonial, updateTestimonial, toggleTestimonial, deleteTestimonial } from "@/lib/api/testimonials";
+import {
+  fetchTestimonials,
+  createTestimonial,
+  updateTestimonial,
+  toggleTestimonial,
+  deleteTestimonial,
+  uploadTestimonialImage,
+} from "@/lib/api/testimonials";
 import TestimonialAvatar from "./components/Testimonialavatar";
 import StarRating from "./components/Starrating";
-import { uploadTestimonialImage } from "@/lib/api/testimonials";
 import { toast } from "sonner";
+import { C } from "../../../constants/colors";
+import { card, btn, inp } from "../../../styles/shared";
+import { Badge, StatCard } from "../../../components/ui";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
@@ -39,37 +48,29 @@ interface TestimonialsPageProps {
   initialTestimonials: Testimonial[];
 }
 
-// ─── ActiveBadge ──────────────────────────────────────────────────────────────
-
-const ActiveBadge: FC<{ active: boolean }> = ({ active }) => (
-  <span
-    className={[
-      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-      active
-        ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-        : "bg-gray-100 text-gray-500 ring-1 ring-gray-200",
-    ].join(" ")}
-  >
-    <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-gray-400"}`} />
-    {active ? "Active" : "Inactive"}
-  </span>
-);
-
 // ─── FieldLabel ───────────────────────────────────────────────────────────────
 
-const FieldLabel: FC<{ children: React.ReactNode; htmlFor?: string }> = ({ children, htmlFor }) => (
+const FieldLabel: FC<{ children: React.ReactNode; htmlFor?: string }> = ({
+  children,
+  htmlFor,
+}) => (
   <label
     htmlFor={htmlFor}
-    className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5"
+    style={{
+      display: "block",
+      fontSize: 11,
+      fontWeight: 600,
+      color: C.tm,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      marginBottom: 6,
+    }}
   >
     {children}
   </label>
 );
 
-const inputCls =
-  "w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition";
-
-// ─── ConfirmDialog ────────────────────────────────────────────────────────────
+// ─── ConfirmDialog (Delete Modal) ─────────────────────────────────────────────
 
 const ConfirmDialog: FC<{
   name: string;
@@ -78,40 +79,94 @@ const ConfirmDialog: FC<{
   isDeleting: boolean;
 }> = ({ name, onConfirm, onCancel, isDeleting }) => (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.4)",
+      zIndex: 1100,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
     role="dialog"
     aria-modal="true"
     aria-labelledby="confirm-title"
   >
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200">
-      <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 mx-auto">
-        <Trash2 className="w-5 h-5 text-red-500" />
+    <div
+      style={{
+        background: C.white,
+        borderRadius: 16,
+        padding: 28,
+        width: 380,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+      }}
+    >
+      {/* Icon */}
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: "50%",
+          background: `${C.red}15`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 16px",
+        }}
+      >
+        <Trash2 size={22} color={C.red} />
       </div>
-      <h3 id="confirm-title" className="text-base font-semibold text-gray-900 text-center mb-1">
-        Delete Testimonial?
-      </h3>
-      <p className="text-sm text-gray-500 text-center mb-6">
-        You&apos;re about to delete{" "}
-        <span className="font-medium text-gray-700">{name}&apos;s</span> review.
-        This action cannot be undone.
-      </p>
-      <div className="flex gap-3">
+
+      {/* Text */}
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div
+          id="confirm-title"
+          style={{ fontWeight: 700, fontSize: 16, color: C.t, marginBottom: 6 }}
+        >
+          Delete Testimonial
+        </div>
+        <div style={{ fontSize: 13, color: C.tm, lineHeight: 1.5 }}>
+          Are you sure you want to delete{" "}
+          <span style={{ fontWeight: 600, color: C.t }}>{name}&apos;s</span>{" "}
+          review? This action cannot be undone.
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 10 }}>
         <button
           onClick={onCancel}
           disabled={isDeleting}
-          className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+          style={{ ...btn("ghost"), flex: 1, justifyContent: "center" }}
         >
           Cancel
         </button>
         <button
           onClick={onConfirm}
           disabled={isDeleting}
-          className="flex-1 rounded-xl bg-red-500 py-2.5 text sm font-medium text-white hover:bg-red-600 transition flex items-center justify-center"
+          style={{
+            ...btn(),
+            flex: 1,
+            justifyContent: "center",
+            background: C.red,
+            borderColor: C.red,
+          }}
         >
           {isDeleting ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div
+              style={{
+                width: 14,
+                height: 14,
+                border: `2px solid ${C.white}`,
+                borderTopColor: "transparent",
+                borderRadius: "50%",
+                animation: "spin 0.6s linear infinite",
+              }}
+            />
           ) : (
-            "Delete"
+            <>
+              <Trash2 size={14} /> Delete
+            </>
           )}
         </button>
       </div>
@@ -130,6 +185,13 @@ interface ModalProps {
   onClose: () => void;
   isSaving: boolean;
 }
+
+const inputStyle = {
+  ...inp({ width: "100%" }),
+  borderRadius: 10,
+  fontSize: 13,
+  padding: "9px 12px",
+};
 
 const TestimonialModal: FC<ModalProps> = ({
   open,
@@ -155,60 +217,130 @@ const TestimonialModal: FC<ModalProps> = ({
 
   const field =
     (key: keyof TestimonialFormDraft) =>
-    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (
+      e: ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) =>
       onChange({ [key]: e.target.value });
 
-
-const handleSave = async () => {
-  let uploadedUrl: string | undefined;
-  if (pendingFile) {
-    try {
-      setUploading(true);
-      uploadedUrl = await uploadTestimonialImage(pendingFile); // ← clean one-liner
-    } catch (err) {
-      console.error("Upload failed:", err);
-      setUploading(false);
-      return;
-    } finally {
-      setUploading(false);
+  const handleSave = async () => {
+    let uploadedUrl: string | undefined;
+    if (pendingFile) {
+      try {
+        setUploading(true);
+        uploadedUrl = await uploadTestimonialImage(pendingFile);
+      } catch (err) {
+        console.error("Upload failed:", err);
+        setUploading(false);
+        return;
+      } finally {
+        setUploading(false);
+      }
     }
-  }
-  onSave(uploadedUrl);
-};
+    onSave(uploadedUrl);
+  };
+
+  const disabled =
+    !form.name.trim() ||
+    !form.message.trim() ||
+    isSaving ||
+    uploading ||
+    !form.designation.trim() ||
+    !form.company.trim();
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.4)",
+        zIndex: 1050,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
+      <div
+        style={{
+          background: C.white,
+          borderRadius: 16,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+          width: "100%",
+          maxWidth: 520,
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2.5">
-            <MessageSquareQuote className="w-5 h-5 text-teal-700" />
-            <h2 id="modal-title" className="text-base font-semibold text-gray-900">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "16px 20px",
+            borderBottom: `1px solid ${C.bd}`,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: `${C.p}18`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MessageSquareQuote size={16} color={C.p} />
+            </div>
+            <span
+              id="modal-title"
+              style={{ fontWeight: 700, fontSize: 15, color: C.t }}
+            >
               {editing ? "Edit Testimonial" : "Add Testimonial"}
-            </h2>
+            </span>
           </div>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+            style={{
+              ...btn("ghost"),
+              padding: 7,
+              borderRadius: "50%",
+              color: C.tm,
+            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div
+          style={{
+            overflowY: "auto",
+            flex: 1,
+            padding: "20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          {/* Row: Name + Designation */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <FieldLabel htmlFor="m-name">Customer Name *</FieldLabel>
               <input
                 id="m-name"
-                className={inputCls}
+                style={inputStyle}
                 value={form.name}
                 onChange={field("name")}
                 placeholder="Full name"
@@ -219,7 +351,7 @@ const handleSave = async () => {
               <FieldLabel htmlFor="m-designation">Designation *</FieldLabel>
               <input
                 id="m-designation"
-                className={inputCls}
+                style={inputStyle}
                 value={form.designation}
                 onChange={field("designation")}
                 placeholder="e.g. Fleet Manager"
@@ -227,17 +359,19 @@ const handleSave = async () => {
             </div>
           </div>
 
+          {/* Company */}
           <div>
             <FieldLabel htmlFor="m-company">Company *</FieldLabel>
             <input
               id="m-company"
-              className={inputCls}
+              style={inputStyle}
               value={form.company}
               onChange={field("company")}
               placeholder="e.g. Tamil Nadu Transport Corp."
             />
           </div>
 
+          {/* Image */}
           <div>
             <FieldLabel htmlFor="m-image">Customer Image</FieldLabel>
             <input
@@ -245,35 +379,64 @@ const handleSave = async () => {
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              className={inputCls}
+              style={{ ...inputStyle, cursor: "pointer" }}
             />
             {uploading && (
-              <p className="text-xs text-gray-500 mt-2">Uploading image...</p>
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  color: C.tm,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <div
+                  style={{
+                    width: 12,
+                    height: 12,
+                    border: `2px solid ${C.p}`,
+                    borderTopColor: "transparent",
+                    borderRadius: "50%",
+                    animation: "spin 0.6s linear infinite",
+                  }}
+                />
+                Uploading image…
+              </div>
             )}
             {previewUrl && (
-              <div className="mt-3">
+              <div style={{ marginTop: 10 }}>
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="w-16 h-16 rounded-full object-cover border border-gray-200"
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: `2px solid ${C.bd}`,
+                  }}
                 />
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Row: Rating + Status */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <FieldLabel htmlFor="m-rating">Star Rating</FieldLabel>
               <select
                 id="m-rating"
-                className={inputCls}
+                style={{ ...inputStyle, cursor: "pointer" }}
                 value={form.rating}
                 onChange={field("rating")}
               >
                 <option value="">— No rating —</option>
                 {[5, 4, 3, 2, 1].map((n) => (
                   <option key={n} value={n}>
-                    {"★".repeat(n)}{"☆".repeat(5 - n)} ({n})
+                    {"★".repeat(n)}
+                    {"☆".repeat(5 - n)} ({n})
                   </option>
                 ))}
               </select>
@@ -285,54 +448,98 @@ const handleSave = async () => {
                 role="switch"
                 aria-checked={form.isActive}
                 onClick={() => onChange({ isActive: !form.isActive })}
-                className={[
-                  "w-full rounded-xl border py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition",
-                  form.isActive
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                    : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100",
-                ].join(" ")}
+                style={{
+                  width: "100%",
+                  borderRadius: 10,
+                  border: `1px solid ${form.isActive ? C.p + "55" : C.bd}`,
+                  background: form.isActive ? `${C.p}12` : C.bg,
+                  color: form.isActive ? C.p : C.tm,
+                  padding: "9px 12px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
               >
                 {form.isActive ? (
-                  <><Eye className="w-4 h-4" /> Published</>
+                  <>
+                    <Eye size={14} /> Published
+                  </>
                 ) : (
-                  <><EyeOff className="w-4 h-4" /> Hidden</>
+                  <>
+                    <EyeOff size={14} /> Hidden
+                  </>
                 )}
               </button>
             </div>
           </div>
 
+          {/* Message */}
           <div>
             <FieldLabel htmlFor="m-message">
               Review Message ({form.message.length}/500)
             </FieldLabel>
             <textarea
               id="m-message"
-              className={`${inputCls} resize-vertical min-h-[110px]`}
+              style={{
+                ...inputStyle,
+                resize: "vertical",
+                minHeight: 110,
+                lineHeight: 1.5,
+              }}
               maxLength={500}
               value={form.message}
               onChange={field("message")}
-              placeholder="Customer review text..."
+              placeholder="Customer review text…"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/60">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 10,
+            padding: "14px 20px",
+            borderTop: `1px solid ${C.bd}`,
+            background: C.bg,
+          }}
+        >
           <button
             onClick={onClose}
-            className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+            style={{ ...btn("ghost"), padding: "8px 18px" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={!form.name.trim() || !form.message.trim() || isSaving || !form.designation.trim() || !form.company.trim()}
-            className="flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            disabled={disabled}
+            style={{
+              ...btn(),
+              padding: "8px 20px",
+              opacity: disabled ? 0.45 : 1,
+              cursor: disabled ? "not-allowed" : "pointer",
+            }}
           >
-            {isSaving ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            {isSaving || uploading ? (
+              <div
+                style={{
+                  width: 14,
+                  height: 14,
+                  border: `2px solid ${C.white}`,
+                  borderTopColor: "transparent",
+                  borderRadius: "50%",
+                  animation: "spin 0.6s linear infinite",
+                }}
+              />
             ) : (
-              <Check className="w-4 h-4" />
+              <Check size={14} />
             )}
             {editing ? "Update" : "Add"} Testimonial
           </button>
@@ -355,9 +562,7 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
   const [deleteTarget, setDeleteTarget] = useState<Testimonial | null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
-  // useSuspenseQuery suspends while loading (triggers loading.tsx)
-  // and throws on error (triggers error.tsx) — no manual handling needed.
-  const { data: list = [] } = useQuery({
+  const { data: list = [], isLoading } = useQuery({
     queryKey: ["testimonials"],
     queryFn: fetchTestimonials,
     initialData: initialTestimonials,
@@ -369,119 +574,90 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
       setModalOpen(false);
-
       toast.success("Testimonial added successfully!");
     },
     onError: (error: Error) => {
-      console.error("Create failed:", error.message);
-
       toast.error("Failed to add testimonial: " + error.message);
     },
   });
 
   const updateMutation = useMutation({
-  mutationFn: ({ id, form }: { id: string; form: TestimonialFormDraft }) =>
-    updateTestimonial(id, form),
-
-  onMutate: async ({ id, form }) => {
-    await queryClient.cancelQueries({ queryKey: ["testimonials"] });
-    const previous = queryClient.getQueryData<Testimonial[]>(["testimonials"]);
-
-    queryClient.setQueryData<Testimonial[]>(["testimonials"], (old = []) =>
-      old.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              name: form.name,
-              designation: form.designation,
-              company: form.company,
-              message: form.message,
-              image: form.image,
-              rating: form.rating === "" ? undefined : Number(form.rating),
-              isActive: form.isActive,
-              updatedAt: Date.now(),
-            }
-          : t
-      )
-    );
-
-    setModalOpen(false); // ← close modal instantly
-
-    return { previous };
-  },
-
-  onError: (error: Error, _vars, context) => {
-    if (context?.previous) {
-      queryClient.setQueryData(["testimonials"], context.previous);
-    }
-    setModalOpen(true); // ← reopen modal on failure
-    toast.error("Failed to update testimonial: " + error.message);
-    console.error("Update failed:", error.message);
-  },
-
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["testimonials"] });
-    toast.success("Testimonial updated successfully!");
-  },
-});
+    mutationFn: ({ id, form }: { id: string; form: TestimonialFormDraft }) =>
+      updateTestimonial(id, form),
+    onMutate: async ({ id, form }) => {
+      await queryClient.cancelQueries({ queryKey: ["testimonials"] });
+      const previous = queryClient.getQueryData<Testimonial[]>(["testimonials"]);
+      queryClient.setQueryData<Testimonial[]>(["testimonials"], (old = []) =>
+        old.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                name: form.name,
+                designation: form.designation,
+                company: form.company,
+                message: form.message,
+                image: form.image,
+                rating: form.rating === "" ? undefined : Number(form.rating),
+                isActive: form.isActive,
+                updatedAt: Date.now(),
+              }
+            : t
+        )
+      );
+      setModalOpen(false);
+      return { previous };
+    },
+    onError: (error: Error, _vars, context) => {
+      if (context?.previous)
+        queryClient.setQueryData(["testimonials"], context.previous);
+      setModalOpen(true);
+      toast.error("Failed to update testimonial: " + error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      toast.success("Testimonial updated successfully!");
+    },
+  });
 
   const toggleMutation = useMutation({
     mutationFn: toggleTestimonial,
-
     onMutate: async (id: string) => {
       await queryClient.cancelQueries({ queryKey: ["testimonials"] });
       const previous = queryClient.getQueryData<Testimonial[]>(["testimonials"]);
-
       queryClient.setQueryData<Testimonial[]>(["testimonials"], (old = []) =>
-        old.map((t) =>
-          t.id === id ? { ...t, isActive: !t.isActive } : t
-        )
+        old.map((t) => (t.id === id ? { ...t, isActive: !t.isActive } : t))
       );
-
       return { previous };
     },
-
     onError: (error: Error, _id, context) => {
-      if (context?.previous) {
+      if (context?.previous)
         queryClient.setQueryData(["testimonials"], context.previous);
-      }
       toast.error("Failed to toggle testimonial: " + error.message);
-      console.error("Toggle failed:", error.message);
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
-
       toast.success("Testimonial status updated!");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteTestimonial,
-
     onMutate: async (id: string) => {
       await queryClient.cancelQueries({ queryKey: ["testimonials"] });
       const previous = queryClient.getQueryData<Testimonial[]>(["testimonials"]);
-
       queryClient.setQueryData<Testimonial[]>(["testimonials"], (old = []) =>
         old.filter((t) => t.id !== id)
       );
-
-      setDeleteTarget(null); // ← close dialog instantly
-
+      setDeleteTarget(null);
       return { previous };
     },
-
     onError: (error: Error, id, context) => {
-      if (context?.previous) {
+      if (context?.previous)
         queryClient.setQueryData(["testimonials"], context.previous);
-      }
       const restored = context?.previous?.find((t) => t.id === id) ?? null;
-      setDeleteTarget(restored); // ← reopen dialog for same testimonial
+      setDeleteTarget(restored);
       toast.error("Failed to delete testimonial: " + error.message);
-      console.error("Delete failed:", error.message);
     },
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
       toast.success("Testimonial deleted successfully!");
@@ -512,6 +688,7 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
     () => ({
       total: list.length,
       active: list.filter((t) => t.isActive).length,
+      inactive: list.filter((t) => !t.isActive).length,
     }),
     [list]
   );
@@ -541,205 +718,526 @@ const TestimonialsPage: FC<TestimonialsPageProps> = ({ initialTestimonials }) =>
     setForm((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  const save = useCallback((uploadedImageUrl?: string) => {
-    const payload: TestimonialFormDraft = {
-      ...form,
-      rating: form.rating === "" ? "" : Number(form.rating),
-      image: uploadedImageUrl ?? form.image,
-    };
-    if (editing) {
-      updateMutation.mutate({ id: editing.id, form: payload });
-    } else {
-      createMutation.mutate(payload);
-    }
-  }, [editing, form, createMutation, updateMutation]);
+  const save = useCallback(
+    (uploadedImageUrl?: string) => {
+      const payload: TestimonialFormDraft = {
+        ...form,
+        rating: form.rating === "" ? "" : Number(form.rating),
+        image: uploadedImageUrl ?? form.image,
+      };
+      if (editing) {
+        updateMutation.mutate({ id: editing.id, form: payload });
+      } else {
+        createMutation.mutate(payload);
+      }
+    },
+    [editing, form, createMutation, updateMutation]
+  );
 
-  const toggleActive = useCallback((id: string) => {
-    toggleMutation.mutate(id);
-  }, [toggleMutation]);
+  const toggleActive = useCallback(
+    (id: string) => {
+      toggleMutation.mutate(id);
+    },
+    [toggleMutation]
+  );
 
   const confirmDelete = useCallback(() => {
-    if (deleteTarget) {
-      deleteMutation.mutate(deleteTarget.id);
-    }
+    if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
   }, [deleteTarget, deleteMutation]);
+
+  // ── Skeleton rows ──────────────────────────────────────────────────────────
+  const SkeletonTable = () => (
+    <>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr style={{ background: C.bg }}>
+            {Array.from({ length: 7 }).map((_, i) => (
+              <th key={i} style={{ padding: "10px 16px" }}>
+                <div className="sk" style={{ height: 11, width: i === 6 ? 50 : 70 }} />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: 6 }).map((_, ri) => (
+            <tr
+              key={ri}
+              style={{
+                borderTop: `1px solid ${C.bd}`,
+                background: ri % 2 === 0 ? C.white : "#fafcfb",
+              }}
+            >
+              {Array.from({ length: 7 }).map((_, ci) => (
+                <td key={ci} style={{ padding: "12px 16px" }}>
+                  <div
+                    className="sk"
+                    style={{
+                      height: 13,
+                      width: ci === 0 ? "75%" : ci === 2 ? "90%" : ci === 6 ? "60%" : "65%",
+                      animationDelay: `${ri * 0.07}s`,
+                    }}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-full p-4 sm:p-6 bg-gray-50">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Customer Testimonials</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {stats.active} active · {stats.total} total
-          </p>
-        </div>
-        <button
-          onClick={openAdd}
-          className="inline-flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Add Testimonial
-        </button>
+    <div style={{ padding: 24 }}>
+      {/* spin keyframe */}
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12, marginBottom: 20 }}>
+        <StatCard icon={<MessageSquareQuote size={18} />} label="Total Stations" value={stats?.total} sub="All reviews" />
+        <StatCard icon={<Eye size={18} />} label="Active" value={stats?.active} sub="Published" />
+        <StatCard icon={<EyeOff size={18} />} label="Inactive" value={stats?.inactive} sub="Hidden" />
       </div>
 
-      {/* Table card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_0_rgba(0,0,0,0.05)] overflow-hidden">
+      {/* Main card */}
+      <div style={{ ...card(), padding: 0, overflow: "hidden" }}>
+
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 border-b border-gray-100">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        <div
+          style={{
+            padding: "14px 16px",
+            borderBottom: `1px solid ${C.bd}`,
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          {/* Search */}
+          <div
+            style={{
+              flex: 1,
+              minWidth: 200,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: C.bg,
+              borderRadius: 10,
+              padding: "7px 12px",
+              border: `1px solid ${C.bd}`,
+            }}
+          >
+            <Search size={14} color={C.tm} />
             <input
-              type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, company, review…"
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
+              style={{
+                border: "none",
+                background: "transparent",
+                fontSize: 13,
+                outline: "none",
+                fontFamily: "inherit",
+                width: "100%",
+                color: C.t,
+              }}
             />
           </div>
-          <div className="flex rounded-xl border border-gray-200 overflow-hidden text-sm font-medium shrink-0">
+
+          {/* Filter tabs */}
+          <div
+            style={{
+              display: "flex",
+              borderRadius: 10,
+              border: `1px solid ${C.bd}`,
+              overflow: "hidden",
+            }}
+          >
             {(["all", "active", "inactive"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilterActive(f)}
-                className={[
-                  "px-3.5 py-2 capitalize transition",
-                  filterActive === f
-                    ? "bg-teal-700 text-white"
-                    : "bg-white text-gray-500 hover:bg-gray-50",
-                ].join(" ")}
+                style={{
+                  ...btn(filterActive === f ? "primary" : "ghost"),
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  borderRadius: 0,
+                  border: "none",
+                  textTransform: "capitalize",
+                  background: filterActive === f ? C.p : "transparent",
+                  color: filterActive === f ? C.white : C.tm,
+                }}
               >
                 {f}
               </button>
             ))}
           </div>
+
+          {/* Add button */}
+          <button style={btn()} onClick={openAdd}>
+            <Plus size={14} /> Add Testimonial
+          </button>
         </div>
 
-        {/* Table — desktop */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                {["Customer", "Designation / Company", "Message", "Rating", "Status", "Last Updated", "Actions"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-16 text-center text-gray-400 text-sm">
-                    No testimonials match your search.
-                  </td>
+        {/* Skeleton loading */}
+        {isLoading && <SkeletonTable />}
+
+        {/* Desktop table */}
+        {!isLoading && (
+          <div
+            style={{
+              width: "100%",
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {/* Desktop table — hidden on mobile via CSS */}
+            <table
+              style={{
+                width: "100%",
+                minWidth: 800,
+                borderCollapse: "collapse",
+              }}
+              className="testimonials-desktop-table"
+            >
+              <thead>
+                <tr style={{ background: C.bg }}>
+                  {[
+                    "Customer",
+                    "Designation / Company",
+                    "Message",
+                    "Rating",
+                    "Status",
+                    "Last Updated",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: "10px 16px",
+                        textAlign: "left",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: C.tm,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                filtered.map((t) => (
-                  <tr key={t.id} className="hover:bg-teal-50/40 transition-colors">
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <TestimonialAvatar name={t.name} image={t.image} size="sm" />
-                        <span className="font-medium text-gray-900 text-sm">{t.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 max-w-[160px]">
-                      <div className="text-gray-700 text-xs font-medium truncate">{t.designation || "—"}</div>
-                      <div className="text-gray-400 text-xs truncate">{t.company || ""}</div>
-                    </td>
-                    <td className="px-5 py-3.5 max-w-[280px]">
-                      <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed">{t.message}</p>
-                    </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      {t.rating !== undefined ? <StarRating rating={t.rating} /> : <span className="text-gray-300 text-xs">—</span>}
-                    </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <ActiveBadge active={t.isActive} />
-                    </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap text-gray-400 text-xs">
-                      {formatDate(t.updatedAt)}
-                    </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => toggleActive(t.id)}
-                          title={t.isActive ? "Hide testimonial" : "Publish testimonial"}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
-                        >
-                          {t.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => openEdit(t)}
-                          title="Edit"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-teal-50 hover:text-teal-700 transition"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(t)}
-                          title="Delete"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{
+                        padding: "64px 16px",
+                        textAlign: "center",
+                        color: C.tm,
+                        fontSize: 13,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <MessageSquareQuote size={32} color={C.bd} />
+                        <span>No testimonials match your search.</span>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Card list — mobile */}
-        <div className="md:hidden divide-y divide-gray-50">
-          {filtered.length === 0 ? (
-            <p className="py-12 text-center text-gray-400 text-sm">No testimonials match your search.</p>
-          ) : (
-            filtered.map((t) => (
-              <div key={t.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <TestimonialAvatar name={t.name} image={t.image} size="md" />
-                    <div>
-                      <div className="font-semibold text-gray-900 text-sm">{t.name}</div>
-                      {(t.designation || t.company) && (
-                        <div className="text-xs text-gray-500">
-                          {[t.designation, t.company].filter(Boolean).join(" · ")}
+                ) : (
+                  filtered.map((t, i) => (
+                    <tr
+                      key={t.id}
+                      style={{
+                        borderTop: `1px solid ${C.bd}`,
+                        background: i % 2 === 0 ? C.white : "#fafcfb",
+                      }}
+                    >
+                      {/* Customer */}
+                      <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <TestimonialAvatar name={t.name} image={t.image} size="sm" />
+                          <span
+                            style={{ fontWeight: 500, color: C.t, fontSize: 13 }}
+                          >
+                            {t.name}
+                          </span>
                         </div>
+                      </td>
+
+                      {/* Designation / Company */}
+                      <td
+                        style={{
+                          padding: "12px 16px",
+                          maxWidth: 160,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: C.t,
+                            fontWeight: 500,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {t.designation || "—"}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: C.tm,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {t.company || ""}
+                        </div>
+                      </td>
+
+                      {/* Message */}
+                      <td
+                        style={{
+                          padding: "12px 16px",
+                          maxWidth: 280,
+                          fontSize: 12,
+                          color: C.tm,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {t.message}
+                        </div>
+                      </td>
+
+                      {/* Rating */}
+                      <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
+                        {t.rating !== undefined ? (
+                          <StarRating rating={t.rating} />
+                        ) : (
+                          <span style={{ color: C.bd, fontSize: 12 }}>—</span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td style={{ padding: "12px 16px" }}>
+                        <Badge color={t.isActive ? "green" : "red"}>
+                          {t.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </td>
+
+                      {/* Updated */}
+                      <td
+                        style={{
+                          padding: "12px 16px",
+                          fontSize: 12,
+                          color: C.tm,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatDate(t.updatedAt)}
+                      </td>
+
+                      {/* Actions */}
+                      <td style={{ padding: "12px 16px" }}>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            onClick={() => toggleActive(t.id)}
+                            title={t.isActive ? "Hide" : "Publish"}
+                            style={{ ...btn("ghost"), padding: "5px 7px", color: C.tm }}
+                          >
+                            {t.isActive ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                          <button
+                            onClick={() => openEdit(t)}
+                            title="Edit"
+                            style={{ ...btn("ghost"), padding: "5px 7px" }}
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(t)}
+                            title="Delete"
+                            style={{
+                              ...btn("ghost"),
+                              padding: "5px 7px",
+                              color: C.red,
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Mobile card list */}
+        {!isLoading && (
+          <div className="testimonials-mobile-list">
+            {filtered.length === 0 ? (
+              <div
+                style={{
+                  padding: "48px 16px",
+                  textAlign: "center",
+                  color: C.tm,
+                  fontSize: 13,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <MessageSquareQuote size={32} color={C.bd} />
+                <span>No testimonials match your search.</span>
+              </div>
+            ) : (
+              filtered.map((t, i) => (
+                <div
+                  key={t.id}
+                  style={{
+                    borderTop: i === 0 ? "none" : `1px solid ${C.bd}`,
+                    padding: "14px 16px",
+                    background: i % 2 === 0 ? C.white : "#fafcfb",
+                  }}
+                >
+                  {/* Header row */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <TestimonialAvatar name={t.name} image={t.image} size="md" />
+                      <div>
+                        <div
+                          style={{ fontWeight: 600, color: C.t, fontSize: 13 }}
+                        >
+                          {t.name}
+                        </div>
+                        {(t.designation || t.company) && (
+                          <div style={{ fontSize: 11, color: C.tm, marginTop: 2 }}>
+                            {[t.designation, t.company].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Badge color={t.isActive ? "green" : "red"}>
+                      {t.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+
+                  {/* Message */}
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.tm,
+                      lineHeight: 1.6,
+                      marginBottom: 10,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {t.message}
+                  </div>
+
+                  {/* Footer row */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      {t.rating !== undefined ? (
+                        <StarRating rating={t.rating} />
+                      ) : (
+                        <span />
                       )}
+                      <div style={{ fontSize: 11, color: C.tm, marginTop: 3 }}>
+                        {formatDate(t.updatedAt)}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        onClick={() => toggleActive(t.id)}
+                        style={{ ...btn("ghost"), padding: "5px 7px", color: C.tm }}
+                      >
+                        {t.isActive ? <EyeOff size={13} /> : <Eye size={13} />}
+                      </button>
+                      <button
+                        onClick={() => openEdit(t)}
+                        style={{ ...btn("ghost"), padding: "5px 7px" }}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(t)}
+                        style={{ ...btn("ghost"), padding: "5px 7px", color: C.red }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
-                  <ActiveBadge active={t.isActive} />
                 </div>
-                <p className="text-gray-600 text-xs leading-relaxed line-clamp-3">{t.message}</p>
-                <div className="flex items-center justify-between">
-                  {t.rating !== undefined ? <StarRating rating={t.rating} /> : <span />}
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => toggleActive(t.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 transition">
-                      {t.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                    <button onClick={() => openEdit(t)} className="w-8 h-8 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-50 transition">
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => setDeleteTarget(t)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-50 transition">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* Footer count */}
-        {filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/60 text-xs text-gray-400">
+        {!isLoading && filtered.length > 0 && (
+          <div
+            style={{
+              padding: "10px 16px",
+              borderTop: `1px solid ${C.bd}`,
+              background: C.bg,
+              fontSize: 12,
+              color: C.tm,
+            }}
+          >
             Showing {filtered.length} of {list.length} testimonials
           </div>
         )}
       </div>
+
+      {/* Responsive visibility */}
+      <style>{`
+        .testimonials-desktop-table { display: table; }
+        .testimonials-mobile-list  { display: none; }
+        @media (max-width: 767px) {
+          .testimonials-desktop-table { display: none !important; }
+          .testimonials-mobile-list  { display: block; }
+        }
+      `}</style>
 
       {/* Modal */}
       <TestimonialModal

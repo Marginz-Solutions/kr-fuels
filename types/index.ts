@@ -325,6 +325,8 @@ export interface DashboardData {
 export interface DashboardResponse {
   success: boolean;
   data: DashboardData;
+}
+
 export interface SeoSettings {
   id: string;
 
