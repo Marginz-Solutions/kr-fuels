@@ -34,6 +34,8 @@ const Table = (props: TableProps) => {
   const [selectedItem, setSelectedItem] = useState<ListItem | null>(null)
   const isFeedback = (item: ListItem): item is Feedback => "rating" in item
 
+  console.log(list)
+
   // keep drawer in sync with list updates
   useEffect(() => {
     if (!selectedItem) return
@@ -90,6 +92,7 @@ const Table = (props: TableProps) => {
                 </thead>
                 <tbody>
                   {list.map((s, i) => (
+                    
                     <tr
                       key={s.id}
                       onClick={() => setSelectedItem(s)}
@@ -118,7 +121,9 @@ const Table = (props: TableProps) => {
                       <td style={{ padding: "12px 16px", fontSize: 12, color: C.t, maxWidth: 200, minWidth: 120 }}>
                         <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.message}</div>
                       </td>
-                      <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{fmtDate(s.createdAt)}</td>
+                      <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{
+                      
+                      fmtDate(s.createdAt)}</td>
 
                       {tab === "feedback" && (
                         <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>

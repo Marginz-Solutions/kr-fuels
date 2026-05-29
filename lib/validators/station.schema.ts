@@ -1,9 +1,9 @@
 import { z } from "zod"
 
 const StationAddressSchema = z.object({
-  doorNo: z.string().min(1, "Door no is required"),
-  street: z.string().min(1, "Street is required"),
-  pincode: z.coerce.number().int().min(100000).max(999999, "Invalid pincode"),
+  doorNo: z.string().optional().default(""),
+  street: z.string().optional().default(""),
+  pincode: z.coerce.number().int().min(100000).max(999999).optional().or(z.literal("")),
 })
 
 const StationLocationSchema = z.object({
@@ -21,7 +21,7 @@ export const StationSchema = z.object({
   workingHours: z.string().optional(),
   emailID: z.string().email("Invalid email").optional().or(z.literal("")),
   status: z.enum(["active", "inactive"]).default("active"),
-  address: StationAddressSchema,
+  address: StationAddressSchema.optional().default({doorNo:"",street:"",pincode:""}),
   location: StationLocationSchema,
 });
 
@@ -30,11 +30,11 @@ export const StationPatchSchema = z.object({
   area: z.string().min(1).optional(),
   stationName: z.string().min(2).optional(),
   contactPerson: z.string().min(2).optional(),
-  mobileNumber: z.string().regex(/^\+91\s\d{5}\s\d{5}$/).optional(),
+  mobileNumber: z.string().regex(/^\d{10}$/, "Invalid mobile number"),
   telephone: z.string().optional(),
   emailID: z.string().email().optional().or(z.literal("")),
   workingHours: z.string().optional(),
-  address: StationAddressSchema.partial().optional(),
+  address: StationAddressSchema.optional(),
   status: z.string().optional(),
   location: StationLocationSchema.partial().optional(),
 });
@@ -44,7 +44,7 @@ export const StationRowSchema = z.object({
   area: z.string().min(1, "area is required"),
   stationName: z.string().min(1, "stationName is required"),
   contactPerson: z.string().min(1, "contactPerson is required"),
-  mobileNumber: z.string().min(1, "mobileNumber is required"),
+  mobileNumber: z.string().regex(/^\d{10}$/, "Invalid mobile number"),
   telephone: z.string().optional().default(""),
   emailID: z.string().email("invalid emailID").optional().or(z.literal("")).default(""),
   doorNo: z.string().optional().default(""),

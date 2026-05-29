@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { C } from "../../../constants/colors";
 import type { BadgeColor } from "../../../types";
-import type { AdminContactEssentials, AdminContactPresents, EnquiryResponse, FeedbackResponse, Enquiry, Feedback, Pagination } from "@/types/dust";
+import type { AdminContactEssentials, AdminContactPresents, EnquiryResponse, FeedbackResponse, Enquiry, Feedback, Pagination, FirestoreTimestamp } from "@/types/dust";
 import { api } from "@/lib/axios";
 import { TabSwitcher } from "./_components/TabSwitcher";
 import Table from "./_components/Table";
@@ -12,6 +12,7 @@ import EssentialsCard from "./_components/EssentialsCard";
 import PresentsCard from "./_components/PresentsCard";
 import { EssentialsCardLoading, PresentsCardLoading } from "@/components/ui/AdminContactCardSkeleton";
 import { toast } from "sonner";
+import { Timestamp } from "firebase/firestore";
 
 export type Tab = "enquiry" | "feedback" | "admin-contact";
 export type ListItem = Enquiry | Feedback;
@@ -33,8 +34,24 @@ export const tabOptions: Array<[Tab, string]> = [
   ["admin-contact", "Contact Details"],
 ];
 
-export const fmtDate = (d?: Date | string) =>
-  d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+
+export const fmtDate = (d?: Date | string | FirestoreTimestamp | null) => {
+  if (!d) return "—";
+
+  // Serialized Firestore Timestamp { _seconds, _nanoseconds }
+  if (typeof d === "object" && "_seconds" in d) {
+    return new Date(d._seconds * 1000).toLocaleDateString("en-IN", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
+  }
+
+  // Plain Date or string
+  const date = new Date(d as Date | string);
+  return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
+};
 
 const DEFAULT_META: Pagination = {
   total: 0, limit: 10, page: 1, totalPages: 1,

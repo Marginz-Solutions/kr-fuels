@@ -139,6 +139,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       status: form.status,
       mapLink: form.mapLink ?? "", address: form.address, location: form.location,
     }))
+    console.log(formData.entries())
     pendingFiles.forEach(f => formData.append("images", f))
     try {
       setSaveLoading(true)
