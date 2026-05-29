@@ -3,6 +3,8 @@ import DashboardClient from "./DashboardClient";
 import type { FuelPrices, DashboardData } from "@/types";
 import { serverFetch } from "@/lib/server-fetch";
 
+export const dynamic = 'force-dynamic';
+
 // Fetch initial prices server-side
 async function getFuelPrices(): Promise<FuelPrices> {
     try {
