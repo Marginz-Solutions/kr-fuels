@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
             ? JSON.parse(raw).stationId
             : null
 
-        // save each image to stationImages collection
         const batch = adminDb.batch()
 
         const savedImages = imageUrls.map((url: string) => {
@@ -37,7 +36,6 @@ export async function POST(req: NextRequest) {
             return { ...payload }
         })
 
-        // if stationId provided, update station's images array too
         if (stationId) {
             const stationRef = adminDb.collection("stations").doc(stationId)
             const stationDoc = await stationRef.get()

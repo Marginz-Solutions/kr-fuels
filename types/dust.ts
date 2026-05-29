@@ -24,7 +24,7 @@ export interface Station {
     address: StationAddress;
     status: "active" | "inactive";
     workingHours:string,
-    images:string[],
+    images?:string[],
     location: StationLocation;
     imageCount?:number
 }
@@ -97,9 +97,9 @@ export interface AdminContactPresents {
         state: string,
         street: string
     },
-    exactLoaction: {
-        lat: string,
-        lng: string
+    exactLocation: {
+        latitude: string,
+        longitude: string
     },
     socialLinks: {
         facebook: string,

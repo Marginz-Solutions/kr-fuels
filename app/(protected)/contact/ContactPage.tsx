@@ -1,20 +1,20 @@
 "use client"
-import { useEffect, useState, type FC } from "react";
+import { useState, type FC } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { C } from "../../../constants/colors";
 import type { BadgeColor } from "../../../types";
-import type {AdminContactEssentials,AdminContactPresents,EnquiryResponse,FeedbackResponse,Enquiry,Feedback,Pagination,} from "@/types/dust";
+import type { AdminContactEssentials, AdminContactPresents, EnquiryResponse, FeedbackResponse, Enquiry, Feedback, Pagination } from "@/types/dust";
 import { api } from "@/lib/axios";
 import { TabSwitcher } from "./_components/TabSwitcher";
 import Table from "./_components/Table";
 import EssentialsCard from "./_components/EssentialsCard";
 import PresentsCard from "./_components/PresentsCard";
-import { btn } from "@/styles/shared";
 import { EssentialsCardLoading, PresentsCardLoading } from "@/components/ui/AdminContactCardSkeleton";
+import { toast } from "sonner";
 
 export type Tab = "enquiry" | "feedback" | "admin-contact";
-
 export type ListItem = Enquiry | Feedback;
-
 export type Status = Feedback["status"];
 
 export const STATUS_COLOR_MAP: Record<string, BadgeColor> = {
@@ -23,9 +23,7 @@ export const STATUS_COLOR_MAP: Record<string, BadgeColor> = {
   "pending": "amber",
 }
 
-export const statusColor = (s: string): BadgeColor =>
-  STATUS_COLOR_MAP[s] ?? "amber"
-
+export const statusColor = (s: string): BadgeColor => STATUS_COLOR_MAP[s] ?? "amber"
 export const statusLabel = (s: string): string =>
   s === "in-progress" ? "In Progress" : s?.charAt(0).toUpperCase() + s?.slice(1);
 
@@ -43,169 +41,152 @@ const DEFAULT_META: Pagination = {
   hasNextPage: false, hasPrevPage: false,
 };
 
-// ─── Component 
+// ─── Component ────────────────────────────────────────────────────────────────
 const ContactPage: FC<EnquiryResponse> = (props) => {
-  const [tab, setTab] = useState<Tab>("enquiry");
-  const { data, meta: initialMeta } = props
-  const [initialLoad, setInitialLoad] = useState(true)
+  const { data: initialData, meta: initialMeta } = props
+  const queryClient = useQueryClient()
 
-  // ── table state ──
-  const [list, setList] = useState<ListItem[]>(data);
-  const [meta, setMeta] = useState<Pagination>(initialMeta);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("enquiry")
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
 
-  // ── admin-contact state ──
-  const [essentials, setEssentials] = useState<AdminContactEssentials | null>(null);
-  const [presents, setPresents] = useState<AdminContactPresents | null>(null);
-  const [contactLoading, setContactLoading] = useState(false);
-  const [savingEss, setSavingEss] = useState(false);
-  const [savingPre, setSavingPre] = useState(false);
-  const [contactError, setContactError] = useState<string | null>(null);
+  // ── admin-contact local state (forms) ──
+  const [essentials, setEssentials] = useState<AdminContactEssentials | null>(null)
+  const [presents, setPresents] = useState<AdminContactPresents | null>(null)
 
-  // ── per-row action state ──
-  const [resolving, setResolving] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  // ─── Fetch enquiry / feedback list ───────────────────────────────────────
+  const {
+    data: listData,
+    isFetching: loading,
+    isError,
+    error: listError,
+    refetch: refetchList,
+  } = useQuery({
+    queryKey: ["contact-list", tab, page, limit],
+    queryFn: async () => {
+      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() })
+      const { data } = await api.get<EnquiryResponse | FeedbackResponse>(`/${tab}?${params}`)
+      return data
+    },
+    enabled: tab !== "admin-contact",
+    initialData: tab === "enquiry" && page === 1 && limit === 10
+      ? { data: initialData, meta: initialMeta }
+      : undefined,
+    placeholderData: (prev) => prev,
+  })
 
+  const list: ListItem[] = (listData?.data as ListItem[]) ?? []
+  const meta: Pagination = listData?.meta ?? DEFAULT_META
 
-  // ─── Fetch table data (enquiry / feedback) 
-  const fetchList = async (t: Tab, pg = 1, limit = 10) => {
-    if (t === "admin-contact") return;
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: pg.toString(), limit: limit ? limit.toString() : "10" });
-      const { data } = await api.get<EnquiryResponse | FeedbackResponse>(
-        `/${t}?${params}`
-      );
-      setList(data.data as ListItem[]);
-      setMeta(data.meta);
-      setPage(pg);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ─── Fetch admin contact ─────────────────────────────────────────────────
+  const {
+    isFetching: contactLoading,
+    isError: isContactError,
+    error: contactError,
+  } = useQuery({
+    queryKey: ["admin-contact"],
+    queryFn: async () => {
+      const [ess, pre] = await Promise.all([
+        api.get("/admin-contact/essentials"),
+        api.get("/admin-contact/presents"),
+      ])
+      setEssentials(ess.data.data)
+      setPresents(pre.data.data)
+      return { essentials: ess.data.data, presents: pre.data.data }
+    },
+    enabled: tab === "admin-contact",
+    staleTime: Infinity, // don't re-fetch unless invalidated
+  })
 
-  // ─── Fetch admin contact 
-  const fetchContact = async () => {
-    setContactLoading(true);
-    setContactError(null);
-    try {
-      const ess = await api.get("/admin-contact/essentials");
-      const pre = await api.get("/admin-contact/presents");
-      setPresents(pre.data.data);
-      setEssentials(ess.data.data);
-    } catch (e: any) {
-      setContactError(e.message);
-    } finally {
-      setContactLoading(false);
-    }
-  };
+  // ─── Resolve mutation ────────────────────────────────────────────────────
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/${tab}/${id}`, { status: "resolved" }),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData(
+        ["contact-list", tab, page, limit],
+        (old: any) => old
+          ? { ...old, data: old.data.map((x: ListItem) => x.id === id ? { ...x, status: "resolved" } : x) }
+          : old
+      )
+      toast.success("Status Updated")
+    },
+    onError: () => toast.error("Failed"),
+  })
 
-  // ─── Tab switch 
-  useEffect(() => {
-    if (initialLoad) {
-      setInitialLoad(false)
-      return
-    }
-    setList([]);
-    setMeta(DEFAULT_META);
-    setPage(1);
-    setError(null);
-    if (tab === "admin-contact") {
-      fetchContact();
-    } else {
-      fetchList(tab, 1);
-    }
-  }, [tab]);
-
-  // ─── Resolve (PATCH status → "resolved") 
-  const resolve = async (id: string) => {
-    setResolving(id);
-    try {
-      await api.patch(`/${tab}/${id}`, { status: "resolved" });
-
-      setList((l) =>
-        l.map((x) => (x.id === id ? { ...x, status: "resolved" as Status } : x))
-      );
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setResolving(null);
-    }
-  };
-
-  // ─── Delete 
-  const remove = async (id: string) => {
-    setDeleting(id);
-    try {
-      await api.delete(`/${tab}/${id}`);
-      const newList = list.filter((x) => x.id !== id);
-      if (newList.length === 0 && page > 1) {
-        fetchList(tab, page - 1);
+  // ─── Delete mutation ─────────────────────────────────────────────────────
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/${tab}/${id}`),
+    onSuccess: (_, id) => {
+      toast.success("Deleted Successfully")
+      const isLastOnPage = list.length === 1 && page > 1
+      if (isLastOnPage) {
+        setPage((p) => p - 1)
       } else {
-        setList(newList);
+        queryClient.invalidateQueries({ queryKey: ["contact-list", tab] })
       }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setDeleting(null);
-    }
-  };
+    },
+    onError: () => toast.error("Failed"),
+  })
 
-  // ─── Save essentials 
-  const saveEssentials = async () => {
-    if (!essentials) return;
-    setSavingEss(true);
-    console.log(essentials)
-    try {
-      await api.patch("/admin-contact/essentials", essentials);
-    } catch (e: any) {
-      setContactError(e.message);
-    } finally {
-      setSavingEss(false);
-    }
-  };
+  // ─── Save essentials mutation ─────────────────────────────────────────────
+  const saveEssentialsMutation = useMutation({
+    mutationFn: () => api.patch("/admin-contact/essentials", essentials),
+    onSuccess: () => toast.success("Saved"),
+    onError: () => toast.error("Failed"),
+  })
 
-  // ─── Save presents (social + address) 
-  const savePresents = async () => {
-    if (!presents) return;
-    setSavingPre(true);
-    try {
-      await api.patch("/admin-contact/presents", presents);
-    } catch (e: any) {
-      setContactError(e.message);
-    } finally {
-      setSavingPre(false);
-    }
-  };
+  // ─── Save presents mutation ───────────────────────────────────────────────
+  const savePresentsMutation = useMutation({
+    mutationFn: () => api.patch("/admin-contact/presents", presents),
+    onSuccess: () => toast.success("Saved"),
+    onError: () => toast.error("Failed"),
+  })
+
+  const errorMsg = isError
+    ? (listError instanceof AxiosError ? (listError.response?.data?.error ?? listError.message) : "Failed to fetch")
+    : null
+
+  const contactErrorMsg = isContactError
+    ? (contactError instanceof AxiosError ? (contactError.response?.data?.error ?? contactError.message) : "Failed to fetch contact")
+    : null
+
+  const handleTabChange = (t: Tab) => {
+    setTab(t)
+    setPage(1)
+  }
 
   return (
     <div style={{ padding: 24 }}>
 
-      {/* Tab switcher */}
-      <TabSwitcher setTab={setTab} tab={tab} tabOptions={tabOptions} />
+      <TabSwitcher setTab={handleTabChange} tab={tab} tabOptions={tabOptions} />
 
-      {/* Global error banner */}
-      {error && (
+      {errorMsg && (
         <div style={{ background: "#fef2f2", border: `1px solid #fecaca`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.red, marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {error}
-          <button onClick={() => setError(null)} style={{ ...btn("ghost"), padding: "2px 8px", fontSize: 12 }}>Dismiss</button>
+          {errorMsg}
         </div>
       )}
 
-      {/* Enquiry / Feedback table */}
-      <Table deleting={deleting} fetchList={fetchList} list={list} loading={loading} meta={meta} page={page} remove={remove} resolve={resolve} resolving={resolving} tab={tab} setPage={setPage} />
+      <Table
+        tab={tab}
+        meta={meta}
+        list={list}
+        loading={loading}
+        page={page}
+        setPage={setPage}
+        limit={limit}
+        setLimit={setLimit}
+        deleting={deleteMutation.isPending ? deleteMutation.variables ?? null : null}
+        resolving={resolveMutation.isPending ? resolveMutation.variables ?? null : null}
+        refetch={() => refetchList()}
+        resolve={(id) => resolveMutation.mutate(id)}
+        remove={(id) => deleteMutation.mutate(id)}
+      />
 
-      {/* Admin Contact */}
       {tab === "admin-contact" && (
         <>
-          {contactError && (
+          {contactErrorMsg && (
             <div style={{ background: "#fef2f2", border: `1px solid #fecaca`, borderRadius: 10, padding: "10px 14px", fontSize: 13, color: C.red, marginBottom: 14 }}>
-              {contactError}
+              {contactErrorMsg}
             </div>
           )}
 
@@ -218,8 +199,18 @@ const ContactPage: FC<EnquiryResponse> = (props) => {
 
           {!contactLoading && essentials && presents && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              <EssentialsCard essentials={essentials} saveEssentials={saveEssentials} savingEss={savingEss} setEssentials={setEssentials} />
-              <PresentsCard presents={presents} savePresents={savePresents} savingPre={savingPre} setPresents={setPresents} />
+              <EssentialsCard
+                essentials={essentials}
+                saveEssentials={() => saveEssentialsMutation.mutate()}
+                savingEss={saveEssentialsMutation.isPending}
+                setEssentials={setEssentials}
+              />
+              <PresentsCard
+                presents={presents}
+                savePresents={() => savePresentsMutation.mutate()}
+                savingPre={savePresentsMutation.isPending}
+                setPresents={setPresents}
+              />
             </div>
           )}
         </>
@@ -227,7 +218,7 @@ const ContactPage: FC<EnquiryResponse> = (props) => {
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
-  );
-};
+  )
+}
 
-export default ContactPage;
+export default ContactPage

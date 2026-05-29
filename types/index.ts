@@ -78,7 +78,7 @@ export interface ProductDocument {
   product_image: string;
   gallery_images: string[];
   is_active: boolean;
-  created_at: string; 
+  created_at: string;
   updated_at: string;
 }
 
@@ -90,7 +90,7 @@ export interface Product {
   product_image: string;
   gallery_images: string[];
   is_active: boolean;
-  created_at: number;  
+  created_at: number;
   updated_at: number;
 }
 
@@ -142,10 +142,9 @@ export type PageId =
   | "testimonials"
   | "clients"
   | "stations"
-  | "products"
   | "faq"
   | "contact"
-  | "settings"
+  | "seo-settings"
   | "profile";
 
 export interface NavItem {
@@ -260,7 +259,7 @@ export const mockTestimonials: Testimonial[] = [
 ];
 
 export type StationFormDraft = Pick<Station,
-    "id"
+  "id"
   | "stationName"
   | "area"
   | "address"
@@ -271,6 +270,7 @@ export type StationFormDraft = Pick<Station,
   | "location"
 > & {
   telephone: string;
+  status: "active" | "inactive"
   emailID: string;
   mapLink: string;
   images: string[];
@@ -325,4 +325,52 @@ export interface DashboardData {
 export interface DashboardResponse {
   success: boolean;
   data: DashboardData;
+export interface SeoSettings {
+  id: string;
+
+  metaTitle: string;
+
+  metaDescription: string;
+
+  keywords: string[];
+
+  ogImage: string;
+
+  createdAt: string;
+
+  updatedAt: string;
+}
+
+export interface SeoSettingsResponse {
+  success: boolean;
+
+  message: SeoSettings | null;
+}
+
+export interface PrivacyPolicySection {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface PrivacyPolicyBanner {
+  title: string;
+  subtitle: string;
+}
+
+export interface PrivacyPolicy {
+  id: string;
+  title: string;
+  slug: string;
+  status: "published" | "draft";
+  banner: PrivacyPolicyBanner;
+  sections: PrivacyPolicySection[];
+  publishedAt: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface PrivacyPolicyResponse {
+  success: boolean;
+  message: PrivacyPolicy | null;
 }

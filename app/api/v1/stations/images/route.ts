@@ -10,17 +10,22 @@ export async function GET(req: NextRequest) {
         }
 
         const { searchParams } = new URL(req.url)
-        const limit = Math.min(Number.parseInt(searchParams.get("limit") ?? "12"),100)
-        const page = Math.max(Number.parseInt(searchParams.get("page") ?? "1"),1)
+        const limit = Math.min(Number.parseInt(searchParams.get("limit") ?? "12"), 100)
+        const page = Math.max(Number.parseInt(searchParams.get("page") ?? "1"), 1)
         const offset = (page - 1) * limit
 
         // get total count
-        const totalSnap = await adminDb.collection("stationImages").count().get()
+        const totalSnap = await adminDb
+            .collection("stationImages")
+            .where("stationId", "==", null)
+            .count()
+            .get()
         const total = totalSnap.data().count
         const totalPages = Math.ceil(total / limit)
 
         let query = adminDb
             .collection("stationImages")
+            .where("stationId", "==", null)
             .orderBy("createdAt", "desc")
             .limit(limit)
 
@@ -52,3 +57,4 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: err.message }, { status: 500 })
     }
 }
+
