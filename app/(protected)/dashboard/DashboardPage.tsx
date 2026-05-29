@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FC } from "react";
+import { useState, useSyncExternalStore, type FC } from "react";
 import {
     BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -25,7 +25,11 @@ interface DashboardPageProps {
     refreshing: boolean;
 }
 
-type FuelDraft = Record<keyof FuelPrices, string>;
+type FuelDraft = {
+    diesel: string;
+    petrol: string;
+    autoLPG: string;
+}
 
 const fuelRows: Array<[keyof FuelPrices, string, "blue" | "amber" | "green", React.ReactNode]> = [
     ["diesel", "Diesel", "blue", <Fuel size={20} key={1} style={{ color: C.p }} />],
@@ -53,6 +57,11 @@ const TOOLTIP_STYLE = {
   zIndex: 20
 };
 
+// Hydration helpers
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 const DashboardPage: FC<DashboardPageProps> = ({
     prices,
     onEditPrice,
@@ -60,6 +69,7 @@ const DashboardPage: FC<DashboardPageProps> = ({
     onRefresh,
     refreshing
 }) => {
+    const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     const [editPrice, setEditPrice] = useState(false);
     const [draft, setDraft] = useState<FuelDraft>({
         diesel: String(prices.diesel),
