@@ -2,6 +2,7 @@
 
 import { verifySession } from "@/lib/auth/verify-session";
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 
 // ─── PUT /api/v1/testimonials/[id] ───────────────────────────────────────────
@@ -48,7 +49,7 @@ export async function PUT(
       image: image || "",
       rating: rating ?? 5,
       isActive: isActive ?? true,
-      updatedAt: new Date().toISOString(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     await docRef.update(updatedData);

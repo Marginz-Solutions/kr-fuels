@@ -1,6 +1,7 @@
 import { verifySession } from "@/lib/auth/verify-session";
 
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -125,9 +126,9 @@ export async function POST(request: NextRequest) {
 
       ogImage: ogImage || "",
 
-      createdAt: new Date().toISOString(),
+      createdAt: FieldValue.serverTimestamp(),
 
-      updatedAt: new Date().toISOString(),
+      updatedAt: FieldValue.serverTimestamp(),
     };
 
     // Save to Firestore

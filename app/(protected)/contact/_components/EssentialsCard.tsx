@@ -83,7 +83,11 @@ const EssentialsCard = (props: EssentialsCardProps) => {
 
         {/* Emails */}
         <div style={sectionLabel}>Emails</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 12,
+        }}>
           <FormField label="Info email">
             <div style={inputWrap}>
               <span style={iconStyle}><Mail size={14} /></span>
@@ -104,7 +108,11 @@ const EssentialsCard = (props: EssentialsCardProps) => {
 
         {/* Phone numbers */}
         <div style={sectionLabel}>Phone numbers</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 12,
+        }}>
           <FormField label="Office phone">
             <div style={inputWrap}>
               <span style={iconStyle}><Phone size={14} /></span>

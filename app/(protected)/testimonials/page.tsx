@@ -1,11 +1,9 @@
 // app/(admin)/testimonials/page.tsx
-
-import { TestimonialsResponse } from "@/types";
 import TestimonialsPage from "./TestimonialsPage";
-import { fetchServerApi } from "@/hooks/server-fetch";
+import { serverFetch } from "@/lib/server-fetch";
 
 export default async function Page() {
-  const res = await fetchServerApi<TestimonialsResponse>("/api/v1/testimonials");
+  const res = await serverFetch("/testimonials");
 
   return (
     <TestimonialsPage

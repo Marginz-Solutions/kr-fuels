@@ -1,4 +1,5 @@
 import { StationRowSchema } from "@/lib/validators/station.schema";
+import { Timestamp } from "firebase/firestore";
 import z from "zod";
 
 export interface StationAddress {
@@ -51,6 +52,8 @@ export interface Faq {
     updatedAt: Date
 }
 
+export type FirestoreTimestamp = { _seconds: number; _nanoseconds: number };
+
 export interface Feedback {
     id?: string
     name: string
@@ -63,8 +66,8 @@ export interface Feedback {
     stationId: string
     stationName:string,
     status: "pending" | "in-progress" | "resolved"
-    createdAt?: Date
-    updatedAt?: Date
+    createdAt?:  Date | string | FirestoreTimestamp | null
+    updatedAt?:  Date | string | FirestoreTimestamp | null
 }
 
 export interface Enquiry {

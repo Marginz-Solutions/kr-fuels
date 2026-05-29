@@ -127,6 +127,7 @@ const Drawer = (props: DrawerProps) => {
                                 style={{ ...inp(), fontSize: 12 }} type="text"
                                 value={(form.address as any)[key] ?? ""}
                                 onChange={(e) => setForm((p) => ({ ...p, address: { ...p.address, [key]: e.target.value } }))}
+                                required
                                 placeholder={`${label} — ${placeholder}`}
                             />
                         </div>
