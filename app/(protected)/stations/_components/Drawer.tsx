@@ -3,7 +3,6 @@ import { api } from '@/lib/axios'
 import { btn, inp } from '@/styles/shared'
 import { StationFormDraft } from '@/types'
 import { Station } from '@/types/dust'
-import { error } from 'console'
 import { ImageIcon, Save, X } from 'lucide-react'
 import React, { useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -148,12 +147,12 @@ const Drawer = (props: DrawerProps) => {
                             <input
                                 style={{ ...inp(), flex: 1 }} type="number" placeholder="Latitude"
                                 value={form.location.latitude || ""}
-                                onChange={(e) => setForm((p) => ({ ...p, location: { ...p.location, latitude: parseFloat(e.target.value) } }))}
+                                onChange={(e) => setForm((p) => ({ ...p, location: { ...p.location, latitude: Number.parseFloat(e.target.value) } }))}
                             />
                             <input
                                 style={{ ...inp(), flex: 1 }} type="number" placeholder="Longitude"
                                 value={form.location.longitude || ""}
-                                onChange={(e) => setForm((p) => ({ ...p, location: { ...p.location, longitude: parseFloat(e.target.value) } }))}
+                                onChange={(e) => setForm((p) => ({ ...p, location: { ...p.location, longitude: Number.parseFloat(e.target.value) } }))}
                             />
                         </div>
                     </div>

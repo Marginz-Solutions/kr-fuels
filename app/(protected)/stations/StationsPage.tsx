@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, type FC } from "react";
-import { Plus, Search, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn, inp } from "../../../styles/shared";
 import { Badge, StatCard } from "../../../components/ui";

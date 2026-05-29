@@ -5,10 +5,9 @@ import React, { useState, useCallback, useEffect } from 'react'
 import UploadModal from './UploadModal'
 import Pagination from '@/components/ui/Pagination'
 import { api } from '@/lib/axios'
-import { Pagination as MetaData } from "@/types/dust"
 import { StationListSkeleton } from './StationListSkeleton'
 import { ImageGridSkeleton } from './ImageGridSkeleton'
-import { Station as OriginalStation } from "@/types/dust"
+import { Station as OriginalStation,Pagination as MetaData } from "@/types/dust"
 import { toast } from 'sonner'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 // ── types ────────────────────────────────────────────────

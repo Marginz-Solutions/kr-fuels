@@ -2,7 +2,7 @@ import { verifySession } from "@/lib/auth/verify-session"
 import { adminDb } from "@/lib/firebase/admin"
 import { DocumentData, FieldValue, Query } from "firebase-admin/firestore"
 import { NextRequest, NextResponse } from "next/server"
-import { FeedbackSchema, FeedbackPatchSchema } from "@/lib/validators/feedback.schema"
+import { FeedbackSchema } from "@/lib/validators/feedback.schema"
 
 // GET /api/feedback
 export async function GET(req: NextRequest) {

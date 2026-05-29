@@ -2,7 +2,7 @@
 import { useState, type FC } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Plus, Search, Edit2, Trash2, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn } from "../../../styles/shared";
 import { Badge } from "../../../components/ui";

@@ -54,7 +54,7 @@ const Pagination: FC<PaginationProps> = ({ meta, page, loading = false, onPageCh
         ) : (
           <button
             key={p}
-            onClick={() => onPageChange(p as number)}
+            onClick={() => onPageChange(p)}
             disabled={loading}
             style={{
               ...btn("ghost"),

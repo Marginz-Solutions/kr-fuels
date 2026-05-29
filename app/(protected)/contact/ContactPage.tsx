@@ -12,7 +12,6 @@ import EssentialsCard from "./_components/EssentialsCard";
 import PresentsCard from "./_components/PresentsCard";
 import { EssentialsCardLoading, PresentsCardLoading } from "@/components/ui/AdminContactCardSkeleton";
 import { toast } from "sonner";
-import { Timestamp } from "firebase/firestore";
 
 export type Tab = "enquiry" | "feedback" | "admin-contact";
 export type ListItem = Enquiry | Feedback;
@@ -47,8 +46,8 @@ export const fmtDate = (d?: Date | string | FirestoreTimestamp | null) => {
   }
 
   // Plain Date or string
-  const date = new Date(d as Date | string);
-  return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-IN", {
+  const date = new Date(d);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-IN", {
     day: "2-digit", month: "short", year: "numeric",
   });
 };
