@@ -38,6 +38,7 @@ export async function PATCH(req: NextRequest) {
         }
 
         const body   = await req.json()
+        console.log(body)
         const parsed = AdminContactPresentsPatchSchema.safeParse(body)
 
         if (!parsed.success) {
@@ -50,12 +51,14 @@ export async function PATCH(req: NextRequest) {
         const docSnap = await DOC_REF.get()
 
         if (docSnap.exists) {
+            console.log(parsed.data)
             await DOC_REF.update({
                 ...flattenObject(parsed.data),
                 updatedAt: FieldValue.serverTimestamp(),
             })
         } else {
             const fullParsed = AdminContactPresentsSchema.safeParse(body)
+           
             if (!fullParsed.success) {
                 return NextResponse.json(
                     { error: "Full data required for first time setup", issues: fullParsed.error.flatten().fieldErrors },

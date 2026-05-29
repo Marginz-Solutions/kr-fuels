@@ -46,8 +46,8 @@ export const AdminContactPresentsSchema = z.object({
     }),
 
     exactLocation: z.object({
-        lat: z.string().regex(/^-?([1-8]?[0-9](\.[0-9]+)?|90(\.0+)?)$/, "Invalid latitude"),
-        lng: z.string().regex(/^-?(1[0-7][0-9](\.[0-9]+)?|[1-9]?[0-9](\.[0-9]+)?|180(\.0+)?)$/, "Invalid longitude"),
+        latitude: z.string().regex(/^-?([1-8]?[0-9](\.[0-9]+)?|90(\.0+)?)$/, "Invalid latitude"),
+        longitude: z.string().regex(/^-?(1[0-7][0-9](\.[0-9]+)?|[1-9]?[0-9](\.[0-9]+)?|180(\.0+)?)$/, "Invalid longitude"),
     }),
 
     socialLinks: z.object({
@@ -69,8 +69,8 @@ export const AdminContactPresentsPatchSchema = z.object({
     }).optional(),
 
     exactLocation: z.object({
-        lat: z.string().regex(/^-?([1-8]?[0-9](\.[0-9]+)?|90(\.0+)?)$/).optional(),
-        lng: z.string().regex(/^-?(1[0-7][0-9](\.[0-9]+)?|[1-9]?[0-9](\.[0-9]+)?|180(\.0+)?)$/).optional(),
+        latitude: z.string().optional(),
+        longitude: z.string().optional(),
     }).optional(),
 
     socialLinks: z.object({

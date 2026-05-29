@@ -10,7 +10,7 @@ export type EssentialsCardProps = {
   essentials: AdminContactEssentials
   setEssentials: React.Dispatch<React.SetStateAction<AdminContactEssentials | null>>
   savingEss: boolean
-  saveEssentials: () => Promise<void>
+  saveEssentials: () => void
 }
 
 const sectionLabel: React.CSSProperties = {

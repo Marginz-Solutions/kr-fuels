@@ -63,14 +63,14 @@ const Loading = () => (
 
             {/* Toolbar */}
             <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.bd}`, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <div style={{
+                {/* <div style={{
                     flex: 1, minWidth: 200,
                     display: "flex", alignItems: "center", gap: 8,
                     background: C.bg, borderRadius: 10, padding: "7px 12px",
                 }}>
                     <Shimmer w={14} h={14} style={{ borderRadius: "50%", flexShrink: 0 }} />
                     <Shimmer w="50%" h={13} />
-                </div>
+                </div> */}
                 <Shimmer w={140} h={36} style={{ borderRadius: 10 }} />
                 <div style={{ display: "flex", gap: 4 }}>
                     <Shimmer w={34} h={34} style={{ borderRadius: 8 }} />

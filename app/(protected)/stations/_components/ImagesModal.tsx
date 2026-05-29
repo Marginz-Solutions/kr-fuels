@@ -9,28 +9,17 @@ import { Pagination as MetaData } from "@/types/dust"
 import { StationListSkeleton } from './StationListSkeleton'
 import { ImageGridSkeleton } from './ImageGridSkeleton'
 import { Station as OriginalStation } from "@/types/dust"
-
+import { toast } from 'sonner'
 
 // ── types ────────────────────────────────────────────────
 export type Station = { id: string; stationName: string; imageCount: number, images: string[] }
-export type ImageItem = { id: string; url: string }
-
-
+export type ImageItem = { id: string; url: string, stationId: string }
 
 const LIMIT_OPTIONS = [12, 24, 48]
 const ACCENT = '#3b82f6'
 
-// ── pagination helper ────────────────────────────────────
-function getPageRange(current: number, total: number): (number | '…')[] {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-    if (current <= 4) return [1, 2, 3, 4, 5, '…', total]
-    if (current >= total - 3) return [1, '…', total - 4, total - 3, total - 2, total - 1, total]
-    return [1, '…', current - 1, current, current + 1, '…', total]
-}
-
 // ── component ────────────────────────────────────────────
 type ImagesModalProps = { open: boolean; setOpen: (val: boolean) => void, setOriginalStations: React.Dispatch<React.SetStateAction<OriginalStation[]>> }
-
 
 const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) => {
     const [stations, setStations] = useState<Station[]>([])
@@ -45,11 +34,36 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
     const [limit, setLimit] = useState(12)
     const [assigning, setAssigning] = useState(false)
     const [loading, setLoading] = useState(false)
-
+    const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const filteredStations = stations?.filter(s =>
         s.stationName.toLowerCase().includes(stationSearch.toLowerCase())
     )
+
+
+    const handleDelete = async (image: ImageItem) => {
+        setDeletingId(image.id)
+        try {
+            await api.delete(`/stations/images/${image.id}`, {
+                params: {
+                    url: image.url
+                }
+            })
+            setImages(prev => prev.filter(img => img.id !== image.id))
+
+            setSelectedImages(prev => {
+                const next = new Set(prev)
+                next.delete(image.id)
+                return next
+            })
+            toast.success("Image deleted")
+        } catch {
+            toast.error("Failed to delete image")
+        }
+        finally {
+            setDeletingId(null)
+        }
+    }
 
 
     const fetchData = async () => {
@@ -58,10 +72,16 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
         setLoading(true)
 
         try {
-            const [stationsData, imagesData] = await Promise.all([api.get("/stations/all"), api.get("/stations/images")])
+            const [stationsData, imagesData] = await Promise.all([
+                api.get("/stations/all"),
+                api.get("/stations/images", {
+                    params: { page, limit }
+                })
+            ])
 
             setStations(stationsData.data.data)
             setImages(imagesData.data.data)
+            console.log(imagesData.data.data)
             setImageMeta(imagesData.data.meta)
             setLoading(false)
         } catch (err) {
@@ -115,11 +135,12 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
             const response = await api.patch(`/stations/${selectedStation}/images/assign`, {
                 imageUrls: images
                     .filter(img => selectedImages.has(img.id))
-                    .map(img => img.url)
+                    .map(img => img.url),
+                imageIds: images
+                    .filter(img => selectedImages.has(img.id))
+                    .map(img => img.id)
             })
-            if (response.data) {
-                alert("ok")
-            }
+            await fetchData()
             setSelectedImages(new Set())
             setStations(prev => prev.map(p =>
                 p.id === selectedStation
@@ -131,7 +152,9 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
                     ? { ...p, images: [...(p.images ?? []), ...(response.data.urls ?? [])] }
                     : p
             ))
+            toast.success("Images Assigned")
         } catch (err) {
+            toast.error("Failed")
             console.error("Assign failed:", err)
         } finally {
             setAssigning(false)
@@ -292,7 +315,7 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
                                     flex: 1,
                                     overflowY: 'auto',
                                     display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                                     gap: 8,
                                     alignContent: 'start',
                                     padding: 2,
@@ -313,18 +336,64 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
                                                 border: isSelected ? `2.5px solid ${ACCENT}` : `2.5px solid transparent`,
                                                 boxSizing: 'border-box',
                                                 userSelect: 'none',
-                                                outline: isSelected ? `0px solid ${ACCENT}` : 'none',
                                                 transition: 'border-color 0.1s',
                                             }}
+                                            className="img-tile"
                                         >
                                             <img
                                                 src={img.url}
-                                                alt={"text"}
+                                                alt="image"
                                                 draggable={false}
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                                             />
 
-                                            {/* selection overlay */}
+                                            {/* Delete button — visible on hover when NOT selected */}
+                                            {!isSelected && (
+                                                <button
+                                                    onClick={e => {
+                                                        e.stopPropagation()
+                                                        handleDelete(img)
+                                                    }}
+                                                    disabled={deletingId === img.id}
+                                                    className="delete-btn"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 5,
+                                                        right: 5,
+                                                        width: 22,
+                                                        height: 22,
+                                                        borderRadius: '50%',
+                                                        background: 'rgba(0,0,0,0.55)',
+                                                        border: 'none',
+                                                        cursor: deletingId === img.id ? 'not-allowed' : 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        padding: 0,
+                                                        opacity: 0,
+                                                        transition: 'opacity 0.15s, background 0.15s',
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    {deletingId === img.id ? (
+                                                        // Spinner
+                                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+                                                            style={{ animation: 'spin 0.7s linear infinite' }}>
+                                                            <circle cx="5" cy="5" r="4" stroke="#fff" strokeWidth="1.6"
+                                                                strokeDasharray="16" strokeDashoffset="6" strokeLinecap="round" />
+                                                        </svg>
+                                                    ) : (
+                                                        // X icon
+                                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                                            <path d="M1 1l8 8M9 1L1 9" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                            )}
+
+                                            <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+                                            {/* Selection overlay — visible when selected */}
                                             {isSelected && (
                                                 <div style={{
                                                     position: 'absolute',
@@ -351,10 +420,14 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
                                                     </div>
                                                 </div>
                                             )}
-
                                         </div>
                                     )
                                 })}
+
+                                <style>{`
+    .img-tile:hover .delete-btn { opacity: 1 !important; }
+    .delete-btn:hover { background: rgba(220,38,38,0.85) !important; }
+`}</style>
                             </div>
                         )}
 
@@ -404,7 +477,7 @@ const ImagesModal = ({ open, setOpen, setOriginalStations }: ImagesModalProps) =
                 </div>
             </Modal>
 
-            <UploadModal open={uploadOpen} setOpen={setUploadOpen} stations={stations} setStations={setStations} />
+            <UploadModal open={uploadOpen} setOpen={setUploadOpen} stations={stations} setStations={setStations} fetchData={fetchData} setOriginalStations={setOriginalStations} />
         </div>
     )
 }

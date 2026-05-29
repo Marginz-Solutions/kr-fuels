@@ -69,8 +69,9 @@ export async function POST(req: NextRequest) {
             address: {
                 ...(row.doorNo && { doorNo: row.doorNo }),
                 ...(row.street && { street: row.street }),
-                pincode: row.pincode
+                pincode: row.pincode.toString()
             },
+            workingHours:row.workingHours,
             status:"active",
             location: {
                 latitude: row.latitude,
