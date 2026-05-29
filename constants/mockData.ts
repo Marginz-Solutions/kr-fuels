@@ -53,9 +53,3 @@ export const mockSubmissions: Submission[] = [
   { id: 4, name: "Deepa M",    email: "deepa@mail.com",   phone: "9842100103", message: "Issue with billing at Madurai station.",                  date: "2025-01-12", status: "resolved"    },
   { id: 5, name: "Nathan J",   email: "nathan@mail.com",  phone: "9842100104", message: "Request for bulk pricing for our transport company.",     date: "2025-01-11", status: "pending"     },
 ];
-
-export const defaultFuelPrices: FuelPrices = {
-  diesel:  87.62,
-  petrol:  102.34,
-  autoLPG: 49.80,
-};

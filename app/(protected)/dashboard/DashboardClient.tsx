@@ -4,6 +4,7 @@ import { useState } from "react";
 import DashboardPage from "./DashboardPage";
 import type { FuelPrices, DashboardData } from "@/types";
 import { toast } from "sonner";
+import { useFuelPrices } from "@/components/providers/FuelPriceContext";
 
 export default function DashboardClient({
     initialPrices,
@@ -16,8 +17,11 @@ export default function DashboardClient({
     const [dashboardData, setDashboardData] = useState<DashboardData>(initialDashboardData);
     const [loading, setLoading] = useState(false);
 
+    const { setPrices: setGlobalPrices } = useFuelPrices();
+
     async function handleEditPrice(p: FuelPrices) {
         setPrices(p);
+        setGlobalPrices(p);
 
         try {
             await fetch("/api/v1/dashboard/fuel-prices", {
