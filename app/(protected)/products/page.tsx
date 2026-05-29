@@ -1,10 +1,17 @@
-import React from 'react'
-import ProductsPage from './ProductsPage'
+import ProductsPage from "./ProductsPage";
+import { CategoriesResponse, ProductsResponse } from "@/types";
+import { serverFetch } from "@/lib/server-fetch";
 
-const page = () => {
+export default async function Page() {
+  const [productsRes, categoriesRes] = await Promise.all([
+    serverFetch("/api/v1/products"),
+    serverFetch("/api/v1/products/categories"),
+  ]);
+
   return (
-    <ProductsPage/>
-  )
+    <ProductsPage
+      initialProducts={productsRes.message ?? []}
+      initialCategories={categoriesRes.data ?? []}
+    />
+  );
 }
-
-export default page
