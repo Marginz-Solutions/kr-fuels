@@ -1,0 +1,247 @@
+// Canonical catalog for the four product screens (/products = Auto LPG, plus the
+// krfuels.com-matching routes /conversionkit, /lubricants, /tanks).
+//
+// DYNAMIC-FIRST: each entry mirrors a `products` Firestore record (matched by an
+// explicit `slug` or by category/name keywords). The detail page renders the live
+// backend record where it has data (name, description, images, external_url) and
+// falls back to this faithful, live-site-matching content for the richer sections
+// the admin schema doesn't (yet) capture — functions, benefits, specs. Content here
+// mirrors krfuels.com / krgfi.com; only the CONTENT matches — visuals stay ours.
+
+export type ProductIcon = "fuel" | "wrench" | "droplets" | "cylinder";
+
+export interface ProductSection {
+  heading: string;
+  items: string[];
+}
+
+export interface ProductSpec {
+  name: string;
+  detail: string;
+}
+
+export interface ProductDetail {
+  /** Stable id — also the key used to match a backend `products` record. */
+  slug: string;
+  /** Route the screen lives at (mirrors krfuels.com / krgfi.com page names). */
+  href: string;
+  /** Dropdown label, selector-pill label and H1. */
+  label: string;
+  /** Eyebrow / category tag. */
+  category: string;
+  icon: ProductIcon;
+  /** One-line subhead under the H1. */
+  tagline: string;
+  /** Lead paragraph(s) — overridden by a backend record's description when present. */
+  intro: string;
+  /** Default hero image (real krfuels.com / vibuh imagery) — overridden by a backend record's product_image. */
+  image: string;
+  /** Bulleted sections (functions / benefits / how it works …). */
+  sections: ProductSection[];
+  /** Variants / grades / pack sizes. */
+  specs: ProductSpec[];
+  /** Optional reference link to the live manufacturer page. */
+  externalUrl?: string;
+  /** When true the menu/footer link opens this product's external site (no internal screen). */
+  external?: boolean;
+  /** Keywords used to match a backend product to this slug (lowercase). */
+  match: string[];
+}
+
+export const PRODUCT_CATALOG: ProductDetail[] = [
+  {
+    slug: "auto-lpg",
+    href: "/products",
+    image: "/assets/products/auto-lpg.jpg",
+    label: "Auto LPG",
+    category: "Auto LPG Fuel",
+    icon: "fuel",
+    tagline: "Eco-friendly automotive fuel — cleaner, safer and up to 40% cheaper than petrol.",
+    intro:
+      "Auto LPG (Liquefied Petroleum Gas) is a clean-burning, eco-friendly automotive fuel dispensed at every KR Trans Fuels station. It costs roughly 40% less than petrol, burns cleaner with significantly lower emissions, and refuels as quickly and easily as any other fuel — so you save money on every kilometre while driving greener.",
+    sections: [
+      {
+        heading: "Why switch to Auto LPG",
+        items: [
+          "Up to 40% cheaper to run than petrol",
+          "Far lower CO, hydrocarbon and NOx emissions",
+          "Cleaner combustion means longer engine life",
+          "Quick, easy refuelling across our growing station network",
+          "Dual-fuel freedom — switch between petrol and LPG on the move",
+        ],
+      },
+      {
+        heading: "How it works",
+        items: [
+          "A BIS-certified conversion kit lets your petrol vehicle run on LPG",
+          "A dedicated high-pressure tank stores the Auto LPG safely",
+          "Flip a change-over switch to run on petrol or LPG at any time",
+          "No loss of convenience — same range, same performance",
+        ],
+      },
+    ],
+    specs: [
+      { name: "Availability", detail: "Dispensed at all KR Trans Fuels Auto LPG stations across Tamil Nadu" },
+      { name: "Typical saving", detail: "~40% lower running cost versus petrol" },
+    ],
+    match: ["auto lpg", "auto-lpg", "fuel"],
+  },
+  {
+    slug: "conversionkit",
+    href: "https://vibuh.com/",
+    external: true,
+    image: "/assets/products/conversionkit.jpg",
+    label: "Conversion Kits",
+    category: "Conversion Kits",
+    icon: "wrench",
+    tagline: "BIS-certified Venturi & Sequential LPG conversion kits for two-, three- and four-wheelers.",
+    intro:
+      "An LPG conversion kit lets your vehicle run on LPG instead of petrol, cutting fuel costs and emissions. Each kit bundles the components needed for safe, efficient fuel delivery — a tank, reducer, injectors, ECU and hoses — fitted by trained technicians and certified to automotive safety standards.",
+    sections: [
+      {
+        heading: "Venturi (open-loop) kits",
+        items: [
+          "Mixer-based fuelling — simple, robust and economical",
+          "Ideal for carburettor and older-generation petrol vehicles",
+          "Lower cost of conversion with reliable everyday performance",
+        ],
+      },
+      {
+        heading: "Sequential (closed-loop) kits",
+        items: [
+          "Electronically controlled multipoint LPG injection",
+          "ECU meters fuel precisely for each cylinder",
+          "Best suited to modern BS-IV / BS-VI fuel-injected vehicles",
+          "Smoother performance, better mileage and cleaner emissions",
+        ],
+      },
+      {
+        heading: "What's in the kit",
+        items: [
+          "High-pressure LPG tank and filler valve",
+          "Reducer / vaporiser (KR 67, KR 56)",
+          "Injector rail (3-way, 4-way, KR 360)",
+          "ECU (Pride, Ultra, Optima Nano)",
+          "Change-over switch, hoses and fittings",
+        ],
+      },
+    ],
+    specs: [
+      { name: "LPG Kit — BS IV (2-Wheeler)", detail: "Conversion kit for BS-IV two-wheelers" },
+      { name: "LPG Kit — BS VI (2-Wheeler)", detail: "Conversion kit for BS-VI two-wheelers" },
+      { name: "LPG Kit — BS IV (4-Wheeler)", detail: "Conversion kit for BS-IV four-wheelers" },
+      { name: "LPG Kit — BS VI (4-Wheeler)", detail: "Conversion kit for BS-VI four-wheelers" },
+    ],
+    externalUrl: "http://krgfi.com/conversionkit.php",
+    match: ["conversion", "kit"],
+  },
+  {
+    slug: "tanks",
+    href: "https://vibuh.com/",
+    external: true,
+    image: "/assets/products/tanks.jpg",
+    label: "Tanks & Multivalves",
+    category: "Tanks & Multivalves",
+    icon: "cylinder",
+    tagline: "Safety-certified high-pressure tanks and multivalves built to automotive standards.",
+    intro:
+      "KR Trans Fuels supplies BIS / automotive-standard LPG tanks and multivalves for Auto LPG vehicles. Cylindrical and toroidal designs suit different vehicles and boot layouts, while the integrated multivalve manages safe filling, level sensing and pressure relief.",
+    sections: [
+      {
+        heading: "Cylindrical tanks",
+        items: [
+          "Mounted in the boot or under the chassis",
+          "Available in a range of capacities to suit your vehicle",
+          "Robust high-pressure construction to automotive standards",
+        ],
+      },
+      {
+        heading: "Toroidal (doughnut) tanks",
+        items: [
+          "Fit neatly into the spare-wheel well",
+          "Free up boot space while keeping a full LPG range",
+        ],
+      },
+      {
+        heading: "Multivalves & safety",
+        items: [
+          "Integrated fill, level-gauge, excess-flow and safety-relief functions",
+          "80% auto-stop fill prevents overfilling",
+          "Pressure-relief valve for safe operation",
+        ],
+      },
+    ],
+    specs: [
+      { name: "5 L Cylindrical Tank", detail: "Compact cylindrical Auto LPG tank" },
+      { name: "32 L Cylindrical Tank", detail: "Mid-capacity cylindrical Auto LPG tank" },
+      { name: "60 L Cylindrical Tank", detail: "High-capacity cylindrical Auto LPG tank" },
+      { name: "33 L Toroidal Tank", detail: "Spare-wheel-well toroidal Auto LPG tank" },
+      { name: "Multivalve KR23", detail: "Integrated fill, level and safety-relief multivalve" },
+    ],
+    externalUrl: "http://krgfi.com/tanks.php",
+    match: ["tank", "multivalve", "valve"],
+  },
+  {
+    slug: "lubricants",
+    href: "/lubricants",
+    image: "/assets/products/lubricants.jpg",
+    label: "Lubricants",
+    category: "Veedol Lubricants",
+    icon: "droplets",
+    tagline: "Specialised lubricants formulated for LPG / CNG engines.",
+    intro:
+      "Lubricant is a thin film, generally composed of 70% base oil and 30% additives, which helps to keep your engine running at its best. Our Veedol lubricants are formulated for LPG and CNG vehicles to protect the engine, reduce wear and extend its life.",
+    sections: [
+      {
+        heading: "What a lubricant does",
+        items: [
+          "Lubricate — reduces friction, engine wear and fuel consumption",
+          "Clean — clears piston varnish and deposit sludge in the sump",
+          "Protect — guards against acid corrosion and rust",
+          "Cool & seal the engine",
+        ],
+      },
+      {
+        heading: "Benefits of quality lubricants",
+        items: [
+          "Better mileage",
+          "High performance",
+          "Less maintenance cost",
+          "Longer engine life",
+          "Engine runs smoothly",
+        ],
+      },
+    ],
+    specs: [
+      { name: "Turbo Star 20W50 (LPG/CNG)", detail: "Available in 500 ml, 1 litre and 3 litre packs, plus loose dispensing" },
+      { name: "Take Off 2T", detail: "Dispensed loose through oil dispensers as per customer requirement at retail outlets" },
+    ],
+    externalUrl: "https://krfuels.com/lubricants.php",
+    match: ["lubric"],
+  },
+];
+
+export const PRODUCT_CATALOG_BY_SLUG: Record<string, ProductDetail> = Object.fromEntries(
+  PRODUCT_CATALOG.map((p) => [p.slug, p]),
+);
+
+export function getProductDetail(slug: string): ProductDetail | null {
+  return PRODUCT_CATALOG_BY_SLUG[slug] ?? null;
+}
+
+/**
+ * Resolve any product-like record (backend or fallback) to one of our four detail
+ * slugs: explicit `slug` wins, otherwise we match on category/name keywords.
+ */
+export function productSlug(p: {
+  slug?: string;
+  product_category?: string;
+  product_name?: string;
+}): string | null {
+  if (p.slug && PRODUCT_CATALOG_BY_SLUG[p.slug]) return p.slug;
+  const hay = `${p.product_category ?? ""} ${p.product_name ?? ""}`.toLowerCase();
+  for (const d of PRODUCT_CATALOG) {
+    if (d.match.some((kw) => hay.includes(kw))) return d.slug;
+  }
+  return null;
+}

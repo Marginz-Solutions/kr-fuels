@@ -1,0 +1,25 @@
+# Firebase App Hosting — KR Trans Fuels public site (apps/user)
+# When creating this backend, set its ROOT DIRECTORY to: apps/user
+
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 80
+
+env:
+  # Backend API base — verify the exact backend host/region after it deploys.
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://kr-backend--krfuelsgfivibuh.us-central1.hosted.app/api/v1
+    availability: [BUILD, RUNTIME]
+
+  # Public site origin (canonical URLs / sitemap) — set to this app's own URL.
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://kr-user--krfuelsgfivibuh.us-central1.hosted.app
+    availability: [BUILD, RUNTIME]
+
+  # Admin app origin (the "Staff Login" link appends /login itself).
+  - variable: NEXT_PUBLIC_ADMIN_URL
+    value: https://kr-admin--krfuelsgfivibuh.us-central1.hosted.app
+    availability: [BUILD, RUNTIME]

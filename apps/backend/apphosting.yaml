@@ -1,0 +1,48 @@
+# Firebase App Hosting - KR Trans Fuels API (apps/backend)
+# This backend's ROOT DIRECTORY must be set to: apps/backend
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 80
+
+env:
+  # Firebase Admin (server) - non-secret
+  - variable: FIREBASE_ADMIN_PROJECT_ID
+    value: krfuelsgfivibuh
+    availability:
+      - RUNTIME
+  - variable: FIREBASE_STORAGE_BUCKET
+    value: krfuelsgfivibuh.appspot.com
+    availability:
+      - RUNTIME
+  - variable: FIREBASE_DB
+    value: test
+    availability:
+      - RUNTIME
+
+  # Service-account secrets (Cloud Secret Manager).
+  # These must exist before deploy:
+  #   firebase apphosting:secrets:set firebase-admin-client-email
+  #   firebase apphosting:secrets:set firebase-admin-private-key
+  - variable: FIREBASE_ADMIN_CLIENT_EMAIL
+    secret: firebase-admin-client-email
+    availability:
+      - RUNTIME
+  - variable: FIREBASE_ADMIN_PRIVATE_KEY
+    secret: firebase-admin-private-key
+    availability:
+      - RUNTIME
+
+  # CORS / cross-origin auth origins
+  - variable: ADMIN_ORIGIN
+    value: https://kr-admin--krfuelsgfivibuh.us-central1.hosted.app
+    availability:
+      - RUNTIME
+  - variable: USER_ORIGIN
+    value: https://kr-user--krfuelsgfivibuh.us-central1.hosted.app
+    availability:
+      - RUNTIME

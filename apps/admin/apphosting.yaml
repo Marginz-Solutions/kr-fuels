@@ -1,0 +1,45 @@
+# Firebase App Hosting — KR Trans Fuels Admin (apps/admin)
+# When creating this backend, set its ROOT DIRECTORY to: apps/admin
+
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 80
+
+env:
+  # Backend API base — verify the exact backend host/region after it deploys.
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://kr-backend--krfuelsgfivibuh.us-central1.hosted.app/api/v1
+    availability: [BUILD, RUNTIME]
+
+  # ── Public Firebase web config — safe to commit (ships in the client bundle) ──
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBB4h6N8aU78Q0aLaxUYeqZR6kkZToa3OI
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: krfuelsgfivibuh.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: krfuelsgfivibuh
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: krfuelsgfivibuh.appspot.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "372539814104"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:372539814104:web:0a721e217c5a01f0aa27ad"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_DB
+    value: test
+    availability: [BUILD, RUNTIME]
+
+  # Keep registration closed in production (open briefly only to seed the 1st admin).
+  - variable: NEXT_PUBLIC_ALLOW_REGISTRATION
+    value: "false"
+    availability: [BUILD, RUNTIME]
+  # COOKIE_DOMAIN intentionally omitted - set it (e.g. .krfuels.com) only once
+  # the apps move to custom domains. An empty value ("") is invalid here.
