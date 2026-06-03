@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Server-to-server — no CORS restrictions.
-const BACKEND_SESSION = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/session`;
+// Server-to-server — no CORS restrictions. Uses the ABSOLUTE backend base
+// (NEXT_PUBLIC_API_BASE_URL is now a relative same-origin path for the browser,
+// which a server-side fetch can't resolve).
+const BACKEND_API_BASE_URL =
+  process.env.BACKEND_API_BASE_URL ?? "http://localhost:4000/api/v1";
+const BACKEND_SESSION = `${BACKEND_API_BASE_URL}/auth/session`;
 
 const cookieConfig = {
   httpOnly: true,

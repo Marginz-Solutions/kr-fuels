@@ -26,7 +26,10 @@ export function FeedbackBarChart({
   data: Array<{ name: string; count: number; fill: string }>;
 }) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    // minWidth/minHeight give a valid first measurement before the ResizeObserver
+    // fires — otherwise recharts logs a width(-1)/height(-1) warning on mount
+    // (the chart is loaded via next/dynamic ssr:false, ahead of layout).
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
       <BarChart layout="vertical" data={data} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={C.bd} horizontal={false} />
         <XAxis type="number" tick={{ fontSize: 11, fill: C.tm }} axisLine={false} tickLine={false} />
@@ -46,7 +49,7 @@ export function FeedbackStatusDonut({
   total: number;
 }) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={180}>
       <PieChart responsive>
         <Pie
           data={data}

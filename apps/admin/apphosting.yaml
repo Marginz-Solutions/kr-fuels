@@ -9,8 +9,17 @@ runConfig:
   concurrency: 80
 
 env:
-  # Backend API base — verify the exact backend host/region after it deploys.
+  # Client (browser) API base — RELATIVE so calls stay same-origin and the
+  # httpOnly `session` cookie attaches. A Next rewrite (next.config.ts) proxies
+  # /api/v1/* to BACKEND_API_BASE_URL, forwarding the cookie server-side. This
+  # is what fixes the cross-host 401s (admin and backend are different hosts).
   - variable: NEXT_PUBLIC_API_BASE_URL
+    value: /api/v1
+    availability: [BUILD, RUNTIME]
+
+  # Absolute backend base — server-side only (session route, serverFetch) and
+  # the rewrite-proxy destination. rewrites() runs at BUILD, so BUILD is required.
+  - variable: BACKEND_API_BASE_URL
     value: https://kr-backend--krfuelsgfivibuh.us-central1.hosted.app/api/v1
     availability: [BUILD, RUNTIME]
 
