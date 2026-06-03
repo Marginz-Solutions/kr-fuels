@@ -11,17 +11,17 @@ runConfig:
 env:
   # Backend API base — verify the exact backend host/region after it deploys.
   - variable: NEXT_PUBLIC_API_BASE_URL
-    value: https://kr-backend--krfuelsgfivibuh.us-central1.hosted.app/api/v1
+    value: https://kr-backend--krfuelsgfivibuh.asia-southeast1.hosted.app/api/v1
     availability: [BUILD, RUNTIME]
 
   # Public site origin (canonical URLs / sitemap) — set to this app's own URL.
   - variable: NEXT_PUBLIC_SITE_URL
-    value: https://kr-user--krfuelsgfivibuh.us-central1.hosted.app
+    value: https://kr-user--krfuelsgfivibuh.asia-southeast1.hosted.app
     availability: [BUILD, RUNTIME]
 
   # Admin app origin (the "Admin Login" link appends /login itself).
   - variable: NEXT_PUBLIC_ADMIN_URL
-    value: https://kr-admin--krfuelsgfivibuh.us-central1.hosted.app
+    value: https://kr-admin--krfuelsgfivibuh.asia-southeast1.hosted.app
     availability: [BUILD, RUNTIME]
 
   # Shared secret (Cloud Secret Manager) for the on-demand revalidation endpoint

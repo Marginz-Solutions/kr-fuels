@@ -1,33 +1,16 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-// Absolute backend API base used SERVER-SIDE only (the session route, server
-// components via serverFetch, and the rewrite proxy below). The browser never
-// talks to this host directly — see the rewrite + NEXT_PUBLIC_API_BASE_URL note.
-const BACKEND_API_BASE_URL =
-  process.env.BACKEND_API_BASE_URL ?? "http://localhost:4000/api/v1";
-
 const nextConfig: NextConfig = {
   // Pin the monorepo root so file tracing is correct in the pnpm workspace.
   turbopack: {
     root: path.resolve(__dirname, "..", ".."),
   },
-  // Same-origin reverse proxy for the backend API. In production the admin and
-  // backend live on different Firebase hostnames (kr-admin--… vs kr-backend--…),
-  // so the httpOnly `session` cookie — stored on the admin host — is never sent
-  // cross-host by the browser. Client code calls the RELATIVE base "/api/v1"
-  // (NEXT_PUBLIC_API_BASE_URL), which is same-origin: the cookie attaches, and
-  // Next forwards the request (cookie included) to the real backend here.
-  // Note: rewrites() is evaluated at BUILD time, so BACKEND_API_BASE_URL must be
-  // available at build (availability: [BUILD, RUNTIME] in apphosting.yaml).
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: `${BACKEND_API_BASE_URL}/:path*`,
-      },
-    ];
-  },
+  // NOTE: the same-origin "/api/v1" → backend proxy is NOT a Next rewrite. App
+  // Hosting routes by Host header and Next's external rewrite forwarded the
+  // admin's own Host, so every proxied call was rejected with a 401 HTML page.
+  // It now lives in app/api/v1/[...path]/route.ts, which fetch()es the absolute
+  // backend URL (correct Host) and forwards the session cookie. See that file.
   // @kr/shared is a TypeScript workspace package consumed as source.
   transpilePackages: ["@kr/shared"],
   // Auto-memoizes components/hooks so the heavy client pages (products,

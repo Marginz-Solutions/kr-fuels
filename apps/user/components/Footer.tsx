@@ -59,7 +59,7 @@ export function Footer({
             {QUICK_LINKS.map((l) => (
               <li key={l.href}><Link href={l.href} className="hover:text-lime">{l.label}</Link></li>
             ))}
-            <li><Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="hover:text-lime">Admin Login</Link></li>
+            <li><Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="hover:text-lime">Staff Login</Link></li>
           </ul>
         </div>
 
