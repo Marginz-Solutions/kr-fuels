@@ -8,6 +8,7 @@ import { useFuelPrices } from "@/components/providers/FuelPriceContext";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { displayName } from "@/lib/auth";
 import { API_BASE } from "@/lib/api-base";
+import { pingRevalidate } from "@/lib/revalidate";
 
 export default function DashboardClient({
     initialPrices,
@@ -43,6 +44,8 @@ export default function DashboardClient({
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body?.error || `Update failed (${res.status})`);
             }
+            // Fuel prices show on the public site — refresh it.
+            pingRevalidate();
             toast.success("Fuel prices updated");
         }
         catch(error: any) {

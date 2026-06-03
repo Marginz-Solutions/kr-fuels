@@ -1,4 +1,5 @@
 import { API_BASE } from "./api-base";
+import { pingRevalidate } from "./revalidate";
 
 export async function authedGet<T = any>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { credentials: "include", cache: "no-store" });
@@ -17,5 +18,7 @@ export async function authedSend<T = any>(path: string, method: string, body?: a
     const e = await res.json().catch(() => ({}));
     throw new Error(e.error || `Request failed (${res.status})`);
   }
+  // authedSend is only used for writes — refresh the public site on success.
+  pingRevalidate();
   return res.json();
 }

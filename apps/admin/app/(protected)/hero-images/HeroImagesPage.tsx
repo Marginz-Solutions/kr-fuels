@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { C } from "../../../constants/colors";
 import { card, btn, iconBtn } from "../../../styles/shared";
 import { API_BASE } from "@/lib/api-base";
+import { pingRevalidate } from "@/lib/revalidate";
 import type { HeroImage } from "@/types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -23,6 +24,8 @@ async function apiFetch(path: string, init?: RequestInit) {
     const e = await res.json().catch(() => ({}));
     throw new Error(e.error || `Request failed (${res.status})`);
   }
+  // Refresh the public site after a successful write (skip plain reads).
+  if ((init?.method ?? "GET").toUpperCase() !== "GET") pingRevalidate();
   return res.json();
 }
 

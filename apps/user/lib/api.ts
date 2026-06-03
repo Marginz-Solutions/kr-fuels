@@ -16,6 +16,9 @@ async function getJson<T>(path: string, fallback: T, revalidate = 60): Promise<T
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 5000)
   try {
+    // Time-based cache; the admin also purges this on-demand (POST /api/revalidate
+    // → revalidatePath) the instant content changes, so edits show immediately
+    // instead of waiting out the `revalidate` window.
     const res = await fetch(`${BASE}${path}`, { next: { revalidate }, signal: controller.signal });
     clearTimeout(timer)
     if (!res.ok) return fallback;

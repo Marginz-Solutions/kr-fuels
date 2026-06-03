@@ -1,4 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { pingRevalidate } from "../revalidate";
+
+// Methods that change data — a successful one should refresh the public site.
+const MUTATING = new Set(["post", "put", "patch", "delete"]);
 
 export const api= axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -6,7 +10,10 @@ export const api= axios.create({
 })
 
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    if (MUTATING.has((response.config.method ?? "").toLowerCase())) pingRevalidate();
+    return response;
+  },
   (error: AxiosError<{ error?: string; message?: string }>) => {
     const status  = error.response?.status
     const message =
