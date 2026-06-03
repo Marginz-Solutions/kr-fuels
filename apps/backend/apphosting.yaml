@@ -39,10 +39,10 @@ env:
 
   # CORS / cross-origin auth origins
   - variable: ADMIN_ORIGIN
-    value: https://kr-admin--krfuelsgfivibuh.asia-southeast1.hosted.app
+    value: https://kr-fuels-admin--krfuelsgfivibuh.asia-southeast1.hosted.app
     availability:
       - RUNTIME
   - variable: USER_ORIGIN
-    value: https://kr-user--krfuelsgfivibuh.asia-southeast1.hosted.app
+    value: https://kr-fuels-user--krfuelsgfivibuh.asia-southeast1.hosted.app
     availability:
       - RUNTIME

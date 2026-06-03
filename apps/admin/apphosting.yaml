@@ -20,13 +20,13 @@ env:
   # Absolute backend base — server-side only (session route, serverFetch) and
   # the rewrite-proxy destination. rewrites() runs at BUILD, so BUILD is required.
   - variable: BACKEND_API_BASE_URL
-    value: https://kr-backend--krfuelsgfivibuh.asia-southeast1.hosted.app/api/v1
+    value: https://kr-fuels-backend--krfuelsgfivibuh.asia-southeast1.hosted.app/api/v1
     availability: [BUILD, RUNTIME]
 
   # On-demand revalidation: after a content change the admin pings the public
   # site so it refreshes immediately. USER_ORIGIN = the public site origin.
   - variable: USER_ORIGIN
-    value: https://kr-user--krfuelsgfivibuh.asia-southeast1.hosted.app
+    value: https://kr-fuels-user--krfuelsgfivibuh.asia-southeast1.hosted.app
     availability: [RUNTIME]
   # Shared secret (Cloud Secret Manager) — MUST match the kr-user backend's value.
   # Create once and grant both backends access:
