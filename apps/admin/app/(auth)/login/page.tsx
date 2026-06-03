@@ -8,6 +8,7 @@ import {
     signOut,
     GoogleAuthProvider,
     signInWithPopup,
+    getAdditionalUserInfo,
     setPersistence,
     browserLocalPersistence,
     browserSessionPersistence,
@@ -107,8 +108,18 @@ function LoginForm() {
             // browsers that partition third-party storage whenever authDomain
             // (*.firebaseapp.com) differs from the app's origin. Popup keeps the
             // OAuth exchange in the same context and returns the result inline.
-            const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
-            const idToken = await user.getIdToken();
+            const result = await signInWithPopup(auth, new GoogleAuthProvider());
+
+            // We never auto-provision admins. Google sign-in CREATES an Auth
+            // account on first use, so if this account didn't already exist we
+            // delete the one Firebase just made and reject — only accounts
+            // already present in the Auth user list may sign in.
+            if (getAdditionalUserInfo(result)?.isNewUser) {
+                try { await result.user.delete(); } catch { /* signOut below clears it */ }
+                throw new Error("not-authorized");
+            }
+
+            const idToken = await result.user.getIdToken();
             await createSession(idToken);
             router.replace(next);
         } catch (err: any) {

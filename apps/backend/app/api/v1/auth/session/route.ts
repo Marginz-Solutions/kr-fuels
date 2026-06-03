@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase/admin";
+import { adminAuth } from "@/lib/firebase/admin";
 export const dynamic = "force-dynamic"
 
 // Shared cookie attributes. In production set COOKIE_DOMAIN to the parent
@@ -26,11 +26,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Verify the token, then check the users collection — only accounts that
-    // were explicitly registered in Firestore may obtain an admin session.
+    // Verify the token, then confirm the account still exists in the Firebase
+    // Authentication user list and is not disabled. Only accounts that were
+    // already provisioned in Auth may obtain an admin session — we never
+    // auto-create admins (new Google sign-ins are rejected on the client).
     const decoded = await adminAuth.verifyIdToken(idToken);
-    const userDoc = await adminDb.collection("users").doc(decoded.uid).get();
-    if (!userDoc.exists) {
+    try {
+      const userRecord = await adminAuth.getUser(decoded.uid);
+      if (userRecord.disabled) {
+        return NextResponse.json({ error: "not-authorized" }, { status: 403 });
+      }
+    } catch {
+      // No such user in the Auth list (e.g. deleted) → deny.
       return NextResponse.json({ error: "not-authorized" }, { status: 403 });
     }
 
