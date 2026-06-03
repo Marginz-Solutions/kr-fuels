@@ -21,7 +21,7 @@ brand constants (`lib/site.ts`) are hardcoded.
 ## Env
 
 `NEXT_PUBLIC_API_BASE_URL` (backend origin + `/api/v1`), `NEXT_PUBLIC_SITE_URL`
-(canonical/sitemap), `NEXT_PUBLIC_ADMIN_URL` (Staff Login target). See `.env.example`.
+(canonical/sitemap), `NEXT_PUBLIC_ADMIN_URL` (Admin Login target). See `.env.example`.
 
 ## SEO
 

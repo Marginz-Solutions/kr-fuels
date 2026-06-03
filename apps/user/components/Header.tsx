@@ -77,7 +77,7 @@ export function Header({
             <Link href={`mailto:${email}`} className="hidden text-white/85 hover:text-white lg:inline">{email}</Link>
             <Link href={`tel:${phone}`} className="text-white/85 hover:text-white">{phone}</Link>
             <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 font-bold text-white transition hover:bg-white/25">
-              Staff Login <ArrowUpRight size={13} />
+              Admin Login <ArrowUpRight size={13} />
             </Link>
           </div>
         </div>
@@ -178,7 +178,7 @@ export function Header({
               })}
               <button onClick={() => { setSavingsOpen(true); setOpen(false); }} className="mt-1 btn-dark justify-center">Savings Calculator</button>
               <button onClick={() => { setCarbonOpen(true); setOpen(false); }} className="btn-outline justify-center">Carbon Footprint</button>
-              <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="btn-outline justify-center">Staff Login</Link>
+              <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="btn-outline justify-center">Admin Login</Link>
             </div>
           </div>
         )}

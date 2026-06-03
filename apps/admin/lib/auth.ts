@@ -18,10 +18,10 @@ export async function logout() {
 
 // Display helpers for the logged-in user chrome.
 export function displayName(user: { displayName?: string | null; email?: string | null } | null): string {
-  if (!user) return "Staff";
+  if (!user) return "Admin";
   if (user.displayName?.trim()) return user.displayName.trim();
   if (user.email) return user.email.split("@")[0];
-  return "Staff";
+  return "Admin";
 }
 
 export function initials(user: { displayName?: string | null; email?: string | null } | null): string {

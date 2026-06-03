@@ -3,7 +3,7 @@ import Image from "next/image";
 import { C } from "@/constants/colors";
 
 export const metadata: Metadata = {
-  title: "Staff Login | KR Trans Fuels Admin",
+  title: "Admin Login | KR Trans Fuels Admin",
   description: "Sign in to the K.R Trans Fuels Private Limited admin panel.",
 };
 

@@ -19,7 +19,7 @@ env:
     value: https://kr-user--krfuelsgfivibuh.us-central1.hosted.app
     availability: [BUILD, RUNTIME]
 
-  # Admin app origin (the "Staff Login" link appends /login itself).
+  # Admin app origin (the "Admin Login" link appends /login itself).
   - variable: NEXT_PUBLIC_ADMIN_URL
     value: https://kr-admin--krfuelsgfivibuh.us-central1.hosted.app
     availability: [BUILD, RUNTIME]
