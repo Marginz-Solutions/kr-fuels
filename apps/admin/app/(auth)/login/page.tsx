@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     signInWithEmailAndPassword,
+    signOut,
     GoogleAuthProvider,
     signInWithPopup,
     setPersistence,
@@ -14,7 +15,6 @@ import {
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { API_BASE } from "@/lib/api-base";
 
 // Only follow same-origin, absolute-path redirects (guards against open redirects).
 function safeNext(next: string | null): string {
@@ -23,14 +23,16 @@ function safeNext(next: string | null): string {
 }
 
 async function createSession(idToken: string) {
-    const res = await fetch(`${API_BASE}/auth/session`, {
+    const res = await fetch("/api/auth/session", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
     });
     if (!res.ok) {
-        throw new Error("session-failed");
+        // Surface the backend's reason (e.g. "not-authorized") so the user sees
+        // a precise message; fall back to a generic session error otherwise.
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "session-failed");
     }
 }
 
@@ -56,9 +58,12 @@ function LoginForm() {
     const [loading, setLoading] = useState(false);
 
     // Already authenticated → go straight to the intended destination.
+    // Gate on !loading so an in-flight sign-in finishes createSession() (which
+    // sets the session cookie) before we navigate; otherwise onAuthStateChanged
+    // could fire first and the middleware would bounce us back for lack of a cookie.
     useEffect(() => {
-        if (!authLoading && user) router.replace(next);
-    }, [user, authLoading, next, router]);
+        if (!authLoading && !loading && user) router.replace(next);
+    }, [authLoading, loading, user, next, router]);
 
     async function applyPersistence() {
         // "Remember me" → keep the session after the tab/browser closes.
@@ -84,6 +89,10 @@ function LoginForm() {
             await createSession(idToken);
             router.replace(next);
         } catch (err: any) {
+            // Sign out of Firebase so the spinner clears and the error is visible.
+            // (If Firebase auth succeeded but session creation failed, `user` being
+            // set would otherwise hide the error behind an indefinite spinner.)
+            try { await signOut(auth); } catch { /* ignore */ }
             setError(getFriendlyError(err?.code ?? err?.message));
             setLoading(false);
         }
@@ -94,19 +103,26 @@ function LoginForm() {
         setLoading(true);
         try {
             await applyPersistence();
-            const provider = new GoogleAuthProvider();
-            const { user } = await signInWithPopup(auth, provider);
+            // Popup (not redirect): redirect-based sign-in silently fails in
+            // browsers that partition third-party storage whenever authDomain
+            // (*.firebaseapp.com) differs from the app's origin. Popup keeps the
+            // OAuth exchange in the same context and returns the result inline.
+            const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
             const idToken = await user.getIdToken();
             await createSession(idToken);
             router.replace(next);
         } catch (err: any) {
+            // Sign out so a half-finished login (Firebase auth OK but session
+            // creation failed) doesn't leave the spinner up and hide the error.
+            try { await signOut(auth); } catch { /* ignore */ }
             setError(getFriendlyError(err?.code ?? err?.message));
             setLoading(false);
         }
     }
 
-    // Verifying an existing session, or redirecting after success.
-    if (authLoading || user) return <CenteredSpinner />;
+    // Show spinner while: Firebase is initialising, a sign-in is in flight, or
+    // we're about to redirect after success.
+    if (authLoading || loading || user) return <CenteredSpinner />;
 
     return (
         <>
@@ -244,8 +260,10 @@ function getFriendlyError(code: string): string {
         "auth/user-disabled": "This account has been disabled.",
         "auth/popup-closed-by-user": "Google sign-in was cancelled.",
         "auth/popup-blocked": "Your browser blocked the sign-in popup. Please allow popups and retry.",
+        "auth/unauthorized-domain": "This domain is not authorised for Google sign-in. Contact your administrator.",
         "auth/network-request-failed": "Network error. Check your connection and try again.",
         "auth/api-key-not-valid": "Auth is misconfigured (invalid Firebase API key).",
+        "not-authorized": "This account isn't authorized for the admin panel. Contact your administrator.",
         "session-failed": "Signed in, but the session could not be saved. Please try again.",
     };
     return map[code] ?? "Something went wrong. Please try again.";

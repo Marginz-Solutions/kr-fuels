@@ -1,15 +1,11 @@
 import { signOut } from "firebase/auth";
 import { auth } from "./firebase/client";
-import { API_BASE } from "./api-base";
 
-// Full logout: delete the backend session cookie AND clear Firebase client
+// Full logout: delete the admin's session cookie and clear Firebase client
 // auth. Both steps are best-effort so a network blip never traps the user.
 export async function logout() {
   try {
-    await fetch(`${API_BASE}/auth/session`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    await fetch("/api/auth/session", { method: "DELETE" });
   } catch {
     /* ignore — still sign out locally */
   }

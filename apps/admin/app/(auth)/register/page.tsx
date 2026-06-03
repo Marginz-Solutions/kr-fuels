@@ -12,16 +12,14 @@ import {
 import { AlertCircle, ArrowLeft, Loader2, ShieldOff } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 import { setDocument } from "@/lib/firebase/firestore";
-import { API_BASE } from "@/lib/api-base";
 
 // Open self-registration is OFF by default for a public staff admin. Set
 // NEXT_PUBLIC_ALLOW_REGISTRATION=true only to bootstrap the first account.
 const REGISTRATION_ENABLED = process.env.NEXT_PUBLIC_ALLOW_REGISTRATION === "true";
 
 async function createSession(idToken: string) {
-  const res = await fetch(`${API_BASE}/auth/session`, {
+  const res = await fetch("/api/auth/session", {
     method: "POST",
-    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken }),
   });

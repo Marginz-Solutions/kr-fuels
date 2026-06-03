@@ -14,6 +14,17 @@ const baseCookie = {
   domain: COOKIE_DOMAIN,
 };
 
+// Allowlist: only these emails may obtain an admin session. Firebase Auth
+// auto-creates a user for any Google account on first sign-in, so verifying the
+// token alone is not enough — we gate on email here. Fail closed: an unset or
+// empty allowlist rejects everyone rather than silently letting anyone in.
+const ADMIN_ALLOWLIST = new Set(
+  (process.env.ADMIN_ALLOWLIST ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 export async function POST(req: NextRequest) {
   let idToken: string | undefined;
   try {
@@ -26,7 +37,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Verify the token and create a session cookie (14 days)
+    if (ADMIN_ALLOWLIST.size === 0) {
+      console.error("ADMIN_ALLOWLIST is not configured — rejecting all admin logins.");
+      return NextResponse.json({ error: "not-authorized" }, { status: 403 });
+    }
+
+    // Verify the token first so we can read the (Firebase-validated) email,
+    // then enforce the allowlist before minting a session cookie.
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    const email = decoded.email?.toLowerCase();
+    if (!email || !ADMIN_ALLOWLIST.has(email)) {
+      return NextResponse.json({ error: "not-authorized" }, { status: 403 });
+    }
+
+    // Create a session cookie (14 days)
     const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
