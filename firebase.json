@@ -1,4 +1,10 @@
 {
+  "firestore": [
+    {
+      "database": "kr-fuels",
+      "rules": "firestore.rules"
+    }
+  ],
   "apphosting": [
     {
       "backendId": "kr-backend",

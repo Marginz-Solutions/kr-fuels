@@ -20,7 +20,7 @@ env:
     availability:
       - RUNTIME
   - variable: FIREBASE_DB
-    value: test
+    value: kr-fuels
     availability:
       - RUNTIME
 

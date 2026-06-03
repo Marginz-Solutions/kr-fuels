@@ -55,7 +55,7 @@ env:
     value: "1:372539814104:web:0a721e217c5a01f0aa27ad"
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_DB
-    value: test
+    value: kr-fuels
     availability: [BUILD, RUNTIME]
 
   # Keep registration closed in production (open briefly only to seed the 1st admin).

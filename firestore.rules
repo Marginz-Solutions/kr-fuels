@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// KR Fuels production database (`kr-fuels`, asia-south1).
+// Almost all data is served through the backend Admin SDK, which BYPASSES these
+// rules. The only direct client-SDK access from the apps is a signed-in staff
+// member touching their own user document (registration + profile pages).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Staff may read/write only their own profile document.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Everything else: no direct client access. (Server uses Admin SDK.)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
