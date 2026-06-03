@@ -1,11 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Route, Plus, Trash2, Save, Loader2, Pencil } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { Route, Plus, Trash2, Save, Loader2, Pencil, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { C } from "../../../constants/colors";
 import { card, btn, inp, iconBtn } from "../../../styles/shared";
 import { Modal, FormField } from "../../../components/ui";
 import { authedGet, authedSend } from "@/lib/authed-fetch";
+import { API_BASE } from "@/lib/api-base";
 import type { JourneyMilestone } from "@/types";
 
 type Draft = { year: string; title: string; description: string; image: string; order: number };
@@ -20,6 +22,29 @@ export default function JourneyPage() {
   const [busy, setBusy] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<JourneyMilestone | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [imgUploading, setImgUploading] = useState(false);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadImage = async (file: File) => {
+    setImgUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/journey/upload`, {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
+      setForm((p) => ({ ...p, image: json.url }));
+      toast.success("Image uploaded");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setImgUploading(false);
+    }
+  };
 
   const load = () =>
     authedGet<{ message: JourneyMilestone[] }>("/journey")
@@ -104,7 +129,37 @@ export default function JourneyPage() {
         <FormField label="Year"><input style={inp()} value={form.year} onChange={(e) => setForm((p) => ({ ...p, year: e.target.value }))} placeholder="2007" /></FormField>
         <FormField label="Title"><input style={inp()} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Founded in Trichy" /></FormField>
         <FormField label="Description"><textarea style={{ ...inp(), minHeight: 80, resize: "vertical" }} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} /></FormField>
-        <FormField label="Image URL (optional)"><input style={inp()} value={form.image} onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))} placeholder="https://…" /></FormField>
+        <FormField label="Image (optional)">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* Preview */}
+            {form.image && (
+              <div style={{ position: "relative", width: "100%", height: 140, borderRadius: 10, overflow: "hidden", background: C.bg }}>
+                <Image src={form.image} alt="Milestone" fill unoptimized style={{ objectFit: "cover" }} />
+                <button
+                  type="button"
+                  title="Remove image"
+                  onClick={() => setForm((p) => ({ ...p, image: "" }))}
+                  style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff" }}
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+            {/* Upload button */}
+            <button
+              type="button"
+              disabled={imgUploading}
+              onClick={() => imgInputRef.current?.click()}
+              style={{ ...inp(), display: "flex", alignItems: "center", gap: 8, cursor: imgUploading ? "wait" : "pointer", color: C.tm, justifyContent: "center", fontSize: 13 }}
+            >
+              {imgUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              {imgUploading ? "Uploading…" : form.image ? "Replace image" : "Upload image"}
+            </button>
+            <input ref={imgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} />
+            {/* URL fallback */}
+            <input style={inp()} value={form.image} onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))} placeholder="Or paste image URL…" />
+          </div>
+        </FormField>
         <FormField label="Order"><input style={inp()} type="number" value={String(form.order)} onChange={(e) => setForm((p) => ({ ...p, order: Number(e.target.value) }))} /></FormField>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
           <button style={btn("ghost")} onClick={() => setOpen(false)}>Cancel</button>

@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   },
   // @kr/shared is a TypeScript workspace package consumed as source.
   transpilePackages: ["@kr/shared"],
+  // Auto-memoizes components/hooks so the heavy client pages (products,
+  // testimonials, seo-settings) stop re-rendering on unrelated state changes.
+  // Bails out safely on any component it can't compile. The
+  // babel-plugin-react-compiler devDependency provides the transform.
+  reactCompiler: true,
   images: {
     // Hosts whose images go through Next's optimizer. Firebase Storage serves
     // from both storage.googleapis.com and firebasestorage.googleapis.com.

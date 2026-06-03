@@ -2,6 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ScrollToTop } from "@/components/ScrollToTop";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { getContact, getStations, getSiteSettings, getFuelPrices, getCalculatorSettings } from "@/lib/api";
 import { BRAND, SITE_URL, formatAddress } from "@/lib/site";
 
@@ -72,10 +74,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
+        <ScrollToTop />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <Header stationCount={stations.total} hqCity={hqCity} email={email} phone={phone} prices={prices} calc={calc} />
         <main>{children}</main>
         <Footer contact={contact} site={site} />
+        <ScrollToTopButton />
       </body>
     </html>
   );

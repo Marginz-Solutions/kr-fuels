@@ -267,9 +267,9 @@ const DashboardPage: FC<DashboardPageProps> = ({
                                 <span className="font-bold text-[18px] text-brand">₹{prices[key]}</span>
                             </div>
                         ))}
-                        <div className="mt-3 py-2 px-3 bg-ink rounded-[10px]">
-                            <div className="text-[11px] text-white/60">Verified by</div>
-                            <div className="text-xs font-medium text-brand-light">teamkrfuels@gmail.com</div>
+                        <div className="mt-3 py-2 px-3 bg-brand rounded-[10px]">
+                            <div className="text-[11px] text-white/80">Verified by</div>
+                            <div className="text-xs font-medium text-white">teamkrfuels@gmail.com</div>
                         </div>
                     </div>
                 </TilesLayout>
@@ -381,7 +381,7 @@ const DashboardPage: FC<DashboardPageProps> = ({
                                             </Badge>
                                         </div>
                                         <div className="flex items-center gap-1.5 flex-wrap mt-[2px] mb-[6px]">
-                                            <span className="bg-brand text-white py-[1px] px-1.5 rounded text-[10px] font-semibold uppercase">
+                                            <span className="bg-ink text-white py-[1px] px-1.5 rounded text-[10px] font-semibold uppercase">
                                                 {s.category}
                                             </span>
                                             <span className="text-[11px] text-mutedfg">@ {s.stationName}</span>

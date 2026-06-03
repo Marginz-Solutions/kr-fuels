@@ -45,38 +45,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const {
-      product_name,
-      product_category,
-      description,
-      product_image,
-      gallery_images,
-      is_active,
-      external_url,
+      product_name, product_category, tagline, description,
+      product_image, gallery_images, sections, specs, slug,
+      cta_primary_text, cta_primary_href, cta_secondary_text, cta_secondary_href,
+      is_active, is_external, external_url,
     } = body;
 
-    // ── Validation ────────────────────────────────────────────────────────────
-    if (!product_name || typeof product_name !== "string" || !product_name.trim()) {
-      return NextResponse.json(
-        { success: false, error: "product_name is required" },
-        { status: 400 }
-      );
-    }
+    if (!product_name || typeof product_name !== "string" || !product_name.trim())
+      return NextResponse.json({ success: false, error: "product_name is required" }, { status: 400 });
+    if (!product_category || typeof product_category !== "string" || !product_category.trim())
+      return NextResponse.json({ success: false, error: "product_category is required" }, { status: 400 });
 
-    if (!product_category || typeof product_category !== "string" || !product_category.trim()) {
-      return NextResponse.json(
-        { success: false, error: "product_category is required" },
-        { status: 400 }
-      );
-    }
-
-    if (description && description.length > 500) {
-      return NextResponse.json(
-        { success: false, error: "description must be 500 characters or fewer" },
-        { status: 400 }
-      );
-    }
-
-    // ── Build document ────────────────────────────────────────────────────────
     const docRef = adminDb.collection("products").doc();
     const now = new Date().toISOString();
 
@@ -84,10 +63,19 @@ export async function POST(request: NextRequest) {
       id: docRef.id,
       product_name: product_name.trim(),
       product_category: product_category.trim(),
+      tagline: tagline?.trim() || "",
       description: description?.trim() || "",
       product_image: product_image || "",
       gallery_images: Array.isArray(gallery_images) ? gallery_images : [],
+      sections: Array.isArray(sections) ? sections : [],
+      specs: Array.isArray(specs) ? specs : [],
+      slug: slug?.trim() || "",
+      cta_primary_text: cta_primary_text?.trim() || "Find a station",
+      cta_primary_href: cta_primary_href?.trim() || "/stations",
+      cta_secondary_text: cta_secondary_text?.trim() || "Talk to our team",
+      cta_secondary_href: cta_secondary_href?.trim() || "/contact",
       is_active: is_active ?? true,
+      is_external: is_external ?? false,
       external_url: external_url || "",
       created_at: now,
       updated_at: now,

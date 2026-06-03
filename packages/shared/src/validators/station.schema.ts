@@ -42,6 +42,7 @@ export const StationPatchSchema = z.object({
   address: StationAddressSchema.optional(),
   status: z.string().optional(),
   location: StationLocationSchema.partial().optional(),
+  primaryImage: z.string().optional(),
 });
 
 export const StationRowSchema = z.object({

@@ -113,50 +113,44 @@ export function ProfileSkeleton() {
   );
 }
 
-// Category rail + header + filter row + responsive product card grid (products).
-// Mirrors the real page layout (full-height left rail + scrolling grid) so there
-// is no load→hydrate layout shift.
-export function ProductsGridSkeleton({ cards = 9 }: { cards?: number }) {
+// Full-width header + search/filter bar + product card grid.
+// Mirrors the real page layout (no sidebar) so there is no load→hydrate layout shift.
+export function ProductsGridSkeleton({ cards = 8 }: { cards?: number }) {
   return (
-    <div className="flex h-full min-h-0 animate-pulse bg-cream">
-      {/* Category rail — desktop only */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-line bg-white">
-        <div className="flex items-center gap-2 border-b border-line px-5 py-4">
-          <div className="h-4 w-4 rounded bg-line" />
-          <div className="h-4 w-24 rounded-full bg-line" />
-        </div>
-        <div className="flex-1 space-y-1.5 p-3">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="h-10 w-full rounded-xl bg-line" />
-          ))}
-        </div>
-      </aside>
-
-      {/* Main */}
-      <div className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-2">
-            <div className="h-5 w-40 rounded-full bg-line" />
-            <div className="h-2.5 w-52 max-w-full rounded-full bg-line" />
+    <div className="flex flex-col h-full min-h-0 animate-pulse bg-cream overflow-y-auto p-4 sm:p-6">
+      {/* Header */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-28 rounded-full bg-line" />
+            <div className="h-5 w-7 rounded-full bg-line" />
           </div>
-          <div className="h-9 w-32 rounded-full bg-line" />
+          <div className="h-3 w-36 rounded-full bg-line" />
         </div>
+        <div className="h-9 w-32 rounded-full bg-line" />
+      </div>
 
-        <div className="mb-5 h-14 w-full rounded-2xl bg-white border border-line" />
+      {/* Toolbar */}
+      <div className="mb-5 h-14 w-full rounded-2xl bg-white border border-line" />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: cards }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-line bg-white p-4">
-              <div className="h-52 w-full rounded-xl bg-line" />
-              <div className="mt-3.5 h-4 w-3/4 rounded-full bg-line" />
-              <div className="mt-2 h-2.5 w-1/2 rounded-full bg-line" />
-              <div className="mt-4 flex gap-2">
-                <div className="h-8 flex-1 rounded-lg bg-line" />
-                <div className="h-8 w-8 rounded-lg bg-line" />
+      {/* Grid — matches xl:grid-cols-4 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: cards }).map((_, i) => (
+          <div key={i} className="rounded-[20px] border border-line bg-white overflow-hidden">
+            {/* Image area */}
+            <div className="h-52 w-full bg-line" />
+            {/* Content */}
+            <div className="p-4 space-y-2.5">
+              <div className="h-4 w-3/4 rounded-full bg-line" />
+              <div className="h-3 w-full rounded-full bg-line" />
+              <div className="h-3 w-2/3 rounded-full bg-line" />
+              <div className="pt-2 flex items-center justify-between">
+                <div className="h-3 w-24 rounded-full bg-line" />
+                <div className="h-8 w-28 rounded-full bg-line" />
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

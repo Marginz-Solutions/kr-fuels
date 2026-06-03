@@ -16,6 +16,7 @@ import {
   Edit2,
   Eye,
   EyeOff,
+  Loader2,
   Plus,
   Search,
   Trash2,
@@ -38,6 +39,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Product, ProductFormDraft, PRODUCT_EMPTY_DRAFT, ProductCategory } from "@/types";
 import { API_BASE } from "@/lib/api-base";
+import { toast } from "sonner";
 import {
   fetchProducts,
   createProduct,
@@ -59,6 +61,102 @@ interface ProductsPageProps {
   initialProducts: Product[];
   initialCategories: ProductCategory[];
 }
+
+// ─── Product fallback images (mirrors user app lib/products.ts) ───────────────
+
+const PRODUCT_FALLBACK_IMAGES: Record<string, string> = {
+  "auto-lpg":     "/assets/products/auto-lpg.jpg",
+  "conversionkit":"/assets/products/conversionkit.jpg",
+  "lubricants":   "/assets/products/lubricants.jpg",
+  "tanks":        "/assets/products/tanks.jpg",
+};
+
+function resolveProductImage(product: { product_image?: string; product_category?: string; product_name?: string }): string {
+  if (product.product_image?.trim()) return product.product_image.trim();
+  const hay = `${product.product_category ?? ""} ${product.product_name ?? ""}`.toLowerCase();
+  if (hay.includes("lubric")) return PRODUCT_FALLBACK_IMAGES["lubricants"];
+  if (hay.includes("tank") || hay.includes("multivalve")) return PRODUCT_FALLBACK_IMAGES["tanks"];
+  if (hay.includes("conversion") || hay.includes("kit")) return PRODUCT_FALLBACK_IMAGES["conversionkit"];
+  if (hay.includes("auto") || hay.includes("lpg") || hay.includes("fuel")) return PRODUCT_FALLBACK_IMAGES["auto-lpg"];
+  return "";
+}
+
+// ─── Default categories + products (mirrors user app PRODUCT_CATALOG) ─────────
+
+const DEFAULT_PRODUCT_CATEGORIES = [
+  { name: "Auto LPG",            icon_label: "Zap"     },
+  { name: "Conversion Kits",     icon_label: "Wrench"  },
+  { name: "Lubricants",          icon_label: "Flask"   },
+  { name: "Tanks & Multivalves", icon_label: "Layers"  },
+];
+
+const DEFAULT_PRODUCTS: ProductFormDraft[] = [
+  {
+    product_name: "Auto LPG", product_category: "Auto LPG", slug: "auto-lpg",
+    tagline: "Eco-friendly automotive fuel — cleaner, safer and up to 40% cheaper than petrol.",
+    description: "Auto LPG (Liquefied Petroleum Gas) is a clean-burning, eco-friendly automotive fuel dispensed at every KR Trans Fuels station. It costs roughly 40% less than petrol, burns cleaner with significantly lower emissions, and refuels as quickly and easily as any other fuel — so you save money on every kilometre while driving greener.",
+    product_image: "", gallery_images: [], is_active: true, is_external: false, external_url: "",
+    cta_primary_text: "Find a station", cta_primary_href: "/stations",
+    cta_secondary_text: "Talk to our team", cta_secondary_href: "/contact",
+    sections: [
+      { heading: "Why switch to Auto LPG", items: ["Up to 40% cheaper to run than petrol","Far lower CO, hydrocarbon and NOx emissions","Cleaner combustion means longer engine life","Quick, easy refuelling across our growing station network","Dual-fuel freedom — switch between petrol and LPG on the move"] },
+      { heading: "How it works", items: ["A BIS-certified conversion kit lets your petrol vehicle run on LPG","A dedicated high-pressure tank stores the Auto LPG safely","Flip a change-over switch to run on petrol or LPG at any time","No loss of convenience — same range, same performance"] },
+    ],
+    specs: [
+      { name: "Availability", detail: "Dispensed at all KR Trans Fuels Auto LPG stations across Tamil Nadu" },
+      { name: "Typical saving", detail: "~40% lower running cost versus petrol" },
+    ],
+  },
+  {
+    product_name: "Lubricants", product_category: "Lubricants", slug: "lubricants",
+    tagline: "Specialised lubricants formulated for LPG / CNG engines.",
+    description: "Lubricant is a thin film, generally composed of 70% base oil and 30% additives, which helps to keep your engine running at its best. Our Veedol lubricants are formulated for LPG and CNG vehicles to protect the engine, reduce wear and extend its life.",
+    product_image: "", gallery_images: [], is_active: true, is_external: false, external_url: "https://krfuels.com/lubricants.php",
+    cta_primary_text: "Find a station", cta_primary_href: "/stations",
+    cta_secondary_text: "Talk to our team", cta_secondary_href: "/contact",
+    sections: [
+      { heading: "What a lubricant does", items: ["Lubricate — reduces friction, engine wear and fuel consumption","Clean — clears piston varnish and deposit sludge in the sump","Protect — guards against acid corrosion and rust","Cool & seal the engine"] },
+      { heading: "Benefits of quality lubricants", items: ["Better mileage","High performance","Less maintenance cost","Longer engine life","Engine runs smoothly"] },
+    ],
+    specs: [
+      { name: "Turbo Star 20W50 (LPG/CNG)", detail: "Available in 500 ml, 1 litre and 3 litre packs, plus loose dispensing" },
+      { name: "Take Off 2T", detail: "Dispensed loose through oil dispensers as per customer requirement at retail outlets" },
+    ],
+  },
+  {
+    product_name: "Conversion Kits", product_category: "Conversion Kits", slug: "conversionkit",
+    tagline: "BIS-certified Venturi & Sequential LPG conversion kits for two-, three- and four-wheelers.",
+    description: "An LPG conversion kit lets your vehicle run on LPG instead of petrol, cutting fuel costs and emissions.",
+    product_image: "", gallery_images: [], is_active: true, is_external: true, external_url: "https://www.vibuh.com/shop-grid.html",
+    cta_primary_text: "Find a station", cta_primary_href: "/stations",
+    cta_secondary_text: "Talk to our team", cta_secondary_href: "/contact",
+    sections: [], specs: [],
+  },
+  {
+    product_name: "Tanks & Multivalves", product_category: "Tanks & Multivalves", slug: "tanks",
+    tagline: "Safety-certified high-pressure tanks and multivalves built to automotive standards.",
+    description: "KR Trans Fuels supplies BIS / automotive-standard LPG tanks and multivalves for Auto LPG vehicles.",
+    product_image: "", gallery_images: [], is_active: true, is_external: true, external_url: "https://www.vibuh.com/shop-grid.html",
+    cta_primary_text: "Find a station", cta_primary_href: "/stations",
+    cta_secondary_text: "Talk to our team", cta_secondary_href: "/contact",
+    sections: [], specs: [],
+  },
+];
+
+const DefaultCategoriesPanel: FC<{ onSeed: () => void; seeding: boolean }> = ({ onSeed, seeding }) => (
+  <div className="mx-1 mb-3 rounded-xl border border-dashed border-line p-3 text-center">
+    <p className="text-xs text-mutedfg mb-1 font-medium">No products yet</p>
+    <p className="text-[11px] text-mutedfg mb-2">Categories are created automatically from your products.</p>
+    <button
+      onClick={onSeed}
+      disabled={seeding}
+      className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white hover:bg-brand/90 disabled:opacity-60 transition"
+    >
+      {seeding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+      Load defaults
+    </button>
+  </div>
+);
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 
@@ -143,26 +241,38 @@ const SkeletonCard: FC = () => (
 
 // ─── EmptyState ───────────────────────────────────────────────────────────────
 
-const EmptyState: FC<{ category: string; onAdd: () => void }> = ({
-  category,
-  onAdd,
-}) => (
+const EmptyState: FC<{
+  onAdd: () => void;
+  showSeedOption?: boolean;
+  onSeedDefaults?: () => void;
+  seeding?: boolean;
+}> = ({ onAdd, showSeedOption, onSeedDefaults, seeding }) => (
   <div className="col-span-full flex flex-col items-center justify-center py-20 px-6 text-center">
     <div className="w-16 h-16 rounded-2xl bg-cream border border-line flex items-center justify-center mb-4 shadow-sm">
       <FolderOpen className="w-7 h-7 text-mutedfg" />
     </div>
-    <h3 className="text-sm font-semibold text-ink mb-1">
-      No products in {category}
-    </h3>
+    <h3 className="text-sm font-semibold text-ink mb-1">No products yet</h3>
     <p className="text-xs text-mutedfg mb-5 max-w-xs">
-      Add your first product to this category. It will appear here once created.
+      Add your first product or load the default catalog to get started.
     </p>
-    <button
-      onClick={onAdd}
-      className="inline-flex items-center gap-1.5 bg-brand hover:bg-brand-dark text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition"
-    >
-      <Plus className="w-3.5 h-3.5" /> Add Product
-    </button>
+    <div className="flex flex-col items-center gap-3">
+      <button
+        onClick={onAdd}
+        className="inline-flex items-center gap-1.5 bg-brand hover:bg-brand-dark text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition"
+      >
+        <Plus className="w-3.5 h-3.5" /> Add Product
+      </button>
+      {showSeedOption && onSeedDefaults && (
+        <button
+          onClick={onSeedDefaults}
+          disabled={seeding}
+          className="inline-flex items-center gap-1.5 border border-line bg-white hover:border-brand hover:text-brand text-mutedfg text-xs font-semibold px-4 py-2 rounded-full transition disabled:opacity-60"
+        >
+          {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderOpen className="w-3.5 h-3.5" />}
+          Load default products
+        </button>
+      )}
+    </div>
   </div>
 );
 
@@ -486,16 +596,16 @@ interface ProductModalProps {
 const ProductModal: FC<ProductModalProps> = ({
   open, editing, form, categories, onChange, onSave, onClose, isSaving,
 }) => {
-  const [previewUrl, setPreviewUrl] = useState<string>(form.product_image ?? "");
+  const [previewUrl, setPreviewUrl] = useState<string>(resolveProductImage(form) ?? "");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<{ product_name?: string; product_category?: string }>({});
 
   useEffect(() => {
-    setPreviewUrl(form.product_image ?? "");
+    setPreviewUrl(resolveProductImage(form) ?? "");
     setPendingFile(null);
     setErrors({});
-  }, [open, form.product_image]);
+  }, [open, form.product_image, form.product_category, form.product_name]);
 
   if (!open) return null;
 
@@ -580,6 +690,42 @@ const ProductModal: FC<ProductModalProps> = ({
         {/* Body */}
         <div className="overflow-y-auto flex-1 px-6 py-5 flex flex-col gap-4">
 
+          {/* Product type toggle */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">Product type</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => onChange({ is_external: false })}
+                className={[
+                  "rounded-[10px] border py-2.5 text-[13px] font-medium flex items-center justify-center gap-2 transition",
+                  !form.is_external
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-cream text-mutedfg hover:border-brand/40",
+                ].join(" ")}
+              >
+                <Package className="w-4 h-4" /> Content page
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange({ is_external: true })}
+                className={[
+                  "rounded-[10px] border py-2.5 text-[13px] font-medium flex items-center justify-center gap-2 transition",
+                  form.is_external
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-cream text-mutedfg hover:border-brand/40",
+                ].join(" ")}
+              >
+                <ArrowRight className="w-4 h-4" /> External redirect
+              </button>
+            </div>
+            <p className="text-[11px] text-mutedfg">
+              {form.is_external
+                ? "Clicking this product on the website opens an external URL — no internal page."
+                : "This product has its own page on the website with description and images."}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Product name */}
             <div className="flex flex-col gap-1.5">
@@ -603,63 +749,233 @@ const ProductModal: FC<ProductModalProps> = ({
               <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
                 Category *
               </label>
-              <select
-                className={[inputCls, "appearance-none cursor-pointer", errors.product_category ? errorInputCls : ""].join(" ")}
+              <input
+                list="product-categories-list"
+                className={[inputCls, errors.product_category ? errorInputCls : ""].join(" ")}
                 value={form.product_category}
                 onChange={field("product_category")}
-              >
-                <option value="">— Select category —</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                placeholder="Type or pick a category…"
+                autoComplete="off"
+              />
+              <datalist id="product-categories-list">
+                {categories.map((c: string) => (
+                  <option key={c} value={c} />
                 ))}
-              </select>
+              </datalist>
               {errors.product_category && (
                 <p className="text-[12px] text-red-500">{errors.product_category}</p>
+              )}
+              {form.product_category && !categories.includes(form.product_category) && (
+                <p className="text-[11px] text-amber-600">New category — will appear in the sidebar once saved.</p>
               )}
             </div>
           </div>
 
-          {/* Description */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
-              Description
-            </label>
-            <textarea
-              className="w-full rounded-[10px] border border-line bg-cream px-3 py-2.5 text-[13px] text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition resize-vertical min-h-[88px] leading-relaxed"
-              maxLength={500}
-              value={form.description}
-              onChange={field("description")}
-              placeholder="Short product description…"
-            />
-            <p className="text-[11px] text-mutedfg text-right">{form.description.length} / 500</p>
-          </div>
+          {/* Redirect URL — only for external products */}
+          {form.is_external && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
+                Redirect URL *
+              </label>
+              <input
+                className="w-full rounded-[10px] border border-brand bg-brand/5 px-3 py-2.5 text-[13px] text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition"
+                value={form.external_url ?? ""}
+                onChange={field("external_url")}
+                placeholder="https://vibhu.com/shop-grid.html"
+              />
+              <p className="text-[11px] text-mutedfg">Website visitors clicking this product will be sent directly to this URL.</p>
+            </div>
+          )}
 
-          {/* External link (website product card → vibhu.com section) */}
+          {/* Description — only for content products */}
+          {!form.is_external && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
+                Description
+              </label>
+              <textarea
+                className="w-full rounded-[10px] border border-line bg-cream px-3 py-2.5 text-[13px] text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition resize-vertical min-h-[88px] leading-relaxed"
+                maxLength={500}
+                value={form.description}
+                onChange={field("description")}
+                placeholder="Short product description…"
+              />
+              <p className="text-[11px] text-mutedfg text-right">{form.description.length} / 500</p>
+            </div>
+          )}
+
+          {/* Buy / reference link — only for content products */}
+          {!form.is_external && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
+                Buy / reference link (optional)
+              </label>
+              <input
+                className="w-full rounded-[10px] border border-line bg-cream px-3 py-2.5 text-[13px] text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition"
+                value={form.external_url ?? ""}
+                onChange={field("external_url")}
+                placeholder="https://vibhu.com/… (shown as a button on the product page)"
+              />
+            </div>
+          )}
+
+          {/* Image upload — only for content products */}
+          {!form.is_external && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
+                Product image
+              </label>
+              <DragDropUpload onFile={handleFile} preview={previewUrl || undefined} />
+              {uploading && (
+                <p className="text-[12px] text-brand flex items-center gap-1.5 mt-1">
+                  <span className="w-3 h-3 border-2 border-brand border-t-transparent rounded-full animate-spin inline-block" />
+                  Uploading image…
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Slug / page route */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
-              External link (website)
+              Page slug (URL)
             </label>
             <input
-              className="w-full rounded-[10px] border border-line bg-cream px-3 py-2.5 text-[13px] text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition"
-              value={form.external_url ?? ""}
-              onChange={field("external_url")}
-              placeholder="https://vibhu.com/… (opens from the website product card)"
+              className={inputCls}
+              value={form.slug ?? ""}
+              onChange={field("slug")}
+              placeholder="auto-lpg  /  lubricants  /  conversionkit  /  tanks  (or custom)"
             />
+            <p className="text-[11px] text-mutedfg">
+              Content products: accessible at <code className="font-mono">/products/[slug]</code>. Use <code className="font-mono">auto-lpg</code>, <code className="font-mono">lubricants</code>, <code className="font-mono">conversionkit</code> or <code className="font-mono">tanks</code> to map to existing routes.
+            </p>
           </div>
 
-          {/* Image upload */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
-              Product image
-            </label>
-            <DragDropUpload onFile={handleFile} preview={previewUrl || undefined} />
-            {uploading && (
-              <p className="text-[12px] text-brand flex items-center gap-1.5 mt-1">
-                <span className="w-3 h-3 border-2 border-brand border-t-transparent rounded-full animate-spin inline-block" />
-                Uploading image…
-              </p>
-            )}
-          </div>
+          {/* CTA buttons — only for content products */}
+          {!form.is_external && (
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">CTA buttons</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input className={inputCls} value={form.cta_primary_text ?? ""} onChange={field("cta_primary_text")} placeholder="Primary text" />
+                <input className={inputCls} value={form.cta_primary_href ?? ""} onChange={field("cta_primary_href")} placeholder="/stations" />
+                <input className={inputCls} value={form.cta_secondary_text ?? ""} onChange={field("cta_secondary_text")} placeholder="Secondary text" />
+                <input className={inputCls} value={form.cta_secondary_href ?? ""} onChange={field("cta_secondary_href")} placeholder="/contact" />
+              </div>
+            </div>
+          )}
+
+          {/* Content sections — only for content products */}
+          {!form.is_external && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">Feature sections</label>
+                <button
+                  type="button"
+                  onClick={() => onChange({ sections: [...(form.sections ?? []), { heading: "", items: [""] }] })}
+                  className="text-[11px] text-brand font-medium hover:underline flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Add section
+                </button>
+              </div>
+              {(form.sections ?? []).map((sec, si) => (
+                <div key={si} className="rounded-[10px] border border-line bg-cream/50 p-3 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="flex-1 h-[34px] rounded-lg border border-line bg-white px-3 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                      value={sec.heading}
+                      onChange={(e) => {
+                        const s = [...(form.sections ?? [])];
+                        s[si] = { ...s[si], heading: e.target.value };
+                        onChange({ sections: s });
+                      }}
+                      placeholder="Section heading"
+                    />
+                    <button type="button" onClick={() => onChange({ sections: (form.sections ?? []).filter((_, i) => i !== si) })} className="text-mutedfg hover:text-red-500 transition">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {sec.items.map((item, ii) => (
+                    <div key={ii} className="flex items-center gap-2 pl-2">
+                      <span className="text-brand shrink-0">•</span>
+                      <input
+                        className="flex-1 h-[30px] rounded-lg border border-line bg-white px-2.5 text-[12px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                        value={item}
+                        onChange={(e) => {
+                          const s = [...(form.sections ?? [])];
+                          const items = [...s[si].items];
+                          items[ii] = e.target.value;
+                          s[si] = { ...s[si], items };
+                          onChange({ sections: s });
+                        }}
+                        placeholder="Bullet point"
+                      />
+                      <button type="button" onClick={() => {
+                        const s = [...(form.sections ?? [])];
+                        s[si] = { ...s[si], items: s[si].items.filter((_, i) => i !== ii) };
+                        onChange({ sections: s });
+                      }} className="text-mutedfg hover:text-red-500 transition shrink-0">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const s = [...(form.sections ?? [])];
+                      s[si] = { ...s[si], items: [...s[si].items, ""] };
+                      onChange({ sections: s });
+                    }}
+                    className="text-[11px] text-brand/70 hover:text-brand ml-4 text-left flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add bullet
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Specs — only for content products */}
+          {!form.is_external && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">Specifications</label>
+                <button
+                  type="button"
+                  onClick={() => onChange({ specs: [...(form.specs ?? []), { name: "", detail: "" }] })}
+                  className="text-[11px] text-brand font-medium hover:underline flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Add spec
+                </button>
+              </div>
+              {(form.specs ?? []).map((spec, si) => (
+                <div key={si} className="flex items-center gap-2">
+                  <input
+                    className="w-[38%] h-[34px] rounded-lg border border-line bg-cream px-2.5 text-[12px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                    value={spec.name}
+                    onChange={(e) => {
+                      const s = [...(form.specs ?? [])];
+                      s[si] = { ...s[si], name: e.target.value };
+                      onChange({ specs: s });
+                    }}
+                    placeholder="Name"
+                  />
+                  <input
+                    className="flex-1 h-[34px] rounded-lg border border-line bg-cream px-2.5 text-[12px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                    value={spec.detail}
+                    onChange={(e) => {
+                      const s = [...(form.specs ?? [])];
+                      s[si] = { ...s[si], detail: e.target.value };
+                      onChange({ specs: s });
+                    }}
+                    placeholder="Detail"
+                  />
+                  <button type="button" onClick={() => onChange({ specs: (form.specs ?? []).filter((_, i) => i !== si) })} className="text-mutedfg hover:text-red-500 transition shrink-0">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Visibility */}
           <div className="flex flex-col gap-1.5">
@@ -733,12 +1049,18 @@ const ProductDetailModal: FC<{
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
         <div className="relative">
-          {product.product_image ? (
+          {product.is_external ? (
+            <div className="w-full h-48 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-brand/10 to-brand/5">
+              <ArrowRight className="w-10 h-10 text-brand/50" />
+              <span className="text-xs font-semibold text-brand/60 uppercase tracking-wider">Redirects to external site</span>
+            </div>
+          ) : resolveProductImage(product) ? (
             <Image
-              src={product.product_image}
+              src={resolveProductImage(product)}
               alt={product.product_name}
               width={512}
               height={192}
+              unoptimized
               sizes="(max-width: 512px) 100vw, 512px"
               className="w-full h-48 object-cover"
             />
@@ -772,7 +1094,16 @@ const ProductDetailModal: FC<{
             </button>
           </div>
 
-          {product.description && (
+          {product.is_external && product.external_url && (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Redirect URL</p>
+              <a href={product.external_url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-brand break-all hover:underline flex items-center gap-1">
+                {product.external_url} <ArrowRight className="w-3 h-3 shrink-0" />
+              </a>
+            </div>
+          )}
+
+          {!product.is_external && product.description && (
             <p className="text-sm text-mutedfg leading-relaxed mb-5">
               {product.description}
             </p>
@@ -797,7 +1128,7 @@ const ProductDetailModal: FC<{
               <p className="text-xs font-semibold text-mutedfg uppercase tracking-wider mb-3">Gallery</p>
               <div className="grid grid-cols-3 gap-2">
                 {product.gallery_images!.map((img, i) => (
-                  <Image key={i} src={img} alt={`Gallery ${i + 1}`} width={120} height={80} sizes="120px" className="w-full h-20 object-cover rounded-xl border border-line" />
+                  <Image key={i} src={img} alt={`Gallery ${i + 1}`} width={120} height={80} unoptimized sizes="120px" className="w-full h-20 object-cover rounded-xl border border-line" />
                 ))}
               </div>
             </div>
@@ -829,13 +1160,22 @@ const ProductCard: FC<{
 }> = ({ product, onView, onEdit, onDelete, onToggle }) => (
   <div className="group relative rounded-[20px] border border-line/70 bg-white overflow-hidden transition-all duration-300 hover:-translate-y-1">
 
-    {/* Image */}
+    {/* Image / Redirect */}
     <div className="relative h-52 overflow-hidden cursor-pointer" onClick={onView}>
-      {product.product_image ? (
+      {product.is_external ? (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-brand/10 to-brand/5">
+          <ArrowRight className="w-8 h-8 text-brand/60" />
+          <span className="text-[11px] font-semibold text-brand/70 uppercase tracking-wider">External redirect</span>
+          {product.external_url && (
+            <span className="text-[10px] text-mutedfg max-w-[180px] truncate px-2">{product.external_url}</span>
+          )}
+        </div>
+      ) : resolveProductImage(product) ? (
         <Image
-          src={product.product_image}
+          src={resolveProductImage(product)}
           alt={product.product_name}
           fill
+          unoptimized
           sizes="(max-width: 768px) 100vw, 320px"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -843,7 +1183,7 @@ const ProductCard: FC<{
         <ProductPlaceholder name={product.product_name} size="lg" />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent pointer-events-none" />
+      {!product.is_external && <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent pointer-events-none" />}
 
       {/* Status */}
       <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
@@ -853,6 +1193,11 @@ const ProductCard: FC<{
       }`}>
         {product.is_active ? "● Active" : "○ Hidden"}
       </div>
+      {product.is_external && (
+        <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+          Redirect
+        </div>
+      )}
 
       {/* Floating actions — visible on hover */}
       <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200">
@@ -926,17 +1271,50 @@ const ProductCard: FC<{
 const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategories }) => {
   const queryClient = useQueryClient();
 
-  const [activeCategory, setActiveCategory] = useState<string>(initialCategories[0]?.name ?? "");
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductFormDraft>(PRODUCT_EMPTY_DRAFT);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
-  const [addCatModalOpen, setAddCatModalOpen] = useState(false);
+  const [seedingCategories, setSeedingCategories] = useState(false);
+
+  // ── Seed default categories ────────────────────────────────────────────────
+  const handleSeedCategories = useCallback(async () => {
+    setSeedingCategories(true);
+    try {
+      await Promise.allSettled(
+        DEFAULT_PRODUCT_CATEGORIES.map((c) => createCategory(c.name, c.icon_label))
+      );
+      queryClient.invalidateQueries({ queryKey: ["product_categories"] });
+
+      const existing = await fetchProducts();
+      if (existing.length === 0) {
+        await Promise.all(DEFAULT_PRODUCTS.map((p) => createProduct(p)));
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      }
+
+      toast.success("Default categories and products loaded");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to load defaults");
+    } finally {
+      setSeedingCategories(false);
+    }
+  }, [queryClient]);
+
+  const handleSeedProducts = useCallback(async () => {
+    setSeedingCategories(true);
+    try {
+      await Promise.all(DEFAULT_PRODUCTS.map((p) => createProduct(p)));
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Default products created — you can now edit them");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to create default products");
+    } finally {
+      setSeedingCategories(false);
+    }
+  }, [queryClient]);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const { data: list = [] } = useQuery({
@@ -945,20 +1323,27 @@ const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategorie
     initialData: initialProducts, // ← server data shown instantly, refetch happens in background
   });
 
+  // Keep fetching product_categories for icon metadata only — not for the category list.
   const { data: fetchedCategories = [] } = useQuery({
     queryKey: ["product_categories"],
     queryFn: fetchCategories,
-    initialData: initialCategories, // ← same for categories
+    initialData: initialCategories,
   });
 
-  const categories: CategoryItem[] = useMemo(
-    () =>
-      fetchedCategories.map((c) => ({
-        name: c.name,
-        icon: ICON_MAP[c.icon_label] ?? Package,
-      })),
-    [fetchedCategories]
-  );
+  // Derive categories directly from products: unique product_category values in insertion order.
+  // This way categories appear automatically when products are added — no separate "Add Category" step.
+  const categories: CategoryItem[] = useMemo(() => {
+    const seen = new Set<string>();
+    const result: CategoryItem[] = [];
+    list.forEach((p) => {
+      if (p.product_category && !seen.has(p.product_category)) {
+        seen.add(p.product_category);
+        const meta = fetchedCategories.find((c) => c.name === p.product_category);
+        result.push({ name: p.product_category, icon: ICON_MAP[meta?.icon_label ?? ""] ?? Package });
+      }
+    });
+    return result;
+  }, [list, fetchedCategories]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const createMutation = useMutation({
@@ -1075,10 +1460,8 @@ const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategorie
   const createCategoryMutation = useMutation({
     mutationFn: ({ name, icon_label }: { name: string; icon_label: string }) =>
       createCategory(name, icon_label),
-    onSuccess: (newCat) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product_categories"] });
-      setActiveCategory(newCat.name);
-      setAddCatModalOpen(false);
     },
     onError: (error: Error) => console.error("Create category failed:", error.message),
   });
@@ -1099,18 +1482,18 @@ const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategorie
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return list.filter((p) => {
-      const matchCat = p.product_category === activeCategory;
       const matchSearch =
         !q ||
         p.product_name.toLowerCase().includes(q) ||
+        p.product_category.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q);
       const matchStatus =
         filterStatus === "all" ||
         (filterStatus === "active" && p.is_active) ||
         (filterStatus === "inactive" && !p.is_active);
-      return matchCat && matchSearch && matchStatus;
+      return matchSearch && matchStatus;
     });
-  }, [list, activeCategory, search, filterStatus]);
+  }, [list, search, filterStatus]);
 
   const stats = useMemo(
     () => ({ total: list.length, active: list.filter((p) => p.is_active).length }),
@@ -1120,20 +1503,28 @@ const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategorie
   // ── Handlers ───────────────────────────────────────────────────────────────
   const openAdd = useCallback(() => {
     setEditing(null);
-    setForm({ ...PRODUCT_EMPTY_DRAFT, product_category: activeCategory });
+    setForm(PRODUCT_EMPTY_DRAFT);
     setModalOpen(true);
-    setSidebarOpen(false);
-  }, [activeCategory]);
+  }, []);
 
   const openEdit = useCallback((p: Product) => {
     setEditing(p);
     setForm({
       product_name: p.product_name,
       product_category: p.product_category,
+      tagline: (p as any).tagline ?? "",
       description: p.description,
       product_image: p.product_image,
       gallery_images: p.gallery_images ?? [],
+      sections: (p as any).sections ?? [],
+      specs: (p as any).specs ?? [],
+      slug: (p as any).slug ?? "",
+      cta_primary_text: (p as any).cta_primary_text ?? "Find a station",
+      cta_primary_href: (p as any).cta_primary_href ?? "/stations",
+      cta_secondary_text: (p as any).cta_secondary_text ?? "Talk to our team",
+      cta_secondary_href: (p as any).cta_secondary_href ?? "/contact",
       is_active: p.is_active,
+      is_external: p.is_external ?? false,
       external_url: p.external_url ?? "",
     });
     setViewProduct(null);
@@ -1161,171 +1552,86 @@ const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategorie
     [editing, form, createMutation, updateMutation]
   );
 
-  const selectCategory = (cat: string) => {
-    setActiveCategory(cat);
-    setSidebarOpen(false);
-    setSearch("");
-    setFilterStatus("all");
-  };
-
-  const handleAddCategory = useCallback(
-    (cat: { name: string; icon_label: string }) => {
-      createCategoryMutation.mutate(cat);
-    },
-    [createCategoryMutation]
-  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full min-h-0 bg-cream">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-[110] bg-black/30 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <div className="flex flex-1 min-h-0">
-        {/* Category rail */}
-        <aside
-          className={[
-            "fixed top-0 left-0 h-full z-[120] flex flex-col bg-white border-r border-line shadow-xl transition-transform duration-300",
-            "w-64 lg:static lg:h-full lg:shrink-0 lg:translate-x-0 lg:shadow-none lg:z-auto",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          ].join(" ")}
+    <div className="flex flex-col h-full min-h-0 bg-cream overflow-y-auto p-4 sm:p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-ink">Products</h1>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand text-white">
+              {stats.total}
+            </span>
+          </div>
+          <p className="text-sm text-mutedfg mt-0.5">
+            {stats.active} active · {stats.total} total
+          </p>
+        </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-sm transition self-start sm:self-auto"
         >
-          <div className="flex items-center justify-between px-5 py-4 border-b border-line">
-            <div className="flex items-center gap-2">
-              <LayoutGrid className="w-4 h-4 text-brand" />
-              <span className="text-sm font-bold text-ink">Categories</span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-7 h-7 rounded-lg flex items-center justify-center text-mutedfg hover:bg-line"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <nav className="flex-1 overflow-y-auto py-3 px-3">
-            {categories.map(({ name, icon: Icon }) => {
-              const isActive = activeCategory === name;
-              const count = categoryCounts[name] ?? 0;
-              return (
-                <button
-                  key={name}
-                  onClick={() => selectCategory(name)}
-                  className={[
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all",
-                    isActive ? "bg-brand text-white" : "text-mutedfg hover:bg-cream",
-                  ].join(" ")}
-                >
-                  <span className={["w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors", isActive ? "bg-white/20" : "bg-line"].join(" ")}>
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-mutedfg"}`} />
-                  </span>
-                  <span className="flex-1 text-left truncate">{name}</span>
-                  <span className={["text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center", isActive ? "bg-white/20 text-white" : "bg-line text-mutedfg"].join(" ")}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="p-3 border-t border-line">
-            <button
-              onClick={() => setAddCatModalOpen(true)}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-line py-2.5 text-xs font-medium text-mutedfg hover:border-brand hover:text-brand hover:bg-brand/5 transition"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Category
-            </button>
-          </div>
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 min-w-0 h-full min-h-0 overflow-y-auto p-4 sm:p-6 lg:pl-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl border border-line text-mutedfg hover:bg-cream transition"
-              >
-                <Menu className="w-4 h-4" />
-              </button>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-ink">{activeCategory}</h1>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand text-white">
-                    {categoryCounts[activeCategory] ?? 0}
-                  </span>
-                </div>
-                <p className="text-sm text-mutedfg mt-0.5">
-                  {stats.active} active · {stats.total} total across all categories
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={openAdd}
-              className="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-sm transition self-start sm:self-auto"
-            >
-              <Plus className="w-4 h-4" /> Add Product
-            </button>
-          </div>
-
-          {/* Toolbar */}
-          <div className="bg-white rounded-2xl border border-line shadow-[0_2px_18px_rgba(26,46,41,0.05)] overflow-hidden mb-5">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3.5">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-mutedfg pointer-events-none" />
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search products…"
-                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-line bg-cream text-sm text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition"
-                />
-              </div>
-              <div className="flex rounded-xl border border-line overflow-hidden text-sm font-medium shrink-0">
-                {(["all", "active", "inactive"] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilterStatus(f)}
-                    className={["px-3.5 py-2 capitalize transition", filterStatus === f ? "bg-brand text-white" : "bg-white text-mutedfg hover:bg-cream"].join(" ")}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.length === 0 ? (
-              <EmptyState category={activeCategory} onAdd={openAdd} />
-            ) : (
-              filtered.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  onView={() => setViewProduct(p)}
-                  onEdit={() => openEdit(p)}
-                  onDelete={() => setDeleteTarget(p)}
-                  onToggle={() => toggleMutation.mutate(p.id)}
-                />
-              ))
-            )}
-          </div>
-
-          {filtered.length > 0 && (
-            <p className="text-xs text-mutedfg mt-5 text-center">
-              Showing {filtered.length} of{" "}
-              {list.filter((p) => p.product_category === activeCategory).length} products in{" "}
-              {activeCategory}
-            </p>
-          )}
-        </main>
+          <Plus className="w-4 h-4" /> Add Product
+        </button>
       </div>
+
+      {/* Toolbar */}
+      <div className="bg-white rounded-2xl border border-line shadow-[0_2px_18px_rgba(26,46,41,0.05)] overflow-hidden mb-5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3.5">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-mutedfg pointer-events-none" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products…"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-line bg-cream text-sm text-ink placeholder-mutedfg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition"
+            />
+          </div>
+          <div className="flex rounded-xl border border-line overflow-hidden text-sm font-medium shrink-0">
+            {(["all", "active", "inactive"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilterStatus(f)}
+                className={["px-3.5 py-2 capitalize transition", filterStatus === f ? "bg-brand text-white" : "bg-white text-mutedfg hover:bg-cream"].join(" ")}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filtered.length === 0 ? (
+          <EmptyState
+            onAdd={openAdd}
+            showSeedOption={list.length === 0}
+            onSeedDefaults={handleSeedProducts}
+            seeding={seedingCategories}
+          />
+        ) : (
+          filtered.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              onView={() => setViewProduct(p)}
+              onEdit={() => openEdit(p)}
+              onDelete={() => setDeleteTarget(p)}
+              onToggle={() => toggleMutation.mutate(p.id)}
+            />
+          ))
+        )}
+      </div>
+
+      {filtered.length > 0 && (
+        <p className="text-xs text-mutedfg mt-5 text-center">
+          Showing {filtered.length} of {list.length} products
+        </p>
+      )}
 
       <ProductDetailModal
         product={viewProduct}
@@ -1342,14 +1648,6 @@ const ProductsPage: FC<ProductsPageProps> = ({ initialProducts, initialCategorie
         onSave={save}
         onClose={() => setModalOpen(false)}
         isSaving={isSaving}
-      />
-
-      <AddCategoryModal
-        open={addCatModalOpen}
-        existingNames={categories.map((c) => c.name)}
-        onAdd={handleAddCategory}
-        onClose={() => !createCategoryMutation.isPending && setAddCatModalOpen(false)}
-        isSaving={createCategoryMutation.isPending}
       />
 
       {deleteTarget && (

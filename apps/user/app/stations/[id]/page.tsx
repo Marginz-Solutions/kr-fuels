@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import { MapPin, Clock, Navigation, Phone, User, ArrowLeft } from "lucide-react";
 import { getStation } from "@/lib/api";
 import { STATIONS_FALLBACK } from "@/lib/fallbacks";
@@ -39,6 +39,8 @@ export default async function StationDetailPage({ params }: Props) {
   const directions = s.mapLink || (lat && lng
     ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.stationName} ${s.district}`)}`);
+  const mapQuery = lat && lng ? `${lat},${lng}` : `${s.stationName ?? ""} ${s.district ?? ""}`;
+  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`;
   const features = Array.from(new Set([...(s.amenities ?? []), ...(s.features ?? [])].map(String)));
 
   return (
@@ -47,21 +49,30 @@ export default async function StationDetailPage({ params }: Props) {
         <ArrowLeft size={15} /> All stations
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
         <div>
-          {s.images && s.images.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-              {s.images.map((img: string, i: number) => (
-                <div key={i} className={`relative w-full overflow-hidden rounded-xl ${i === 0 ? "col-span-2 aspect-video" : "aspect-square"}`}>
-                  <Image src={img} alt={`${s.stationName} ${i + 1}`} fill loading={i === 0 ? "eager" : "lazy"} sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+          {(() => {
+            const cover = (s as any).primaryImage || s.images?.[0];
+            const subImages = (s.images ?? []).filter((img: string) => img !== cover);
+            return cover ? (
+              <div className="grid grid-cols-2 gap-3">
+                {/* Featured / primary image */}
+                <div className="relative col-span-2 aspect-video w-full overflow-hidden rounded-xl">
+                  <ImageWithSkeleton src={cover} alt={s.stationName ?? "Station"} fill loading="eager" sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid aspect-video place-items-center rounded-2xl bg-cream text-ink/30">
-              <MapPin size={48} />
-            </div>
-          )}
+                {/* Sub-images gallery */}
+                {subImages.map((img: string, i: number) => (
+                  <div key={i} className="relative aspect-square w-full overflow-hidden rounded-xl">
+                    <ImageWithSkeleton src={img} alt={`${s.stationName} ${i + 2}`} fill loading="lazy" sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid aspect-video place-items-center rounded-2xl bg-cream text-ink/30">
+                <MapPin size={48} />
+              </div>
+            );
+          })()}
         </div>
 
         <div>
@@ -86,6 +97,17 @@ export default async function StationDetailPage({ params }: Props) {
           <Link href={directions} target="_blank" rel="noopener noreferrer" className="btn-primary mt-7 w-full">
             <Navigation size={16} /> Get Directions
           </Link>
+
+          {/* Location map — kept tight under the button so there's no gap */}
+          <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+            <iframe
+              title={`${s.stationName ?? "Station"} location`}
+              src={mapSrc}
+              className="block h-64 w-full"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
         </div>
       </div>
     </section>

@@ -68,27 +68,18 @@ export const STATIONS_FALLBACK: StationPublic[] = [
   },
 ];
 
+const EMPTY_PRODUCT_FIELDS = {
+  tagline: "", sections: [], specs: [],
+  cta_primary_text: "Find a station", cta_primary_href: "/stations",
+  cta_secondary_text: "Talk to our team", cta_secondary_href: "/contact",
+  is_external: false,
+};
+
 export const PRODUCTS_FALLBACK: ProductPublic[] = [
-  {
-    id: "fb-p1", slug: "auto-lpg", product_name: "Auto LPG Fuel", product_category: "Fuel",
-    description: "Clean-burning, economical Auto LPG dispensed at every KR Trans Fuels station — save up to 40% over petrol.",
-    product_image: "", gallery_images: [], external_url: "",
-  },
-  {
-    id: "fb-p2", slug: "conversionkit", product_name: "Conversion Kits", product_category: "Equipment",
-    description: "BIS-certified Venturi & Sequential conversion kits for petrol vehicles, fitted by trained technicians.",
-    product_image: "", gallery_images: [], external_url: "",
-  },
-  {
-    id: "fb-p3", slug: "lubricants", product_name: "Lubricants", product_category: "Accessories",
-    description: "Specialised engine lubricants formulated for Auto LPG vehicles for longer engine life.",
-    product_image: "", gallery_images: [], external_url: "",
-  },
-  {
-    id: "fb-p4", slug: "tanks", product_name: "Tanks & Multivalves", product_category: "Equipment",
-    description: "Safety-certified high-pressure tanks and multivalves built to automotive standards.",
-    product_image: "", gallery_images: [], external_url: "",
-  },
+  { ...EMPTY_PRODUCT_FIELDS, id: "fb-p1", slug: "auto-lpg", product_name: "Auto LPG Fuel", product_category: "Fuel", description: "Clean-burning, economical Auto LPG dispensed at every KR Trans Fuels station — save up to 40% over petrol.", product_image: "", gallery_images: [], external_url: "" },
+  { ...EMPTY_PRODUCT_FIELDS, id: "fb-p2", slug: "conversionkit", product_name: "Conversion Kits", product_category: "Equipment", description: "BIS-certified Venturi & Sequential conversion kits for petrol vehicles, fitted by trained technicians.", product_image: "", gallery_images: [], external_url: "", is_external: true },
+  { ...EMPTY_PRODUCT_FIELDS, id: "fb-p3", slug: "lubricants", product_name: "Lubricants", product_category: "Accessories", description: "Specialised engine lubricants formulated for Auto LPG vehicles for longer engine life.", product_image: "", gallery_images: [], external_url: "" },
+  { ...EMPTY_PRODUCT_FIELDS, id: "fb-p4", slug: "tanks", product_name: "Tanks & Multivalves", product_category: "Equipment", description: "Safety-certified high-pressure tanks and multivalves built to automotive standards.", product_image: "", gallery_images: [], external_url: "", is_external: true },
 ];
 
 export const FAQ_FALLBACK: FaqPublic[] = [

@@ -13,6 +13,7 @@ export interface PublicStation {
   workingHours: string;
   status: string;
   images: string[];
+  primaryImage: string;
   location: { latitude: number; longitude: number } | null;
   mapLink: string;
   contactPerson: string;
@@ -56,6 +57,7 @@ export function normalizeStation(id: string, d: any): PublicStation {
     workingHours: d?.workingHours ?? "",
     status: String(d?.status ?? "active"),
     images: Array.isArray(d?.images) ? d.images.filter(Boolean) : [],
+    primaryImage: d?.primaryImage ?? "",
     location: lat !== undefined && lng !== undefined ? { latitude: lat, longitude: lng } : null,
     mapLink: d?.mapLink ?? "",
     contactPerson: d?.contactPerson ?? "",

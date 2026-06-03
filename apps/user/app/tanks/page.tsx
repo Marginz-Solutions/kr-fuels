@@ -1,8 +1,9 @@
-import { redirect } from "next/navigation";
+import ProductScreen from "@/components/ProductScreen";
 
-// Tanks & Multivalves are sold on the manufacturer site — match krfuels.com
-// behaviour (krgfi.com/tanks.php → vibuh.com). Any direct hit on /tanks redirects
-// there; the nav/footer link to it directly.
+export const revalidate = 300;
+
+// ProductScreen handles redirect vs content page based on Firestore is_external flag.
+// Falls back to catalog content if no Firestore record exists for this slug.
 export default function TanksPage() {
-  redirect("https://vibuh.com/");
+  return <ProductScreen slug="tanks" />;
 }

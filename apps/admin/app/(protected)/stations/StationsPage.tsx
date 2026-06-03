@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, type FC } from "react";
-import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload, Loader2 } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn, inp, iconBtn } from "../../../styles/shared";
 import { Badge, StatCard } from "../../../components/ui";
@@ -11,7 +11,6 @@ import { StationResponse, Station } from "@/types/dust";
 import Drawer from "./_components/Drawer";
 import { api } from "@/lib/axios";
 import Pagination from "@/components/ui/Pagination";
-import { Spin } from "antd";
 import ExcelUploadModal from "./_components/ExcelUploadModal";
 import { toast } from "sonner";
 
@@ -22,7 +21,8 @@ const EMPTY_FORM: StationFormDraft = {
   district: "Madurai", workingHours: "",
   location: { latitude: 0, longitude: 0 }, mapLink: "",
   status: "active",
-  images: []
+  images: [],
+  primaryImage: "",
 }
 
 const LIMIT_OPTIONS = [10, 25, 50]
@@ -127,6 +127,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       status: s.status,
       workingHours: s.workingHours, location: s.location,
       mapLink: s.mapLink ?? "", images: s.images ?? [],
+      primaryImage: s.primaryImage ?? "",
     })
     setDrawer(true)
   }
@@ -147,6 +148,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       district: form.district, workingHours: form.workingHours,
       status: form.status,
       mapLink: form.mapLink ?? "", address: form.address, location: form.location,
+      primaryImage: form.primaryImage ?? "",
     }))
     pendingFiles.forEach(f => formData.append("images", f))
     try {
@@ -473,7 +475,7 @@ const StationsPage: FC<StationResponse> = (props) => {
                 onClick={() => remove(deleteTarget)}
                 style={{ ...btn(), flex: 1, justifyContent: "center", background: C.red, borderColor: C.red }}
               >
-                {deleteLoading ? <Spin /> : <><Trash2 size={14} /> Delete</>}
+                {deleteLoading ? <Loader2 size={14} className="animate-spin" /> : <><Trash2 size={14} /> Delete</>}
               </button>
             </div>
           </div>

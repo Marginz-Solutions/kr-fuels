@@ -177,9 +177,9 @@ export const pushImagesToStorage = async (
   user: DecodedIdToken | null
 ): Promise<string[]> => {
   const imageFiles = formData.getAll("images") as File[]
-  const imageUrls: string[] = [];
   const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET)
 
+  // Validate up front so a bad file fails fast before any upload starts.
   for (const file of imageFiles) {
     if (!file.type.startsWith("image/")) {
       throw new AppError("Invalid file format", 400)
@@ -187,35 +187,39 @@ export const pushImagesToStorage = async (
     if (file.size > 5 * 1024 * 1024) {
       throw new AppError(`File too large: ${file.name} (max 5MB)`, 400);
     }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.name.split(".").pop()
-    const fileName = `stations/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const fileRef = bucket.file(fileName)
-
-    await fileRef.save(buffer, {
-      metadata: {
-        contentType: file.type,
-        metadata: { uploadedBy: user?.uid }
-      }
-    })
-
-    // Buckets with Uniform Bucket-Level Access (UBLA) reject per-object ACLs, so
-    // makePublic() throws "Cannot update access control … when uniform bucket-level
-    // access is enabled". Treat it as non-fatal — the object is served publicly via
-    // bucket IAM instead (see HANDOFF.md: make the bucket/prefix public once).
-    try {
-      await fileRef.makePublic()
-    } catch (e: any) {
-      if (!/uniform bucket-level access/i.test(e?.message ?? "")) {
-        console.error("makePublic failed (non-fatal):", e?.message)
-      }
-    }
-
-    const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-    imageUrls.push(url);
-
   }
+
+  // Upload concurrently — sequential awaits made multi-image uploads N× slower.
+  // Promise.all preserves input order, so imageUrls matches the file order.
+  const imageUrls = await Promise.all(
+    imageFiles.map(async (file) => {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const ext = file.name.split(".").pop()
+      const fileName = `stations/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const fileRef = bucket.file(fileName)
+
+      await fileRef.save(buffer, {
+        metadata: {
+          contentType: file.type,
+          metadata: { uploadedBy: user?.uid }
+        }
+      })
+
+      // Buckets with Uniform Bucket-Level Access (UBLA) reject per-object ACLs, so
+      // makePublic() throws "Cannot update access control … when uniform bucket-level
+      // access is enabled". Treat it as non-fatal — the object is served publicly via
+      // bucket IAM instead (see HANDOFF.md: make the bucket/prefix public once).
+      try {
+        await fileRef.makePublic()
+      } catch (e: any) {
+        if (!/uniform bucket-level access/i.test(e?.message ?? "")) {
+          console.error("makePublic failed (non-fatal):", e?.message)
+        }
+      }
+
+      return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    })
+  );
 
   return imageUrls;
 }

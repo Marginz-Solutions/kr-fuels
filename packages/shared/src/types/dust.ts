@@ -25,6 +25,7 @@ export interface Station {
     status: "active" | "inactive";
     workingHours:string,
     images?:string[],
+    primaryImage?: string,
     location: StationLocation;
     // Optional Google-Maps directions link; persisted by the station write schema and
     // read by the user site. Loaded into the edit form so editing preserves it.

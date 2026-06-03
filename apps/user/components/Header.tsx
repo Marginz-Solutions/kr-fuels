@@ -47,24 +47,24 @@ export function Header({
 
   const ticker = (
     <span className="inline-flex items-center gap-6 px-6 text-[12.5px] whitespace-nowrap">
-      <span className="text-white/45">Today&apos;s Price in {hqCity}:</span>
-      <span className="font-semibold text-brand-light">Auto-LPG ₹{p(prices.autoLPG)}/lit</span>
-      <span className="text-white/30">·</span>
-      <span className="text-amber-400">Petrol ₹{p(prices.petrol)}/lit</span>
-      <span className="text-white/30">·</span>
-      <span className="text-amber-400">Diesel ₹{p(prices.diesel)}/lit</span>
-      <span className="text-white/30">·</span>
-      <span className="font-bold text-brand-light">💚 Savings over Petrol: {savings}%</span>
+      <span className="text-white/75">Today&apos;s Price in {hqCity}:</span>
+      <span className="font-semibold text-white">Auto-LPG ₹{p(prices.autoLPG)}/lit</span>
+      <span className="text-white/40">·</span>
+      <span className="text-amber-200">Petrol ₹{p(prices.petrol)}/lit</span>
+      <span className="text-white/40">·</span>
+      <span className="text-amber-200">Diesel ₹{p(prices.diesel)}/lit</span>
+      <span className="text-white/40">·</span>
+      <span className="font-bold text-white">💚 Savings over Petrol: {savings}%</span>
     </span>
   );
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      {/* ── Top dark price-ticker bar (scrolling marquee) ───────── */}
-      <div className="bg-ink text-white/85">
-        <div className="container-x grid h-10 grid-cols-3 items-center gap-4 text-[12.5px]">
-          <span className="hidden shrink-0 items-center gap-1.5 md:flex">
-            <CalendarDays size={14} className="text-brand-light" />
+      {/* ── Top green price-ticker bar (scrolling marquee) ──────── */}
+      <div className="bg-brand text-white">
+        <div className="container-x grid h-11 grid-cols-3 items-center gap-4 text-[12.5px]">
+          <span className="hidden shrink-0 items-center gap-1.5 font-medium md:flex">
+            <CalendarDays size={14} className="text-white/90" />
             <span suppressHydrationWarning>{today}</span>
           </span>
           <div className="col-span-3 overflow-hidden md:col-span-1">
@@ -74,9 +74,9 @@ export function Header({
             </div>
           </div>
           <div className="hidden shrink-0 items-center justify-end gap-4 md:flex">
-            <Link href={`mailto:${email}`} className="hidden hover:text-white lg:inline">{email}</Link>
-            <Link href={`tel:${phone}`} className="hover:text-white">{phone}</Link>
-            <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full font-bold text-brand-dark">
+            <Link href={`mailto:${email}`} className="hidden text-white/85 hover:text-white lg:inline">{email}</Link>
+            <Link href={`tel:${phone}`} className="text-white/85 hover:text-white">{phone}</Link>
+            <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 font-bold text-white transition hover:bg-white/25">
               Staff Login <ArrowUpRight size={13} />
             </Link>
           </div>
@@ -108,7 +108,7 @@ export function Header({
                     <div className="invisible absolute left-0 top-full w-56 translate-y-1 rounded-2xl border border-line bg-white p-2 opacity-0 shadow-lg transition-all group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                       {PRODUCT_MENU.map((m) =>
                         m.external ? (
-                          <Link key={m.label} href={m.href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-ink/75 transition hover:bg-brand-pale hover:text-brand">
+                          <Link key={m.label} href={m.href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg px-3 py-2 my-1 text-sm text-ink/75 transition hover:bg-gray-100 hover:text-ink">
                             {m.label} <ArrowUpRight size={13} />
                           </Link>
                         ) : (

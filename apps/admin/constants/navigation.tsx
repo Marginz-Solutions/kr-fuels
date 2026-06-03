@@ -12,10 +12,12 @@ import {
   Route,
   Globe,
   Calculator,
+  Images,
 } from "lucide-react";
 
 export const NAV = [
   { id: "dashboard",      label: "Dashboard",      href: "/dashboard",      icon: LayoutDashboard },
+  { id: "hero-images",    label: "Hero Carousel",  href: "/hero-images",    icon: Images },
   { id: "clients",        label: "Clients",        href: "/clients",        icon: Users },
   { id: "stations",       label: "Stations",       href: "/stations",       icon: MapPin },
   { id: "products",       label: "Products",       href: "/products",       icon: Package },

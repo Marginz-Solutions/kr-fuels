@@ -76,6 +76,16 @@ export interface DistrictDataPoint {
 
 // ─── Products ─────────────────────────────────────────────
 
+export interface ProductSection {
+  heading: string;
+  items: string[];
+}
+
+export interface ProductSpec {
+  name: string;
+  detail: string;
+}
+
 export interface ProductDocument {
   id: string;
   product_name: string;
@@ -84,7 +94,7 @@ export interface ProductDocument {
   product_image: string;
   gallery_images: string[];
   is_active: boolean;
-  external_url?: string; // per-product website link (vibhu.com section)
+  external_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -93,11 +103,20 @@ export interface Product {
   id: string;
   product_name: string;
   product_category: string;
+  tagline: string;
   description: string;
   product_image: string;
   gallery_images: string[];
+  sections: ProductSection[];
+  specs: ProductSpec[];
+  slug: string;
+  cta_primary_text: string;
+  cta_primary_href: string;
+  cta_secondary_text: string;
+  cta_secondary_href: string;
   is_active: boolean;
-  external_url?: string; // per-product website link (vibhu.com section)
+  is_external: boolean;
+  external_url?: string;
   created_at: number;
   updated_at: number;
 }
@@ -105,20 +124,38 @@ export interface Product {
 export interface ProductFormDraft {
   product_name: string;
   product_category: string;
+  tagline: string;
   description: string;
   product_image: string;
   gallery_images: string[];
+  sections: ProductSection[];
+  specs: ProductSpec[];
+  slug: string;
+  cta_primary_text: string;
+  cta_primary_href: string;
+  cta_secondary_text: string;
+  cta_secondary_href: string;
   is_active: boolean;
+  is_external: boolean;
   external_url?: string;
 }
 
 export const PRODUCT_EMPTY_DRAFT: ProductFormDraft = {
   product_name: "",
   product_category: "",
+  tagline: "",
   description: "",
   product_image: "",
   gallery_images: [],
+  sections: [],
+  specs: [],
+  slug: "",
+  cta_primary_text: "Find a station",
+  cta_primary_href: "/stations",
+  cta_secondary_text: "Talk to our team",
+  cta_secondary_href: "/contact",
   is_active: true,
+  is_external: false,
   external_url: "",
 };
 
@@ -203,6 +240,7 @@ export type StationFormDraft = Pick<Station,
   emailID: string;
   mapLink: string;
   images: string[];
+  primaryImage: string;
 };
 
 export type FAQFormDraft = Pick<FAQ, "question" | "answer" | "isLink">;
@@ -342,6 +380,15 @@ export interface JourneyMilestone {
   description: string;
   image?: string;
   order?: number;
+}
+
+export interface HeroImage {
+  id: string;
+  url: string;
+  order: number;
+  active: boolean;
+  createdAt?: string | null;
+  createdBy?: string;
 }
 
 export interface SiteSocialLinks {

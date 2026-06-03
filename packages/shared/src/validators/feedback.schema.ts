@@ -1,5 +1,19 @@
 import z from "zod"
 
+// Canonical station-feedback categories — single source of truth shared by the
+// public feedback form (user app) and the admin dashboard aggregation. Keep the
+// form/dashboard in sync by importing FEEDBACK_CATEGORIES everywhere.
+export const FEEDBACK_CATEGORIES = [
+    "Station Experience",
+    "Safety & Education",
+    "Pricing & Value",
+    "Website/App Support",
+    "New Station Request",
+    "General Inquiry",
+] as const
+
+export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number]
+
 export const FeedbackSchema = z.object({
     name: z.string()
         .min(2, "Name must be at least 2 characters")

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { adminAuth, adminDb } from "@/lib/firebase/admin";
 export const dynamic = "force-dynamic"
 
 // Shared cookie attributes. In production set COOKIE_DOMAIN to the parent
@@ -14,17 +14,6 @@ const baseCookie = {
   domain: COOKIE_DOMAIN,
 };
 
-// Allowlist: only these emails may obtain an admin session. Firebase Auth
-// auto-creates a user for any Google account on first sign-in, so verifying the
-// token alone is not enough — we gate on email here. Fail closed: an unset or
-// empty allowlist rejects everyone rather than silently letting anyone in.
-const ADMIN_ALLOWLIST = new Set(
-  (process.env.ADMIN_ALLOWLIST ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean),
-);
-
 export async function POST(req: NextRequest) {
   let idToken: string | undefined;
   try {
@@ -37,16 +26,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    if (ADMIN_ALLOWLIST.size === 0) {
-      console.error("ADMIN_ALLOWLIST is not configured — rejecting all admin logins.");
-      return NextResponse.json({ error: "not-authorized" }, { status: 403 });
-    }
-
-    // Verify the token first so we can read the (Firebase-validated) email,
-    // then enforce the allowlist before minting a session cookie.
+    // Verify the token, then check the users collection — only accounts that
+    // were explicitly registered in Firestore may obtain an admin session.
     const decoded = await adminAuth.verifyIdToken(idToken);
-    const email = decoded.email?.toLowerCase();
-    if (!email || !ADMIN_ALLOWLIST.has(email)) {
+    const userDoc = await adminDb.collection("users").doc(decoded.uid).get();
+    if (!userDoc.exists) {
       return NextResponse.json({ error: "not-authorized" }, { status: 403 });
     }
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, Mail, Phone, Clock } from "lucide-react";
-import { getContact, getSiteSettings } from "@/lib/api";
-import { ContactForm } from "@/components/ContactForm";
+import { MapPin, Mail, Phone, Clock, MessageCircle } from "lucide-react";
+import { getContact, getSiteSettings, getStations } from "@/lib/api";
+import { ContactPanels } from "@/components/ContactPanels";
 import { BRAND, formatAddress, getCoords } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function ContactPage() {
-  const [contact, site] = await Promise.all([getContact(), getSiteSettings()]);
+  const [contact, site, stations] = await Promise.all([getContact(), getSiteSettings(), getStations()]);
   const socials = Object.entries(site.social ?? {}).filter(([, url]) => !!url) as [string, string][];
 
   const companyName = contact.essentials?.companyName || BRAND.name;
@@ -29,54 +29,66 @@ export default async function ContactPage() {
     : `${companyName}, ${address}`;
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`;
 
+  const info = [
+    { icon: MapPin, label: "Address", value: address },
+    { icon: Mail, label: "Email", value: email, href: `mailto:${email}` },
+    { icon: Phone, label: "Phone", value: phone, href: `tel:${phone}` },
+    ...(whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", value: whatsapp, href: `https://wa.me/${String(whatsapp).replace(/[^0-9]/g, "")}` }] : []),
+    { icon: Clock, label: "Hours", value: hours },
+  ];
+
   return (
     <>
-      <section className="bg-linear-to-b from-brand-pale/60 to-white">
+      <section className="bg-gradient-to-b from-brand-pale/60 to-white">
         <div className="container-x py-14 text-center">
           <span className="eyebrow mb-4">Contact</span>
-          <h1 className="text-4xl font-extrabold text-ink sm:text-5xl">We'd Love to Hear From You</h1>
+          <h1 className="text-4xl font-extrabold text-ink sm:text-5xl">We&apos;d Love to Hear From You</h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-mutedfg">
-            Questions about Auto LPG, stations or conversions? Reach out — we're here to help.
+            Questions about Auto LPG, stations or conversions — or feedback on a station you visited?
+            Reach out, we&apos;re here to help.
           </p>
         </div>
       </section>
 
-      <section className="container-x grid gap-8 py-16 lg:grid-cols-2">
+      <section className="container-x py-16">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.05fr] lg:items-start">
+        {/* ── Contact info ───────────────────────────────────── */}
         <div className="space-y-6">
-          <div className="space-y-4">
-            {[
-              { icon: MapPin, label: "Address", value: address },
-              { icon: Mail, label: "Email", value: email, href: `mailto:${email}` },
-              { icon: Phone, label: "Phone", value: phone, href: `tel:${phone}` },
-              ...(whatsapp ? [{ icon: Phone, label: "WhatsApp", value: whatsapp, href: `tel:${whatsapp}` }] : []),
-              { icon: Clock, label: "Hours", value: hours },
-            ].map((c) => (
-              <div key={c.label} className="flex items-start gap-4 card-soft">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-pale text-brand"><c.icon size={20} /></span>
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-mutedfg">{c.label}</div>
-                  {c.href ? (
-                    <Link href={c.href} className="font-medium text-ink hover:text-brand">{c.value}</Link>
-                  ) : (
-                    <div className="font-medium text-ink">{c.value}</div>
-                  )}
+          <div className="card-soft">
+            <h2 className="text-xl font-extrabold text-ink">Get in touch</h2>
+            <p className="mt-1 text-sm text-mutedfg">Reach us by phone, email or drop by — we&apos;re happy to help.</p>
+
+            {/* Quick actions */}
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <Link href={`tel:${phone}`} className="btn-primary justify-center"><Phone size={16} /> Call Now</Link>
+              {whatsapp ? (
+                <Link href={`https://wa.me/${String(whatsapp).replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" className="btn-outline justify-center"><MessageCircle size={16} className="text-brand" /> WhatsApp</Link>
+              ) : (
+                <Link href={`mailto:${email}`} className="btn-outline justify-center"><Mail size={16} className="text-brand" /> Email Us</Link>
+              )}
+            </div>
+
+            {/* Detail rows */}
+            <div className="mt-6 divide-y divide-line">
+              {info.map((c) => (
+                <div key={c.label} className="flex items-start gap-4 py-4 first:pt-0 last:pb-0">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-pale text-brand"><c.icon size={20} /></span>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-mutedfg">{c.label}</div>
+                    {c.href ? (
+                      <Link href={c.href} className="font-medium text-ink break-words hover:text-brand">{c.value}</Link>
+                    ) : (
+                      <div className="font-medium text-ink break-words">{c.value}</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-line">
-            <iframe
-              title={`${companyName} location`}
-              src={mapSrc}
-              className="h-72 w-full"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-
+          {/* Socials */}
           {socials.length > 0 && (
-            <div>
+            <div className="card-soft">
               <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-mutedfg">Follow us</div>
               <div className="flex flex-wrap gap-3">
                 {socials.map(([key, url]) => (
@@ -89,7 +101,20 @@ export default async function ContactPage() {
           )}
         </div>
 
-        <ContactForm />
+        {/* ── Enquiry / Feedback panels ──────────────────────── */}
+        <ContactPanels stations={stations.data} />
+        </div>
+
+        {/* ── Full-width location map (spans both columns) ────── */}
+        <div className="mt-8 overflow-hidden rounded-2xl border border-line">
+          <iframe
+            title={`${companyName} location`}
+            src={mapSrc}
+            className="block h-[420px] w-full"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
       </section>
     </>
   );

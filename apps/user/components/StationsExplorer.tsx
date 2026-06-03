@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { MapPin, Clock, Navigation, Eye, Search } from "lucide-react";
+import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import type { StationPublic } from "@/lib/api";
 
 const FEATURE_OPTIONS = ["24x7", "Free Water", "Nitrogen Air", "Parking", "Restroom", "Air Filling"];
@@ -99,11 +99,11 @@ export function StationsExplorer({ stations, districts }: { stations: StationPub
           const line = [s.address?.doorNo, s.address?.street].filter(Boolean).join(", ");
           return (
             <div key={s.id} className="card-soft flex flex-col">
-              {/* Thumbnail — first station image, with a graceful placeholder */}
-              {s.images && s.images.length > 0 ? (
+              {/* Thumbnail — primary image or first image, with a graceful placeholder */}
+              {(s.primaryImage || (s.images && s.images.length > 0)) ? (
                 <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-xl">
-                  <Image
-                    src={s.images[0]}
+                  <ImageWithSkeleton
+                    src={s.primaryImage || s.images![0]}
                     alt={s.stationName ?? "Station"}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

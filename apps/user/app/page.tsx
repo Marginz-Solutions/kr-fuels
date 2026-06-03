@@ -1,25 +1,31 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowRight, Play, MapPin, ShieldCheck,
+  ArrowRight, MapPin, ShieldCheck,
   HelpCircle, MessageSquare, GitCompare, Leaf,
 } from "lucide-react";
 import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
-import { getFuelPrices, getStations, getTestimonials, getAbout, getClients } from "@/lib/api";
+import { HeroCarousel } from "@/components/HeroCarousel";
+import { getFuelPrices, getStations, getTestimonials, getAbout, getClients, getHeroImages } from "@/lib/api";
 import { BRAND, OFFERINGS, TESTIMONIAL_FALLBACK } from "@/lib/site";
 import { PARTNERS_FALLBACK } from "@/lib/fallbacks";
 
 // ISR: home reflects live fuel prices — keep it fresh but served from cache.
 export const revalidate = 30;
 
+const HERO_IMAGES_FALLBACK = ["/assets/hero-2.jpg", "/assets/hero-1.jpg", "/assets/products/auto-lpg.jpg"];
+
 export default async function HomePage() {
-  const [prices, stations, testimonials, about, partners] = await Promise.all([
+  const [prices, stations, testimonials, about, partners, heroImages] = await Promise.all([
     getFuelPrices(),
     getStations(),
     getTestimonials(),
     getAbout(),
     getClients("collaborator"),
+    getHeroImages(),
   ]);
+
+  const heroSlides = heroImages.length ? heroImages : HERO_IMAGES_FALLBACK;
 
   const count = stations.total > 0 ? stations.total : 81;
   // Savings is computed live from today's prices; falls back to the brand figure (40%)
@@ -29,6 +35,11 @@ export default async function HomePage() {
   const p = (v: number) => (v > 0 ? v : "—");
   const carousel = testimonials.length ? testimonials : TESTIMONIAL_FALLBACK;
   const partnerList = partners.length ? partners : PARTNERS_FALLBACK;
+  // Build a marquee reel of two IDENTICAL halves so the CSS `translateX(-50%)` loop is
+  // perfectly seamless. Each half repeats the partner list enough times to overflow the
+  // widest viewport, so there's never an empty gap before it loops.
+  const partnerHalf = Array.from({ length: Math.max(2, Math.ceil(12 / Math.max(1, partnerList.length))) }).flatMap(() => partnerList);
+  const partnerReel = [...partnerHalf, ...partnerHalf];
 
   const stats = [
     { value: `${count}+`, label: "Stations across Tamil Nadu" },
@@ -65,16 +76,13 @@ export default async function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/stations" className="btn-primary">Find Nearest Station <ArrowRight size={16} /></Link>
-              <Link href="#video" className="btn-dark"><Play size={16} /> Watch How It Works</Link>
+              <Link href="/learn" className="btn-dark">How It Works <ArrowRight size={16} /></Link>
             </div>
           </div>
 
-          {/* Hero image + floating badges */}
+          {/* Hero carousel + floating badges */}
           <div className="relative mx-auto w-full max-w-xl">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] border border-line shadow-[0_20px_60px_rgba(13,26,16,0.12)]">
-              <Image src="/assets/hero-2.jpg" alt="Auto LPG station" fill className="object-cover" priority sizes="(max-width:1024px) 100vw, 580px" />
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/30 to-transparent" />
-            </div>
+            <HeroCarousel images={heroSlides} alt="KR Trans Fuels Auto LPG station" />
             <div className="absolute -right-3 top-6 rounded-2xl border border-line bg-white px-4 py-3 shadow-lg">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-mutedfg">Trusted</div>
               <div className="text-sm font-extrabold text-ink">Since 2007</div>
@@ -110,6 +118,30 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Quick Links (moved up) ───────────────────────────── */}
+      <section className="container-x py-14">
+        <div className="mb-8 text-center">
+          <span className="eyebrow mb-3">Quick Links</span>
+          <h2 className="section-title">Everything You Need, One Tap Away</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {ctaCards.map((c) => (
+            <Link key={c.title} href={c.href} className="group card-soft flex flex-col items-start gap-4 transition hover:-translate-y-1 hover:border-brand/30 hover:shadow-md">
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-pale text-brand transition group-hover:bg-brand group-hover:text-white">
+                <c.icon size={26} />
+              </span>
+              <div>
+                <div className="text-lg font-bold text-ink">{c.title}</div>
+                <div className="mt-1 text-sm text-mutedfg">{c.sub}</div>
+              </div>
+              <span className="mt-auto inline-flex items-center gap-1 text-sm font-bold text-brand">
+                Explore <ArrowRight size={15} className="transition group-hover:translate-x-1" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* ── Numbers That Speak ───────────────────────────────── */}
       <section className="border-y border-line bg-white">
         <div className="container-x py-14">
@@ -125,18 +157,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Story + Offerings ────────────────────────────────── */}
+      {/* ── About Us + Offerings ─────────────────────────────── */}
       <section className="container-x py-20">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <span className="eyebrow mb-4">Our Story</span>
+            <span className="eyebrow mb-4">About Us</span>
             <h2 className="section-title">Powering Green Mobility Since 2007</h2>
             <p className="mt-4 text-mutedfg">
               {about.contentBlocks?.[0]?.body ||
                 `K.R Trans Fuels, a subsidiary of KRT Carriers, established its first Auto LPG Dispensing Station in 2007. Today, with ${count}+ stations across Tamil Nadu and more in the pipeline, we lead the state in cleaner automotive fuel.`}
             </p>
             <Link href="/about" className="mt-6 inline-flex items-center gap-1.5 font-bold text-brand hover:gap-2.5 transition-all">
-              Our Full Journey <ArrowRight size={16} />
+              Learn More About Us <ArrowRight size={16} />
             </Link>
             <div className="mt-7 grid grid-cols-2 gap-4">
               <div className="rounded-2xl bg-brand-pale p-5">
@@ -172,27 +204,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Video ────────────────────────────────────────────── */}
-      <section id="video" className="scroll-mt-24 bg-cream py-20">
-        <div className="container-x text-center">
-          <span className="eyebrow mb-4">See It in Action</span>
-          <h2 className="section-title">Watch How Auto LPG Conversion Works</h2>
-          <div className="mx-auto mt-8 aspect-video max-w-3xl overflow-hidden rounded-3xl border border-line bg-ink shadow-lg">
-            {about.videoUrl ? (
-              <iframe className="h-full w-full" src={about.videoUrl} title="See it in action" allowFullScreen />
-            ) : (
-              <div className="grid h-full place-items-center text-white/60">
-                <div className="text-center">
-                  <span className="grid mx-auto mb-3 h-16 w-16 place-items-center rounded-full bg-brand text-white"><Play size={28} /></span>
-                  <p>Auto LPG conversion — video coming soon</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ─────────────────────────────────────── */}
+      {/* ── Testimonials (auto-scroll) ───────────────────────── */}
       <section className="container-x py-20">
         <div className="mb-10 text-center">
           <span className="eyebrow mb-4">Testimonials</span>
@@ -202,35 +214,21 @@ export default async function HomePage() {
         <TestimonialsCarousel items={carousel} />
       </section>
 
-      {/* ── CTA cards ────────────────────────────────────────── */}
-      <section className="container-x pb-20">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {ctaCards.map((c) => (
-            <Link key={c.title} href={c.href} className="group card-soft flex items-center justify-between transition hover:border-brand/30 hover:shadow-md">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-pale text-brand"><c.icon size={20} /></span>
-                <div>
-                  <div className="font-bold text-ink">{c.title}</div>
-                  <div className="text-xs text-mutedfg">{c.sub}</div>
-                </div>
-              </div>
-              <ArrowRight size={18} className="text-brand transition group-hover:translate-x-1" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Partners ─────────────────────────────────────────── */}
+      {/* ── Partners (horizontal auto-scroll) ────────────────── */}
       {partnerList.length > 0 && (
-        <section className="border-y border-line bg-white py-14">
+        <section className="overflow-hidden border-y border-line bg-white py-14">
           <div className="container-x">
             <p className="mb-8 text-center text-sm font-semibold uppercase tracking-wider text-mutedfg/70">Our technology partners</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-              {partnerList.map((pt) =>
+          </div>
+          <div className="relative flex overflow-hidden">
+            {/* Per-item right margin (not flex gap) so the two identical halves line up
+                exactly at the -50% loop point — perfectly seamless, infinite scroll. */}
+            <div className="flex w-max kr-marquee items-center">
+              {partnerReel.map((pt, idx) =>
                 pt.logo ? (
-                  <Image key={pt.id} src={pt.logo} alt={pt.name} width={140} height={36} unoptimized className="h-9 w-auto max-w-[140px] object-contain opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0" />
+                  <Image key={`${pt.id}-${idx}`} src={pt.logo} alt={pt.name} width={200} height={56} unoptimized className="mr-20 h-14 w-auto max-w-[200px] shrink-0 object-contain opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0" />
                 ) : (
-                  <span key={pt.id} className="text-lg font-bold text-mutedfg/60">{pt.name}</span>
+                  <span key={`${pt.id}-${idx}`} className="mr-20 shrink-0 text-3xl font-bold text-mutedfg/60">{pt.name}</span>
                 )
               )}
             </div>
@@ -248,8 +246,8 @@ export default async function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href="/stations" className="btn-primary">Find a Station Near You <ArrowRight size={16} /></Link>
-            <Link href="/learn#calculators" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10">
-              Calculate Your Savings
+            <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10">
+              Talk to Our Team
             </Link>
           </div>
         </div>

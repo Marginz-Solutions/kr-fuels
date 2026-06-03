@@ -4,7 +4,7 @@ import { btn, inp } from '@/styles/shared'
 import { StationFormDraft } from '@/types'
 import { Station } from '@/types/dust'
 import Image from 'next/image'
-import { ImageIcon, Save, X } from 'lucide-react'
+import { ImageIcon, Save, Star, X } from 'lucide-react'
 import React, { useRef, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -165,39 +165,69 @@ const Drawer = (props: DrawerProps) => {
 
                         {/* Existing images */}
                         {form.images.length > 0 && (
-                            <div style={{
-                                display: "grid",
-                                gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))",
-                                gap: 8,
-                                marginBottom: 10,
-                            }}>
-                                {form.images.map((url, i) => (
-                                    <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: `1px solid ${C.bd}` }}>
-                                        <Image
-                                            src={url}
-                                            alt={`Station image ${i + 1}`}
-                                            fill
-                                            sizes="100px"
-                                            style={{ objectFit: "cover" }}
-                                        />
-                                        <button
-                                            onClick={() => {
-                                                setForm(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }))
-                                                onDeleteImage(url)
-                                            }}
-                                            style={{
-                                                position: "absolute", top: 3, right: 3,
-                                                width: 18, height: 18, borderRadius: "50%",
-                                                background: "rgba(0,0,0,0.55)", border: "none",
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                                cursor: "pointer", padding: 0,
-                                            }}
-                                        >
-                                            <X size={10} color="#fff" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                            <>
+                                <div style={{ fontSize: 11, color: C.tm, marginBottom: 6 }}>
+                                    Tap ★ to set the card cover image · currently:{" "}
+                                    <strong style={{ color: C.t }}>
+                                        {form.primaryImage ? "custom" : "first image (default)"}
+                                    </strong>
+                                </div>
+                                <div style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))",
+                                    gap: 8,
+                                    marginBottom: 10,
+                                }}>
+                                    {form.images.map((url, i) => {
+                                        const isPrimary = form.primaryImage === url || (!form.primaryImage && i === 0);
+                                        return (
+                                            <div key={i} style={{
+                                                position: "relative", aspectRatio: "1", borderRadius: 8, overflow: "hidden",
+                                                border: `2px solid ${isPrimary ? C.p : C.bd}`,
+                                            }}>
+                                                <Image
+                                                    src={url}
+                                                    alt={`Station image ${i + 1}`}
+                                                    fill
+                                                    sizes="100px"
+                                                    style={{ objectFit: "cover" }}
+                                                />
+                                                {/* Star — set/unset primary */}
+                                                <button
+                                                    title={isPrimary ? "Primary image" : "Set as primary"}
+                                                    onClick={() => setForm(p => ({ ...p, primaryImage: p.primaryImage === url ? "" : url }))}
+                                                    style={{
+                                                        position: "absolute", bottom: 3, left: 3,
+                                                        width: 20, height: 20, borderRadius: "50%",
+                                                        background: isPrimary ? C.p : "rgba(0,0,0,0.45)",
+                                                        border: "none", display: "flex", alignItems: "center",
+                                                        justifyContent: "center", cursor: "pointer", padding: 0,
+                                                    }}
+                                                >
+                                                    <Star size={10} color="#fff" fill={isPrimary ? "#fff" : "none"} />
+                                                </button>
+                                                {/* Delete */}
+                                                <button
+                                                    onClick={() => {
+                                                        if (form.primaryImage === url) setForm(p => ({ ...p, primaryImage: "" }));
+                                                        setForm(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }));
+                                                        onDeleteImage(url);
+                                                    }}
+                                                    style={{
+                                                        position: "absolute", top: 3, right: 3,
+                                                        width: 18, height: 18, borderRadius: "50%",
+                                                        background: "rgba(0,0,0,0.55)", border: "none",
+                                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                                        cursor: "pointer", padding: 0,
+                                                    }}
+                                                >
+                                                    <X size={10} color="#fff" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
                         )}
 
                         {/* Upload zone */}

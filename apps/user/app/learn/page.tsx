@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, X, HelpCircle } from "lucide-react";
-import { getFuelPrices, getCalculatorSettings, getFaq } from "@/lib/api";
-import { Calculators } from "@/components/Calculators";
+import { Check, X, HelpCircle, Fuel, Flame, type LucideIcon } from "lucide-react";
+import { getFaq } from "@/lib/api";
 import { normalizeUrl } from "@kr/shared/lib/utils";
 import { FAQ_FALLBACK } from "@/lib/fallbacks";
 
 export const metadata: Metadata = {
-  title: "Learn — Savings & Carbon Calculators",
-  description: "Auto LPG vs Domestic LPG, savings & carbon calculators, and frequently asked questions.",
+  title: "Learn — Auto LPG vs Domestic LPG",
+  description: "Auto LPG vs Domestic LPG compared, and frequently asked questions about switching.",
 };
 
-// ISR: calculator inputs use live prices; FAQ/settings change infrequently.
+// ISR: FAQ/settings change infrequently — serve from cache, refresh in background.
 export const revalidate = 120;
 
 const COMPARISON = [
@@ -23,8 +22,20 @@ const COMPARISON = [
   ["Safety standard", "BIS automotive certified", "Domestic cylinder norms"],
 ];
 
+const COLUMNS: { title: string; sub: string; icon: LucideIcon; idx: number; highlight: boolean }[] = [
+  { title: "Auto LPG", sub: "Automotive grade — for vehicles", icon: Fuel, idx: 1, highlight: true },
+  { title: "Domestic LPG", sub: "Cooking grade — for households", icon: Flame, idx: 2, highlight: false },
+];
+
+// Renders a comparison value: yes/no become coloured pills, everything else is text.
+function Cell({ v }: { v: string }) {
+  if (v === "yes") return <span className="inline-flex items-center gap-1.5 font-semibold text-brand"><Check size={16} /> Permitted</span>;
+  if (v === "no") return <span className="inline-flex items-center gap-1.5 font-semibold text-red-500"><X size={16} /> Not permitted</span>;
+  return <span className="font-semibold text-ink">{v}</span>;
+}
+
 export default async function LearnPage() {
-  const [prices, settings, faq] = await Promise.all([getFuelPrices(), getCalculatorSettings(), getFaq()]);
+  const faq = await getFaq();
   // Real FAQ from the backend wins; fall back to common questions when empty.
   const faqList = faq.length ? faq : FAQ_FALLBACK;
 
@@ -40,39 +51,42 @@ export default async function LearnPage() {
         </div>
       </section>
 
-      {/* Comparison */}
+      {/* Auto LPG vs Domestic LPG — side-by-side comparison cards */}
       <section className="container-x py-16">
-        <h2 className="section-title mb-6 text-center">Auto LPG vs Domestic LPG</h2>
-        <div className="overflow-hidden rounded-2xl border border-line">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-brand text-white">
-                <th className="p-4 text-left font-semibold"> </th>
-                <th className="p-4 text-left font-semibold">Auto LPG</th>
-                <th className="p-4 text-left font-semibold">Domestic LPG</th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON.map((row, i) => (
-                <tr key={i} className={i % 2 ? "bg-cream" : "bg-white"}>
-                  <td className="p-4 font-medium text-ink">{row[0]}</td>
-                  {[row[1], row[2]].map((cell, c) => (
-                    <td key={c} className="p-4 text-mutedfg">
-                      {cell === "yes" ? <Check className="text-brand" size={18} /> : cell === "no" ? <X className="text-red-500" size={18} /> : cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mb-8 text-center">
+          <h2 className="section-title">Auto LPG vs Domestic LPG</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-mutedfg">
+            They share a name, but they are engineered for entirely different jobs. Here&apos;s how they compare.
+          </p>
         </div>
-      </section>
-
-      {/* Calculators */}
-      <section id="calculators" className="bg-cream py-16">
-        <div className="container-x">
-          <h2 className="section-title mb-8 text-center">Calculate Your Savings & Impact</h2>
-          <Calculators prices={prices} settings={settings} />
+        <div className="grid gap-6 md:grid-cols-2">
+          {COLUMNS.map((col) => (
+            <div
+              key={col.title}
+              className={`card-soft ${col.highlight ? "ring-2 ring-brand/25" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${col.highlight ? "bg-brand text-white" : "bg-cream text-ink/60"}`}>
+                  <col.icon size={24} />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-extrabold text-ink">{col.title}</h3>
+                    {col.highlight && <span className="rounded-full bg-brand-pale px-2 py-0.5 text-[11px] font-bold text-brand-dark">Recommended for vehicles</span>}
+                  </div>
+                  <p className="text-sm text-mutedfg">{col.sub}</p>
+                </div>
+              </div>
+              <dl className="mt-6 space-y-3">
+                {COMPARISON.map((row) => (
+                  <div key={row[0]} className="flex items-center justify-between gap-4 border-b border-line pb-3 last:border-0 last:pb-0">
+                    <dt className="text-sm font-medium text-mutedfg">{row[0]}</dt>
+                    <dd className="text-right text-sm"><Cell v={row[col.idx]} /></dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))}
         </div>
       </section>
 

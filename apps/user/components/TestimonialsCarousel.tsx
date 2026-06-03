@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 
 export interface TestimonialItem {
   id: string;
@@ -15,6 +15,16 @@ export interface TestimonialItem {
 
 export function TestimonialsCarousel({ items }: { items: TestimonialItem[] }) {
   const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Auto-advance through testimonials; pauses while the user is hovering so they
+  // can read, and resumes on mouse-out. Manual controls keep working throughout.
+  useEffect(() => {
+    if (items.length <= 1 || paused) return;
+    const id = setInterval(() => setI((p) => (p + 1) % items.length), 5000);
+    return () => clearInterval(id);
+  }, [items.length, paused]);
+
   if (!items.length) return null;
 
   const go = (d: number) => setI((p) => (p + d + items.length) % items.length);
@@ -23,7 +33,7 @@ export function TestimonialsCarousel({ items }: { items: TestimonialItem[] }) {
   const role = [t.designation, t.company].filter(Boolean).join(", ");
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <div className="card-soft relative px-8 py-10 text-center">
         <Quote className="mx-auto mb-4 text-brand" size={36} />
         <div className="mb-5 flex justify-center gap-1">
@@ -34,7 +44,9 @@ export function TestimonialsCarousel({ items }: { items: TestimonialItem[] }) {
         <p className="text-lg leading-relaxed text-ink/85">“{t.message}”</p>
         <div className="mt-7 flex items-center justify-center gap-3">
           {t.image ? (
-            <Image src={t.image} alt={t.name} width={48} height={48} unoptimized className="h-12 w-12 rounded-full object-cover ring-2 ring-brand-pale" />
+            <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-brand-pale">
+              <ImageWithSkeleton src={t.image} alt={t.name} fill unoptimized sizes="48px" className="object-cover" />
+            </span>
           ) : (
             <span className="grid h-12 w-12 place-items-center rounded-full bg-brand-pale font-bold text-brand">{t.name.charAt(0)}</span>
           )}

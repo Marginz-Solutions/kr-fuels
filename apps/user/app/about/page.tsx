@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import { MapPin, Clock, Leaf } from "lucide-react";
+import { MapPin, Leaf, CalendarClock, Users, Fuel, Target, Compass, Sparkles, type LucideIcon } from "lucide-react";
 import { getAbout, getJourney, getStations } from "@/lib/api";
+import { Reveal } from "@/components/Reveal";
+import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import { BRAND } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -12,6 +13,9 @@ export const metadata: Metadata = {
 // ISR: editorial content — long cache window, refreshed in the background.
 export const revalidate = 300;
 
+// Cyclic accent icons for the mission / values cards.
+const BLOCK_ICONS: LucideIcon[] = [Target, Compass, Sparkles, Leaf];
+
 export default async function AboutPage() {
   const [about, journey, stations] = await Promise.all([
     getAbout(),
@@ -19,6 +23,16 @@ export default async function AboutPage() {
     getStations(),
   ]);
   const count = stations.total > 0 ? stations.total : 81;
+  const districts = stations.districts.length || 11;
+  const blocks = (about.contentBlocks ?? []).slice(1);
+
+  const stats: { icon: LucideIcon; v: string; l: string }[] = [
+    { icon: MapPin, v: `${count}+`, l: "Active Stations" },
+    { icon: Leaf, v: `${districts}+`, l: "Districts Covered" },
+    { icon: CalendarClock, v: `${BRAND.yearsOfService}+`, l: "Years of Operation" },
+    { icon: Users, v: "50,000+", l: "Happy Customers" },
+    { icon: Fuel, v: "2M+", l: "LPG Refills Delivered" },
+  ];
 
   return (
     <>
@@ -43,14 +57,11 @@ export default async function AboutPage() {
         </section>
       )}
 
-      {/* Live counts */}
+      {/* Live counts + headline stats */}
       {about.showStationCount !== false && (
         <section className="container-x py-14">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              { icon: MapPin, v: `${count}+`, l: "Active Stations" },
-              { icon: Leaf, v: `${stations.districts.length || 11}+`, l: "Districts Covered" },
-            ].map((s) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {stats.map((s) => (
               <div key={s.l} className="card-soft text-center">
                 <s.icon className="mx-auto mb-2 text-brand" size={26} />
                 <div className="text-3xl font-extrabold text-ink">{s.v}</div>
@@ -61,19 +72,29 @@ export default async function AboutPage() {
         </section>
       )}
 
-      {/* Content blocks */}
-      <section className="container-x pb-20">
-        <div className="mx-auto max-w-3xl space-y-8">
-          {(about.contentBlocks ?? []).slice(1).map((b, i) => (
-            <div key={i}>
-              <h2 className="text-2xl font-extrabold text-ink">{b.heading}</h2>
-              <p className="mt-3 leading-relaxed text-mutedfg">{b.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Mission & values — icon-led split cards */}
+      {blocks.length > 0 && (
+        <section className="container-x pb-20">
+          <div className="mx-auto max-w-4xl space-y-5">
+            {blocks.map((b, i) => {
+              const Icon = BLOCK_ICONS[i % BLOCK_ICONS.length];
+              return (
+                <div key={i} className="card-soft grid gap-5 sm:grid-cols-[auto_1fr] sm:items-start">
+                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-pale text-brand">
+                    <Icon size={26} />
+                  </span>
+                  <div>
+                    <h2 className="text-xl font-extrabold text-ink">{b.heading}</h2>
+                    <p className="mt-2 leading-relaxed text-mutedfg">{b.body}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-      {/* Journey timeline */}
+      {/* Journey timeline — items reveal on scroll */}
       {journey.length > 0 && (
         <section className="bg-cream py-20">
           <div className="container-x">
@@ -91,15 +112,18 @@ export default async function AboutPage() {
                     <span className="absolute left-4 top-2 z-10 h-3 w-3 -translate-x-1/2 rounded-full bg-brand ring-4 ring-cream sm:left-1/2" />
                     {/* card — offset full width on mobile, alternating halves on desktop */}
                     <div className={`pl-12 sm:w-1/2 sm:pl-0 ${i % 2 ? "sm:ml-auto sm:pl-10" : "sm:pr-10 sm:text-right"}`}>
-                      <div className="card-soft">
-                        {m.image && (
-                          <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-lg">
-                            <Image src={m.image} alt={m.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
-                          </div>
-                        )}
-                        <div className="mt-1 font-bold text-ink">{m.title}</div>
-                        <div className="mt-1 text-sm text-mutedfg">{m.description}</div>
-                      </div>
+                      <Reveal direction={i % 2 ? "right" : "left"} delay={(i % 2) * 90}>
+                        <div className="card-soft">
+                          {m.image && (
+                            <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-lg">
+                              <ImageWithSkeleton src={m.image} alt={m.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                            </div>
+                          )}
+                          {m.year && <div className="text-sm font-bold text-brand">{m.year}</div>}
+                          <div className="mt-1 font-bold text-ink">{m.title}</div>
+                          <div className="mt-1 text-sm text-mutedfg">{m.description}</div>
+                        </div>
+                      </Reveal>
                     </div>
                   </div>
                 ))}

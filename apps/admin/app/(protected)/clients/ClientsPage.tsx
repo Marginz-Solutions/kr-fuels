@@ -1,8 +1,8 @@
 "use client";
-import { useMemo, useState, type FC } from "react";
+import { useMemo, useRef, useState, type FC } from "react";
 import {
   Plus, Globe, Trash2, ToggleLeft, ToggleRight, Check, Edit2,
-  Search, Users, Building2, Handshake, ExternalLink, AlertTriangle,
+  Search, Users, Building2, Handshake, ExternalLink, AlertTriangle, Upload, Loader2, X,
 } from "lucide-react";
 
 import { C } from "../../../constants/colors";
@@ -16,6 +16,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchClients, createClient, updateClient, toggleClient, deleteClient,
 } from "@/lib/api/clients";
+import { API_BASE } from "@/lib/api-base";
 import { toast } from "sonner";
 
 type FormState = { name: string; type: ClientType; website: string; logo: string; active: boolean };
@@ -39,6 +40,29 @@ const ClientsPage: FC = () => {
   const [confirm, setConfirm] = useState<
     { kind: "toggle" | "delete"; client: Client } | null
   >(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadLogo = async (file: File) => {
+    setLogoUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/clients/upload`, {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
+      setForm((p) => ({ ...p, logo: json.url }));
+      toast.success("Logo uploaded");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
 
   const { data: list = [], isLoading } = useQuery({
     queryKey: ["clients", typeFilter, activeFilter, search],
@@ -218,8 +242,33 @@ const ClientsPage: FC = () => {
         <FormField label="Website URL">
           <input style={inp()} value={form.website} onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))} placeholder="www.example.com" />
         </FormField>
-        <FormField label="Logo (image URL or emoji)">
-          <input style={inp()} value={form.logo} onChange={(e) => setForm((p) => ({ ...p, logo: e.target.value }))} placeholder="https://…/logo.png  or  🏢" />
+        <FormField label="Logo">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* Preview */}
+            {form.logo && /^https?:\/\//i.test(form.logo) && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 10, border: `1px solid ${C.bd}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: C.bg, flexShrink: 0 }}>
+                  <Image src={form.logo} alt="logo preview" width={52} height={52} unoptimized style={{ objectFit: "contain", width: "100%", height: "100%" }} />
+                </div>
+                <button type="button" title="Remove logo" onClick={() => setForm((p) => ({ ...p, logo: "" }))} style={{ ...iconBtn("ghost", 28, { color: C.red }) }}>
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+            {/* Upload */}
+            <button
+              type="button"
+              disabled={logoUploading}
+              onClick={() => logoInputRef.current?.click()}
+              style={{ ...inp(), display: "flex", alignItems: "center", gap: 8, cursor: logoUploading ? "wait" : "pointer", color: C.tm, justifyContent: "center", fontSize: 13 }}
+            >
+              {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              {logoUploading ? "Uploading…" : form.logo && /^https?:\/\//i.test(form.logo) ? "Replace logo" : "Upload logo"}
+            </button>
+            <input ref={logoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadLogo(f); e.target.value = ""; }} />
+            {/* URL / emoji fallback */}
+            <input style={inp()} value={form.logo} onChange={(e) => setForm((p) => ({ ...p, logo: e.target.value }))} placeholder="Or paste URL / emoji  🏢" />
+          </div>
         </FormField>
         <FormField label="Status">
           <div style={{ display: "flex", gap: 8 }}>

@@ -1,6 +1,7 @@
 import { verifySession } from "@/lib/auth/verify-session";
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
+import { FEEDBACK_CATEGORIES } from "@kr/shared/validators/feedback.schema";
 
 export const dynamic = "force-dynamic";
 
@@ -28,24 +29,19 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const categoriesList = [
-      "Station Experience",
-      "Safety & Education",
-      "Pricing & Value",
-      "Website/App Support",
-      "New Station Request",
-      "General Inquiry",
-    ];
+    const categoriesList = FEEDBACK_CATEGORIES;
 
     const last30DaysMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-    // Fetch collections in parallel
-    const [stationsSnap, feedbacksSnap, productsSnap, productCategoriesSnap, enquiriesSnap] =
+    // Fetch collections in parallel. product_categories is only needed as a
+    // count, so use a server-side aggregation (reads 0 docs) instead of pulling
+    // every category document just to call .length on it.
+    const [stationsSnap, feedbacksSnap, productsSnap, productCategoriesCount, enquiriesSnap] =
       await Promise.all([
         adminDb.collection("stations").get().then((s) => s.docs),
         adminDb.collection("feedbacks").orderBy("createdAt", "desc").get().then((s) => s.docs),
         adminDb.collection("products").get().then((s) => s.docs),
-        adminDb.collection("product_categories").get().then((s) => s.docs),
+        adminDb.collection("product_categories").count().get().then((s) => s.data().count),
         adminDb.collection("enquiryDetails").orderBy("createdAt", "desc").get().then((s) => s.docs),
       ]);
 
@@ -143,7 +139,7 @@ export async function GET(req: NextRequest) {
       products: {
         total: productsSnap.length,
         active: productsSnap.filter((doc) => doc.data().is_active !== false).length,
-        categories: productCategoriesSnap.length,
+        categories: productCategoriesCount,
         byCategory: productsByCategory,
       },
       recentFeedback,

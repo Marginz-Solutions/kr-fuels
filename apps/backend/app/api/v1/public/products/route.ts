@@ -18,10 +18,18 @@ export async function GET() {
         product_name: d.product_name ?? "",
         product_category: d.product_category ?? "",
         description: d.description ?? "",
+        tagline: d.tagline ?? "",
         product_image: d.product_image ?? "",
         gallery_images: d.gallery_images ?? [],
-        external_url: d.external_url ?? "",
+        sections: d.sections ?? [],
+        specs: d.specs ?? [],
         slug: d.slug ?? "",
+        cta_primary_text: d.cta_primary_text ?? "",
+        cta_primary_href: d.cta_primary_href ?? "",
+        cta_secondary_text: d.cta_secondary_text ?? "",
+        cta_secondary_href: d.cta_secondary_href ?? "",
+        is_external: d.is_external ?? false,
+        external_url: d.external_url ?? "",
       };
     });
 

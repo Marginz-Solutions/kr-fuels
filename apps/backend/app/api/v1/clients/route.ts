@@ -20,7 +20,13 @@ export async function GET(request: NextRequest) {
     const active = searchParams.get("active");
     const q = (searchParams.get("q") ?? "").trim().toLowerCase();
 
-    const snap = await adminDb.collection(COLLECTION).get();
+    // Push the `type` filter to Firestore (single-field, auto-indexed) so we
+    // don't pull the whole collection just to drop most of it. `active` and the
+    // free-text `q` stay in-memory (active is low-cardinality; q needs substring
+    // matching Firestore can't do), as does the `order`/name sort.
+    const base = adminDb.collection(COLLECTION);
+    const query = type ? base.where("type", "==", type) : base;
+    const snap = await query.get();
 
     let clients = snap.docs.map((doc) => {
       const data = doc.data();
@@ -32,7 +38,6 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    if (type) clients = clients.filter((c: any) => c.type === type);
     if (active === "true") clients = clients.filter((c: any) => c.active === true);
     if (active === "false") clients = clients.filter((c: any) => c.active === false);
     if (q) clients = clients.filter((c: any) => (c.name ?? "").toLowerCase().includes(q));

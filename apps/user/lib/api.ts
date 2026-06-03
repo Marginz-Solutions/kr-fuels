@@ -61,11 +61,11 @@ export interface StationPublic {
 }
 
 export async function getStations(): Promise<{ data: StationPublic[]; total: number; districts: string[] }> {
-  return getJson("/public/stations", { data: [], total: 0, districts: [] }, 60);
+  return getJson("/public/stations", { data: [], total: 0, districts: [] }, 300);
 }
 
 export async function getStation(id: string): Promise<StationPublic | null> {
-  const j = await getJson<{ data: StationPublic | null }>(`/public/stations/${id}`, { data: null }, 60);
+  const j = await getJson<{ data: StationPublic | null }>(`/public/stations/${id}`, { data: null }, 300);
   return j.data;
 }
 
@@ -84,18 +84,18 @@ export interface TestimonialPublic {
   rating?: number;
 }
 export async function getTestimonials(): Promise<TestimonialPublic[]> {
-  const j = await getJson<{ data: TestimonialPublic[] }>("/public/testimonials", { data: [] });
+  const j = await getJson<{ data: TestimonialPublic[] }>("/public/testimonials", { data: [] }, 600);
   return j.data;
 }
 
 export interface FaqPublic { id: string; question?: string; answer?: string; isLink?: boolean; [k: string]: any }
 export async function getFaq(): Promise<FaqPublic[]> {
-  const j = await getJson<{ data: FaqPublic[] }>("/public/faq", { data: [] });
+  const j = await getJson<{ data: FaqPublic[] }>("/public/faq", { data: [] }, 600);
   return j.data;
 }
 
 export async function getPrivacy(): Promise<any> {
-  const j = await getJson<{ data: any }>("/public/privacy-policy", { data: null });
+  const j = await getJson<{ data: any }>("/public/privacy-policy", { data: null }, 3600);
   return j.data;
 }
 
@@ -104,47 +104,69 @@ export interface ContactDetails {
   presents: any | null;
 }
 export async function getContact(): Promise<ContactDetails> {
-  const j = await getJson<{ data: ContactDetails }>("/public/contact", { data: { essentials: null, presents: null } });
+  const j = await getJson<{ data: ContactDetails }>("/public/contact", { data: { essentials: null, presents: null } }, 1800);
   return j.data;
 }
+
+export interface ProductSection { heading: string; items: string[] }
+export interface ProductSpec    { name: string;    detail: string  }
 
 export interface ProductPublic {
   id: string;
   product_name: string;
   product_category: string;
+  tagline: string;
   description: string;
   product_image: string;
   gallery_images: string[];
-  external_url: string;
-  // Optional admin-set detail-page slug; the website also matches by category/name.
+  sections: ProductSection[];
+  specs: ProductSpec[];
   slug?: string;
+  cta_primary_text: string;
+  cta_primary_href: string;
+  cta_secondary_text: string;
+  cta_secondary_href: string;
+  is_external: boolean;
+  external_url: string;
 }
 export async function getProducts(): Promise<{ data: ProductPublic[]; categories: any[] }> {
-  return getJson("/public/products", { data: [], categories: [] });
+  return getJson("/public/products", { data: [], categories: [] }, 600);
 }
 
 export interface ClientPublic { id: string; name: string; type: string; website: string; logo: string }
 export async function getClients(type?: string): Promise<ClientPublic[]> {
-  const j = await getJson<{ data: ClientPublic[] }>(`/public/clients${type ? `?type=${type}` : ""}`, { data: [] });
+  const j = await getJson<{ data: ClientPublic[] }>(`/public/clients${type ? `?type=${type}` : ""}`, { data: [] }, 600);
   return j.data;
 }
 
 export async function getAbout(): Promise<AboutContent> {
-  const j = await getJson<{ data: AboutContent }>("/public/about", { data: ABOUT_CONTENT_DEFAULT });
+  const j = await getJson<{ data: AboutContent }>("/public/about", { data: ABOUT_CONTENT_DEFAULT }, 1800);
   return j.data ?? ABOUT_CONTENT_DEFAULT;
 }
 
 export async function getJourney(): Promise<JourneyMilestone[]> {
-  const j = await getJson<{ data: JourneyMilestone[] }>("/public/journey", { data: [] });
+  const j = await getJson<{ data: JourneyMilestone[] }>("/public/journey", { data: [] }, 1800);
   return j.data;
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const j = await getJson<{ data: SiteSettings }>("/public/site-settings", { data: SITE_SETTINGS_DEFAULT });
+  const j = await getJson<{ data: SiteSettings }>("/public/site-settings", { data: SITE_SETTINGS_DEFAULT }, 1800);
   return j.data ?? SITE_SETTINGS_DEFAULT;
 }
 
 export async function getCalculatorSettings(): Promise<CalculatorSettings> {
-  const j = await getJson<{ data: CalculatorSettings }>("/public/calculator-settings", { data: CALCULATOR_SETTINGS_DEFAULT });
+  const j = await getJson<{ data: CalculatorSettings }>("/public/calculator-settings", { data: CALCULATOR_SETTINGS_DEFAULT }, 1800);
   return j.data ?? CALCULATOR_SETTINGS_DEFAULT;
+}
+
+export async function getHeroImages(): Promise<string[]> {
+  const j = await getJson<{ data: { id: string; url: string; order: number }[] }>(
+    "/public/hero-images",
+    { data: [] },
+    300,
+  );
+  return (j.data ?? [])
+    .filter((img) => img.url)
+    .sort((a, b) => a.order - b.order)
+    .map((img) => img.url);
 }

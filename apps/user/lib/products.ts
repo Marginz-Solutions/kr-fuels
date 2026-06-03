@@ -88,7 +88,7 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
   },
   {
     slug: "conversionkit",
-    href: "https://vibuh.com/",
+    href: "https://www.vibuh.com/shop-grid.html",
     external: true,
     image: "/assets/products/conversionkit.jpg",
     label: "Conversion Kits",
@@ -137,7 +137,7 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
   },
   {
     slug: "tanks",
-    href: "https://vibuh.com/",
+    href: "https://www.vibuh.com/shop-grid.html",
     external: true,
     image: "/assets/products/tanks.jpg",
     label: "Tanks & Multivalves",
