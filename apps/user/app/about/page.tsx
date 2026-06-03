@@ -3,7 +3,7 @@ import { MapPin, Leaf, CalendarClock, Users, Fuel, Target, Compass, Sparkles, ty
 import { getAbout, getJourney, getStations } from "@/lib/api";
 import { Reveal } from "@/components/Reveal";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
-import { BRAND } from "@/lib/site";
+import { BRAND, STATION_COUNT_FALLBACK, DISTRICT_COUNT_FALLBACK } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -22,8 +22,8 @@ export default async function AboutPage() {
     getJourney(),
     getStations(),
   ]);
-  const count = stations.total > 0 ? stations.total : 81;
-  const districts = stations.districts.length || 11;
+  const count = stations.total > 0 ? stations.total : STATION_COUNT_FALLBACK;
+  const districts = stations.districts.length || DISTRICT_COUNT_FALLBACK;
   const blocks = (about.contentBlocks ?? []).slice(1);
 
   const stats: { icon: LucideIcon; v: string; l: string }[] = [

@@ -5,7 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Menu, X, Calculator, Leaf, ChevronDown, ArrowUpRight, CalendarDays } from "lucide-react";
-import { NAV_LINKS, PRODUCT_MENU, ADMIN_LOGIN_URL } from "@/lib/site";
+import { NAV_LINKS, PRODUCT_MENU, ADMIN_LOGIN_URL, STATION_COUNT_FALLBACK } from "@/lib/site";
 import type { FuelPricesPublic } from "@/lib/api";
 import type { CalculatorSettings } from "@kr/shared/types";
 
@@ -35,7 +35,7 @@ export function Header({
   const [carbonOpen, setCarbonOpen] = useState(false);
   const [today, setToday] = useState("");
   const pathname = usePathname();
-  const count = stationCount > 0 ? stationCount : 81;
+  const count = stationCount > 0 ? stationCount : STATION_COUNT_FALLBACK;
 
   // Render the date only after mount to avoid SSR/CSR hydration drift.
   useEffect(() => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getStations } from "@/lib/api";
 import { StationsExplorer } from "@/components/StationsExplorer";
 import { STATIONS_FALLBACK } from "@/lib/fallbacks";
+import { STATION_COUNT_FALLBACK } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Auto LPG Stations",
@@ -18,7 +19,7 @@ export default async function StationsPage() {
   const districts = stations.districts.length
     ? stations.districts
     : Array.from(new Set(STATIONS_FALLBACK.map((s) => s.district).filter(Boolean) as string[])).sort();
-  const count = stations.total > 0 ? stations.total : 81;
+  const count = stations.total > 0 ? stations.total : STATION_COUNT_FALLBACK;
 
   return (
     <>

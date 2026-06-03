@@ -16,6 +16,12 @@ export const BRAND = {
   yearsOfService: new Date().getFullYear() - 2007,
 };
 
+// Network-size fallbacks. Every screen reads the REAL station count + district
+// list live from the DB (getStations → total / districts); these are only used
+// to keep the UI and SEO copy sensible if the public API is momentarily down.
+export const STATION_COUNT_FALLBACK = 81;
+export const DISTRICT_COUNT_FALLBACK = 11;
+
 // Admin app ORIGIN (no trailing slash). Dev: the admin runs on :3001.
 // Production: set NEXT_PUBLIC_ADMIN_URL=https://admin.krfuels.com .
 export const ADMIN_URL = (process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:3001").replace(/\/+$/, "");

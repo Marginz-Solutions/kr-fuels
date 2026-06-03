@@ -7,7 +7,7 @@ import {
 import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { getFuelPrices, getStations, getTestimonials, getAbout, getClients, getHeroImages } from "@/lib/api";
-import { BRAND, OFFERINGS, TESTIMONIAL_FALLBACK } from "@/lib/site";
+import { BRAND, OFFERINGS, TESTIMONIAL_FALLBACK, STATION_COUNT_FALLBACK } from "@/lib/site";
 import { PARTNERS_FALLBACK } from "@/lib/fallbacks";
 
 // ISR: home reflects live fuel prices — keep it fresh but served from cache.
@@ -27,7 +27,7 @@ export default async function HomePage() {
 
   const heroSlides = heroImages.length ? heroImages : HERO_IMAGES_FALLBACK;
 
-  const count = stations.total > 0 ? stations.total : 81;
+  const count = stations.total > 0 ? stations.total : STATION_COUNT_FALLBACK;
   // Savings is computed live from today's prices; falls back to the brand figure (40%)
   // only when prices are unavailable, and is used consistently across the page.
   const savingsPct = prices.petrol > 0 && prices.autoLPG > 0 ? Math.round((1 - prices.autoLPG / prices.petrol) * 100) : 40;
