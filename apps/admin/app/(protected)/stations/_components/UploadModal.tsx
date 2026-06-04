@@ -5,7 +5,7 @@ import React, { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent
 import { Station } from './ImagesModal'
 import { api } from '@/lib/axios'
 import { toast } from 'sonner'
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, Check, ArrowUp } from 'lucide-react'
 import { Station as OriginalStation } from "@/types/dust"
 
 type UploadFile = {
@@ -343,8 +343,8 @@ const UploadModal = ({ open, setOpen, stations, setStations, fetchData, setOrigi
                   <b style={{ opacity: 1 }}>{files.length}</b> file{files.length > 1 ? 's' : ''}
                 </span>
               )}
-              {doneCount > 0 && <span style={{ fontSize: 12, color: '#22c55e' }}>✓ {doneCount} uploaded</span>}
-              {uploadingCount > 0 && <span style={{ fontSize: 12, color: ACCENT }}>↑ {uploadingCount} uploading…</span>}
+              {doneCount > 0 && <span style={{ fontSize: 12, color: '#22c55e', display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={13} /> {doneCount} uploaded</span>}
+              {uploadingCount > 0 && <span style={{ fontSize: 12, color: ACCENT, display: 'inline-flex', alignItems: 'center', gap: 4 }}><ArrowUp size={13} /> {uploadingCount} uploading…</span>}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               {pendingCount > 0 && (

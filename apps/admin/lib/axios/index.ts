@@ -14,13 +14,24 @@ api.interceptors.response.use(
     if (MUTATING.has((response.config.method ?? "").toLowerCase())) pingRevalidate();
     return response;
   },
-  (error: AxiosError<{ error?: string; message?: string }>) => {
+  (error: AxiosError<{ error?: string; message?: string; issues?: Record<string, string[]> }>) => {
     const status  = error.response?.status
-    const message =
+    const issues  = error.response?.data?.issues
+    // Field-level validation errors (e.g. { mobileNumber: ["Invalid mobile number"] })
+    // are flattened into the message so a 400 names the offending field instead of a
+    // bare "Validation failed". They're also attached to the Error for callers that
+    // want to highlight individual inputs.
+    const fieldDetail = issues
+      ? Object.entries(issues)
+          .map(([field, msgs]) => `${field}: ${(msgs ?? []).join(", ")}`)
+          .join(" · ")
+      : ""
+    const baseMessage =
       error.response?.data?.error   ??
       error.response?.data?.message ??
       error.message                 ??
       "Something went wrong"
+    const message = fieldDetail ? `${baseMessage} — ${fieldDetail}` : baseMessage
  
     // ── Global status handling ──
     if (status === 401) {
@@ -41,7 +52,10 @@ api.interceptors.response.use(
       console.error("[axios] Server error:", status, error.config?.url)
     }
  
-    // Normalize: always reject with a plain Error carrying the server message
-    return Promise.reject(new Error(message))
+    // Normalize: always reject with a plain Error carrying the server message,
+    // exposing the raw field issues for callers that want per-input handling.
+    const err = new Error(message)
+    if (issues) (err as Error & { issues?: Record<string, string[]> }).issues = issues
+    return Promise.reject(err)
   }
 )

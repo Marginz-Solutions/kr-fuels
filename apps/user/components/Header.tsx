@@ -60,18 +60,15 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      {/* ── Top green price-ticker bar (scrolling marquee) ──────── */}
+      {/* ── Top green price-ticker bar (static — no scroll) ─────── */}
       <div className="bg-brand text-white">
-        <div className="container-x grid h-11 grid-cols-3 items-center gap-4 text-[12.5px]">
+        <div className="container-x flex h-11 items-center justify-between gap-4 text-[12.5px]">
           <span className="hidden shrink-0 items-center gap-1.5 font-medium md:flex">
             <CalendarDays size={14} className="text-white/90" />
             <span suppressHydrationWarning>{today}</span>
           </span>
-          <div className="col-span-3 overflow-hidden md:col-span-1">
-            <div className="flex w-max kr-marquee">
-              {ticker}
-              {ticker}
-            </div>
+          <div className="flex min-w-0 flex-1 justify-center overflow-hidden">
+            {ticker}
           </div>
           <div className="hidden shrink-0 items-center justify-end gap-4 md:flex">
             <Link href={`mailto:${email}`} className="hidden text-white/85 hover:text-white lg:inline">{email}</Link>
@@ -139,7 +136,7 @@ export function Header({
             </button>
           </div>
 
-          <button className="grid h-10 w-10 place-items-center rounded-lg lg:hidden" onClick={() => setOpen((v) => !v)} aria-label="Menu">
+          <button className="grid h-10 w-10 shrink-0 place-items-center rounded-lg lg:hidden" onClick={() => setOpen((v) => !v)} aria-label="Menu">
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>

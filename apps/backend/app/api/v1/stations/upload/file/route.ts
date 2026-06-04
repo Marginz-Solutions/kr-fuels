@@ -3,8 +3,15 @@ import { adminDb } from "@/lib/firebase/admin";
 import { ExcelUploadStationSchema } from "@kr/shared/validators/station.schema";
 import { Station, StationRow } from "@kr/shared/types/dust";
 import { NextRequest, NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
 import * as XLSX from "xlsx"
 export const dynamic = "force-dynamic"
+
+// Identity of a station for dedup purposes: name + canonical mobile number.
+// The schema already canonicalises mobileNumber to a bare 10-digit value, so the
+// same station always produces the same key regardless of how the sheet formats it.
+const stationKey = (stationName: string, mobileNumber: string) =>
+    `${(stationName ?? "").trim().toLowerCase().replace(/\s+/g, " ")}|${(mobileNumber ?? "").trim()}`
 export async function POST(req: NextRequest) {
     const user = await verifySession(req)
     if (!user) {
@@ -53,11 +60,34 @@ export async function POST(req: NextRequest) {
         );
     }
 
+    // ── Idempotency guard ────────────────────────────────────────────────
+    // Without this, re-uploading the same sheet — or a double-click that fires the
+    // request twice — inserts the whole file again as fresh auto-ID docs, so the
+    // station count balloons (e.g. 8 → 80) and the list shows the same stations
+    // repeated. Skip any row that already exists (by name + mobile) and any row
+    // duplicated inside the sheet itself, so an upload becomes safe to retry.
+    const existingSnap = await adminDb
+        .collection("stations")
+        .select("stationName", "mobileNumber")
+        .get()
+    const existingKeys = new Set(
+        existingSnap.docs.map(d => stationKey(d.data().stationName, d.data().mobileNumber))
+    )
+
     const batch = adminDb.batch();
 
     const savedIds: string[] = []
+    const skipped: string[] = []
+    const seen = new Set<string>()  // collapse duplicate rows within the same sheet
 
     for (const row of result.data as StationRow[]) {
+        const key = stationKey(row.stationName, row.mobileNumber)
+        if (existingKeys.has(key) || seen.has(key)) {
+            skipped.push(row.stationName)
+            continue
+        }
+        seen.add(key)
+
         const ref = adminDb.collection("stations").doc()
         const payload: Station = {
             district: row.district,
@@ -79,17 +109,19 @@ export async function POST(req: NextRequest) {
                 longitude: row.longitude
             }
         }
-        batch.set(ref, payload)
+        batch.set(ref, { ...payload, createdAt: FieldValue.serverTimestamp(), createdBy: user.uid })
         savedIds.push(ref.id)
     }
 
-    await batch.commit()
+    if (savedIds.length > 0) await batch.commit()
 
     return NextResponse.json(
         {
             success: true,
             data: {
                 inserted: savedIds.length,
+                skipped: skipped.length,
+                skippedStations: skipped,
                 ids: savedIds,
             },
         },

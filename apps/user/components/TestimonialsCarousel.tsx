@@ -57,7 +57,7 @@ export function TestimonialsCarousel({ items }: { items: TestimonialItem[] }) {
         </div>
 
         <div className="mt-8 flex items-center justify-center gap-3">
-          <button onClick={() => go(-1)} className="grid h-10 w-10 place-items-center rounded-full border border-line hover:bg-brand-pale" aria-label="Previous">
+          <button onClick={() => go(-1)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line hover:bg-brand-pale" aria-label="Previous">
             <ChevronLeft size={18} />
           </button>
           <div className="flex gap-1.5">
@@ -65,7 +65,7 @@ export function TestimonialsCarousel({ items }: { items: TestimonialItem[] }) {
               <button key={d} onClick={() => setI(d)} className={`h-2 rounded-full transition-all ${d === i ? "w-6 bg-brand" : "w-2 bg-black/15"}`} aria-label={`Go to ${d + 1}`} />
             ))}
           </div>
-          <button onClick={() => go(1)} className="grid h-10 w-10 place-items-center rounded-full border border-line hover:bg-brand-pale" aria-label="Next">
+          <button onClick={() => go(1)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line hover:bg-brand-pale" aria-label="Next">
             <ChevronRight size={18} />
           </button>
         </div>

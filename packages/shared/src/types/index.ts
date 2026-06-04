@@ -402,12 +402,20 @@ export interface SiteSocialLinks {
 export interface SiteSettings {
   footerTags: string[];
   social?: SiteSocialLinks;
+  /** MP4/WebM (or YouTube/embed) URL for the "in action" video on the home page. */
+  homeVideoUrl?: string;
   updatedAt?: string | Date | null;
 }
+
+// The KR GFI Premium Auto LPG TVC hosted on the live site — used as the home-page
+// video until an admin sets a different URL.
+export const HOME_VIDEO_URL_DEFAULT =
+  "https://krfuels.com/assets/videos/KRGFI%20Premium%20Auto%20LPG%20Conversion%20Kit%20%20%20TVC%20%20%20Director's%20Cut.mp4";
 
 export const SITE_SETTINGS_DEFAULT: SiteSettings = {
   footerTags: ["Eco-Friendly", "Auto LPG", "Since 2007", "Proven Savings", "Cleaner Drive"],
   social: {},
+  homeVideoUrl: HOME_VIDEO_URL_DEFAULT,
 };
 
 export interface CalculatorSettings {

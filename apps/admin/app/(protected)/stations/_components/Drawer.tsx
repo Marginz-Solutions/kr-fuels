@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { ImageIcon, Save, Star, X } from 'lucide-react'
 import React, { useRef, useState } from 'react'
 import { toast } from 'sonner'
+import WorkingHoursPicker from './WorkingHoursPicker'
 
 type DrawerProps = {
     editing: Station | null
@@ -58,7 +59,7 @@ const Drawer = (props: DrawerProps) => {
             <div style={{ width: 440, maxWidth: "95vw", background: C.white, height: "100%", boxShadow: "-10px 0 40px rgba(26,46,41,0.12)", display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${C.bd}` }}>
                     <span style={{ fontWeight: 600, fontSize: 16, color: C.t }}>{editing ? "Edit Station" : "Add New Station"}</span>
-                    <button onClick={() => setDrawer(false)} aria-label="Close" style={{ ...btn("ghost"), padding: 6 }}>✕</button>
+                    <button onClick={() => setDrawer(false)} aria-label="Close" style={{ ...btn("ghost"), padding: 6 }}><X size={16} /></button>
                 </div>
                 <div style={{ padding: 20, overflowY: "auto", flex: 1 }}>
 
@@ -67,10 +68,9 @@ const Drawer = (props: DrawerProps) => {
                         ["stationName", "Station Name", "text", "KR Fuels Madurai Central"],
                         ["area", "Area", "text", "Anna Nagar, RS Puram..."],
                         ["contactPerson", "Contact Person", "text", "John Doe"],
-                        ["mobileNumber", "Mobile Number", "tel", "+91 98421 00000"],
+                        ["mobileNumber", "Mobile Number", "tel", "9842100000 (10 digits)"],
                         ["telephone", "Telephone (optional)", "tel", "044-XXXXXXXX"],
                         ["emailID", "Email ID (optional)", "email", "station@krfuels.in"],
-                        ["workingHours", "Working Hours", "text", "6:00 AM - 10:00 PM"],
                     ] as const).map(([key, label, type, placeholder]) => (
                         <div key={key} style={{ marginBottom: 16 }}>
                             <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 4, display: "block" }}>{label}</label>
@@ -82,6 +82,12 @@ const Drawer = (props: DrawerProps) => {
                             />
                         </div>
                     ))}
+
+                    {/* Working Hours — guided open/close time picker */}
+                    <WorkingHoursPicker
+                        value={form.workingHours ?? ""}
+                        onChange={(workingHours) => setForm((p) => ({ ...p, workingHours }))}
+                    />
 
                     {/* Status */}
                     <div style={{ marginBottom: 16 }}>

@@ -68,8 +68,6 @@ export async function GET(request: NextRequest) {
       ...doc.data(),
     }));
 
-    console.log(stations)
-
     return NextResponse.json({
       data: stations,
       meta: {
@@ -127,7 +125,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-
+    // Reject an exact duplicate (same name + mobile) so an accidental re-submit
+    // can't create a second copy. Query a single field (auto-indexed) and match
+    // the mobile in memory to avoid needing a composite index.
+    const dupSnap = await adminDb
+      .collection("stations")
+      .where("stationName", "==", result.data.stationName)
+      .get();
+    if (dupSnap.docs.some(d => d.data().mobileNumber === result.data.mobileNumber)) {
+      return NextResponse.json(
+        { error: `A station named "${result.data.stationName}" with this mobile number already exists` },
+        { status: 409 }
+      );
+    }
 
     const imageUrls = await pushImagesToStorage(formData, user);
 

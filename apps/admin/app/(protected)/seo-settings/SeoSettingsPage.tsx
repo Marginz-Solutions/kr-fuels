@@ -17,7 +17,7 @@ import {
   Edit,
 } from "lucide-react";
 import { C } from "../../../constants/colors";
-import { card, btn, inp } from "../../../styles/shared";
+import { card, btn, iconBtn, inp } from "../../../styles/shared";
 import { toast } from "sonner";
 import {
   useMutation,
@@ -360,12 +360,10 @@ const OgImageUpload: FC<{
             {!disabled && (
             <button
               onClick={() => onChange("")}
-              style={{
-                ...btn("ghost"),
+              style={iconBtn("ghost", 28, {
                 background: "rgba(255,255,255,0.9)",
                 color: C.red,
-                padding: "6px 10px",
-              }}
+              })}
             >
               <X size={13} />
             </button>

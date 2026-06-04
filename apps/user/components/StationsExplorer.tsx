@@ -157,7 +157,7 @@ export function StationsExplorer({ stations, districts }: { stations: StationPub
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`h-9 w-9 rounded-full text-sm font-semibold transition ${
+              className={`h-9 w-9 shrink-0 rounded-full text-sm font-semibold transition ${
                 current === i + 1 ? "bg-brand text-white" : "border border-black/10 text-ink/60 hover:border-brand"
               }`}
             >

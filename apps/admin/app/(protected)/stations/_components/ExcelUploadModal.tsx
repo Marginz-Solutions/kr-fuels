@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback } from "react"
 import { Modal } from '@/components/ui'
-import { Upload, FileSpreadsheet, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import {
+    Upload, FileSpreadsheet, X, CheckCircle2, AlertCircle, AlertTriangle, Loader2,
+    Landmark, Map, Store, User, Smartphone, Phone, Mail, DoorClosed, Signpost, Mailbox, Clock, MapPin, Navigation,
+} from "lucide-react"
 import { api } from "@/lib/axios"
-import { C } from "@/constants/colors"
 import { toast } from "sonner"
 
 type ExcelUploadModalProps = {
@@ -12,19 +14,19 @@ type ExcelUploadModalProps = {
 }
 
 const REQUIRED_COLUMNS = [
-    { key: "district", label: "District", icon: "🏛️" },
-    { key: "area", label: "Area", icon: "🗺️" },
-    { key: "stationName", label: "Station Name", icon: "🏪" },
-    { key: "contactPerson", label: "Contact Person", icon: "👤" },
-    { key: "mobileNumber", label: "Mobile Number", icon: "📱" },
-    { key: "telephone", label: "Telephone", icon: "☎️" },
-    { key: "emailID", label: "Email ID", icon: "✉️" },
-    { key: "doorNo", label: "Door No", icon: "🚪" },
-    { key: "street", label: "Street", icon: "🛣️" },
-    { key: "pincode", label: "Pincode", icon: "📮" },
-    {key:"workingHours",label:"Working Hours",icon:"⏱️"},
-    { key: "latitude", label: "Latitude", icon: "📍" },
-    { key: "longitude", label: "Longitude", icon: "📍" },
+    { key: "district", label: "District", Icon: Landmark },
+    { key: "area", label: "Area", Icon: Map },
+    { key: "stationName", label: "Station Name", Icon: Store },
+    { key: "contactPerson", label: "Contact Person", Icon: User },
+    { key: "mobileNumber", label: "Mobile Number", Icon: Smartphone },
+    { key: "telephone", label: "Telephone", Icon: Phone },
+    { key: "emailID", label: "Email ID", Icon: Mail },
+    { key: "doorNo", label: "Door No", Icon: DoorClosed },
+    { key: "street", label: "Street", Icon: Signpost },
+    { key: "pincode", label: "Pincode", Icon: Mailbox },
+    { key: "workingHours", label: "Working Hours", Icon: Clock },
+    { key: "latitude", label: "Latitude", Icon: MapPin },
+    { key: "longitude", label: "Longitude", Icon: Navigation },
 ]
 
 const ExcelUploadModal = ({ open, setOpen,fetchList }: ExcelUploadModalProps) => {
@@ -63,22 +65,30 @@ const ExcelUploadModal = ({ open, setOpen,fetchList }: ExcelUploadModalProps) =>
     }
 
     const handleUpload = async () => {
-        if (!file) return
+        // Guard against a second click while the request is in flight — without it,
+        // each click re-inserts the whole sheet and duplicates every station.
+        if (!file || loading) return
         const formData: FormData = new FormData()
         formData.append("file", file)
         setLoading(true)
-        const resposne = await api.post("/stations/upload/file", formData)
-        if (!resposne.data) {
-            toast.error("Upload Failed")
+        try {
+            const response = await api.post("/stations/upload/file", formData)
+            const { inserted = 0, skipped = 0 } = response.data?.data ?? {}
+            await fetchList(1, 10)
+            if (inserted === 0 && skipped > 0) {
+                toast.info(`No new stations added — ${skipped} already existed`)
+            } else if (skipped > 0) {
+                toast.success(`${inserted} added · ${skipped} skipped (already exist)`)
+            } else {
+                toast.success(`${inserted} station${inserted === 1 ? "" : "s"} uploaded`)
+            }
+            setOpen(false)
+            setFile(null)
+        } catch (err) {
+            toast.error(err instanceof Error && err.message ? err.message : "Upload Failed")
+        } finally {
+            setLoading(false)
         }
-        else {
-            await fetchList(1,10)
-            toast.success("Uploaded Successfully!")
-        }
-        formData.delete("file")
-        setLoading(false)
-        setOpen(false)
-        setFile(null)
     }
 
     const handleClose = () => {
@@ -199,7 +209,7 @@ const ExcelUploadModal = ({ open, setOpen,fetchList }: ExcelUploadModalProps) =>
                                     display: "flex", alignItems: "center", gap: 8,
                                 }}
                             >
-                                <span style={{ fontSize: 14 }}>{col.icon}</span>
+                                <col.Icon size={15} color="#64748b" style={{ flexShrink: 0 }} />
                                 <div>
                                     <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "#1e293b" }}>{col.label}</p>
                                     <p style={{ margin: 0, fontSize: 10, color: "#94a3b8", fontFamily: "monospace" }}>Header: {col.key}</p>
@@ -207,9 +217,10 @@ const ExcelUploadModal = ({ open, setOpen,fetchList }: ExcelUploadModalProps) =>
                             </div>
                         ))}
                     </div>
-                    <div style={{ padding: "8px 14px", background: "#fffbeb", borderTop: "1px solid #fde68a" }}>
+                    <div style={{ padding: "8px 14px", background: "#fffbeb", borderTop: "1px solid #fde68a", display: "flex", alignItems: "center", gap: 6 }}>
+                        <AlertTriangle size={13} color="#92400e" style={{ flexShrink: 0 }} />
                         <p style={{ margin: 0, fontSize: 11, color: "#92400e" }}>
-                            ⚠️ Column header names must match exactly (case-sensitive) as shown above.
+                            Column header names must match exactly (case-sensitive) as shown above.
                         </p>
                     </div>
                 </div>
@@ -227,15 +238,15 @@ const ExcelUploadModal = ({ open, setOpen,fetchList }: ExcelUploadModalProps) =>
                     </button>
                     <button
                         onClick={handleUpload}
-                        disabled={!file}
+                        disabled={!file || loading}
                         style={{
                             padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-                            border: "none", cursor: file ? "pointer" : "not-allowed",
-                            background: file ? "#2563eb" : "#cbd5e1", color: "#fff",
-                            transition: "background 0.2s"
+                            border: "none", cursor: !file || loading ? "not-allowed" : "pointer",
+                            background: !file || loading ? "#cbd5e1" : "#2563eb", color: "#fff",
+                            transition: "background 0.2s", display: "inline-flex", alignItems: "center", gap: 6,
                         }}
                     >
-                        {loading ? (<Loader2 size={14} color={C.tm} style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />) : "upload"}
+                        {loading ? (<><Loader2 size={14} color="#fff" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} /> Uploading…</>) : "Upload"}
 
                     </button>
                 </div>

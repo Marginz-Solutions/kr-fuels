@@ -22,6 +22,14 @@ import { toast } from "sonner";
 type FormState = { name: string; type: ClientType; website: string; logo: string; active: boolean };
 const EMPTY_FORM: FormState = { name: "", type: "collaborator", website: "", logo: "", active: true };
 
+// The three technology-partner logos from the live KR Fuels home page (krfuels.com).
+// Offered as a one-click seed when the collection is empty so they become editable here.
+const DEFAULT_PARTNERS: Array<{ name: string; type: ClientType; website: string; logo: string; active: boolean; order: number }> = [
+  { name: "GFI", type: "collaborator", website: "https://www.gficontrolsystems.eu/", logo: "https://krfuels.com/assets/images/3.png", active: true, order: 0 },
+  { name: "BRC Gas Equipment", type: "collaborator", website: "https://www.brc.it/", logo: "https://krfuels.com/assets/images/1.png", active: true, order: 1 },
+  { name: "Zavoli", type: "collaborator", website: "https://www.zavoli.com/en/", logo: "https://krfuels.com/assets/images/2.png", active: true, order: 2 },
+];
+
 type TypeFilter = "all" | ClientType;
 type ActiveFilter = "all" | "active" | "inactive";
 
@@ -41,7 +49,21 @@ const ClientsPage: FC = () => {
     { kind: "toggle" | "delete"; client: Client } | null
   >(null);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const seedDefaults = async () => {
+    setSeeding(true);
+    try {
+      await Promise.all(DEFAULT_PARTNERS.map((p) => createClient(p)));
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      toast.success("Partner logos added — you can now edit them");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add default partners");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const uploadLogo = async (file: File) => {
     setLogoUploading(true);
@@ -133,8 +155,8 @@ const ClientsPage: FC = () => {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: C.t }}>Clients & Collaborators</div>
-          <div style={{ fontSize: 12, color: C.tm }}>Partner companies shown on the public website</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.t }}>Partners</div>
+          <div style={{ fontSize: 12, color: C.tm }}>Technology partners &amp; collaborators shown on the public website</div>
         </div>
         <button style={btn()} onClick={openAdd}><Plus size={15} />Add Partner</button>
       </div>
@@ -174,9 +196,13 @@ const ClientsPage: FC = () => {
       {isLoading ? (
         <div style={{ color: C.tm, fontSize: 13, padding: 40, textAlign: "center" }}>Loading partners…</div>
       ) : list.length === 0 ? (
-        <div style={{ ...card(), padding: 40, textAlign: "center", color: C.tm, fontSize: 13 }}>
-          No partners match the current filters.
-        </div>
+        typeFilter === "all" && activeFilter === "all" && !search.trim() ? (
+          <DefaultPartnersPanel onSeed={seedDefaults} seeding={seeding} />
+        ) : (
+          <div style={{ ...card(), padding: 40, textAlign: "center", color: C.tm, fontSize: 13 }}>
+            No partners match the current filters.
+          </div>
+        )
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 16 }}>
           {list.map((c) => (
@@ -350,6 +376,34 @@ const SegmentedFilter: FC<{ value: string; onChange: (v: string) => void; option
         {label}
       </button>
     ))}
+  </div>
+);
+
+// Shown when there are no partners yet — offers the three KR Fuels logos from the
+// live site (krfuels.com) as a one-click seed so they become editable entries.
+const DefaultPartnersPanel: FC<{ onSeed: () => void; seeding: boolean }> = ({ onSeed, seeding }) => (
+  <div style={{ ...card(), padding: 24 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.t }}>Add KR Fuels technology partners</div>
+        <div style={{ fontSize: 12, color: C.tm, marginTop: 2 }}>
+          No partners yet. Add the three logos shown on the live home page (GFI, BRC, Zavoli) to start managing them here.
+        </div>
+      </div>
+      <button style={{ ...btn(), whiteSpace: "nowrap", flexShrink: 0 }} onClick={onSeed} disabled={seeding}>
+        {seeding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}Add partner logos
+      </button>
+    </div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+      {DEFAULT_PARTNERS.map((p) => (
+        <div key={p.name} style={{ ...card(), padding: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+          <div style={{ width: "100%", height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Image src={p.logo} alt={p.name} width={120} height={48} unoptimized style={{ maxHeight: 48, maxWidth: "100%", width: "auto", objectFit: "contain" }} />
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: C.t }}>{p.name}</div>
+        </div>
+      ))}
+    </div>
   </div>
 );
 

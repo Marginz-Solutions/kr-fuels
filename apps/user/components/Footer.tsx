@@ -45,7 +45,7 @@ export function Footer({
           {socials.length > 0 && (
             <div className="mt-5 flex gap-2.5">
               {socials.map(([key, url]) => (
-                <Link key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={key} title={key} className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-sm font-bold uppercase text-white transition hover:bg-brand">
+                <Link key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={key} title={key} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-bold uppercase text-white transition hover:bg-brand">
                   {key.charAt(0)}
                 </Link>
               ))}

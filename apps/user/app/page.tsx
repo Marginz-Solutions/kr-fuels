@@ -6,9 +6,11 @@ import {
 } from "lucide-react";
 import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { getFuelPrices, getStations, getTestimonials, getAbout, getClients, getHeroImages } from "@/lib/api";
-import { BRAND, OFFERINGS, TESTIMONIAL_FALLBACK, STATION_COUNT_FALLBACK } from "@/lib/site";
+import { HomeVideo } from "@/components/HomeVideo";
+import { getFuelPrices, getStations, getTestimonials, getAbout, getClients, getHeroImages, getSiteSettings } from "@/lib/api";
+import { BRAND, TESTIMONIAL_FALLBACK, STATION_COUNT_FALLBACK } from "@/lib/site";
 import { PARTNERS_FALLBACK } from "@/lib/fallbacks";
+import { HOME_VIDEO_URL_DEFAULT } from "@kr/shared/types";
 
 // ISR: home reflects live fuel prices — keep it fresh but served from cache.
 export const revalidate = 30;
@@ -16,16 +18,18 @@ export const revalidate = 30;
 const HERO_IMAGES_FALLBACK = ["/assets/hero-2.jpg", "/assets/hero-1.jpg", "/assets/products/auto-lpg.jpg"];
 
 export default async function HomePage() {
-  const [prices, stations, testimonials, about, partners, heroImages] = await Promise.all([
+  const [prices, stations, testimonials, about, partners, heroImages, site] = await Promise.all([
     getFuelPrices(),
     getStations(),
     getTestimonials(),
     getAbout(),
     getClients("collaborator"),
     getHeroImages(),
+    getSiteSettings(),
   ]);
 
   const heroSlides = heroImages.length ? heroImages : HERO_IMAGES_FALLBACK;
+  const homeVideoUrl = site.homeVideoUrl || HOME_VIDEO_URL_DEFAULT;
 
   const count = stations.total > 0 ? stations.total : STATION_COUNT_FALLBACK;
   // Savings is computed live from today's prices; falls back to the brand figure (40%)
@@ -157,7 +161,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── About Us + Offerings ─────────────────────────────── */}
+      {/* ── About Us + Video ─────────────────────────────────── */}
       <section className="container-x py-20">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
@@ -183,16 +187,8 @@ export default async function HomePage() {
           </div>
 
           <div>
-            <h3 className="mb-5 text-xl font-extrabold text-ink">What We Offer</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {OFFERINGS.map((o) => (
-                <div key={o.title} className="card-soft">
-                  <div className="text-2xl">{o.emoji}</div>
-                  <h4 className="mt-2 font-bold text-ink">{o.title}</h4>
-                  <p className="mt-1 text-sm text-mutedfg">{o.desc}</p>
-                </div>
-              ))}
-            </div>
+            <h3 className="mb-5 text-xl font-extrabold text-ink">See Auto LPG in Action</h3>
+            <HomeVideo src={homeVideoUrl} />
             <div className="mt-4 flex items-center gap-3 rounded-2xl bg-ink px-5 py-4 text-white">
               <Leaf className="shrink-0 text-brand-light" size={24} />
               <div>

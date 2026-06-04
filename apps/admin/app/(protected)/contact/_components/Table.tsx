@@ -1,7 +1,7 @@
 import { fmtDate, ListItem, statusColor, statusLabel, Tab } from '../ContactPage'
 import { btn, card, iconBtn } from '@/styles/shared'
 import { C } from '@/constants/colors'
-import { Check, Loader2, RefreshCw, Trash2 } from 'lucide-react'
+import { Check, Loader2, RefreshCw, Trash2, Star } from 'lucide-react'
 import { Feedback, Pagination } from '@/types/dust'
 import { Badge } from '@/components/ui'
 import PaginationComponent from '@/components/ui/Pagination'
@@ -111,7 +111,13 @@ const Table = (props: TableProps) => {
                         <>
                           <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.phoneNo}</td>
                           <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.category}</td>
-                          <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{"★".repeat(s.rating)}</td>
+                          <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>
+                            <span style={{ display: "inline-flex", gap: 1, alignItems: "center" }}>
+                              {Array.from({ length: s.rating }, (_, idx) => (
+                                <Star key={idx} size={13} color="#f59e0b" fill="#f59e0b" />
+                              ))}
+                            </span>
+                          </td>
                           <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.stationName ?? "-"}</td>
                         </>
                       )}

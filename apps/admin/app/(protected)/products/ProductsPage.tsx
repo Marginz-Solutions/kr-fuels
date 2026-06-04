@@ -407,7 +407,7 @@ const AddCategoryModal: FC<{
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-mutedfg hover:bg-line transition"
+            className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-mutedfg hover:bg-line transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -681,7 +681,7 @@ const ProductModal: FC<ProductModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-line flex items-center justify-center text-mutedfg hover:bg-cream hover:text-mutedfg transition"
+            className="w-8 h-8 shrink-0 rounded-full border border-line flex items-center justify-center text-mutedfg hover:bg-cream hover:text-mutedfg transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1069,7 +1069,7 @@ const ProductDetailModal: FC<{
           )}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-mutedfg hover:bg-white shadow-sm transition"
+            className="absolute top-3 right-3 w-8 h-8 shrink-0 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-mutedfg hover:bg-white shadow-sm transition"
           >
             <X className="w-4 h-4" />
           </button>

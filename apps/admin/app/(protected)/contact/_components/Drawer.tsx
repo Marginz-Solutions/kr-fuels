@@ -174,11 +174,12 @@ export const Drawer = ({ item, tab, onClose, resolving, deleting, resolve, remov
                                 value={
                                     <span style={{ display: "flex", gap: 2, alignItems: "center" }}>
                                         {Array.from({ length: 5 }, (_, idx) => (
-                                            <span key={idx} style={{
-                                                fontSize: 18,
-                                                color: idx < (item ).rating ? "#f59e0b" : C.bd,
-                                                lineHeight: 1,
-                                            }}>★</span>
+                                            <Star
+                                                key={idx}
+                                                size={16}
+                                                color={idx < (item).rating ? "#f59e0b" : C.bd}
+                                                fill={idx < (item).rating ? "#f59e0b" : "none"}
+                                            />
                                         ))}
                                         <span style={{ fontSize: 12, color: C.tm, marginLeft: 6 }}>
                                             {(item).rating} / 5

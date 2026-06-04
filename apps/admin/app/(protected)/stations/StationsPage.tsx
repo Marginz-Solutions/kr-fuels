@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, type FC } from "react";
-import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload, Loader2 } from "lucide-react";
+import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload, Loader2, User, Phone } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn, inp, iconBtn } from "../../../styles/shared";
 import { Badge, StatCard } from "../../../components/ui";
@@ -166,7 +166,7 @@ const StationsPage: FC<StationResponse> = (props) => {
       setPendingFiles([])
       setDrawer(false)
     } catch (err) {
-      toast.error("Failed")
+      toast.error(err instanceof Error && err.message ? err.message : "Failed")
       console.error("Save failed:", err)
     } finally {
       setSaveLoading(false)
@@ -355,16 +355,26 @@ const StationsPage: FC<StationResponse> = (props) => {
             gap: isMobile ? 10 : 16,
             padding: isMobile ? 10 : 16,
           }}>
-            {list.map(s => (
-              <div key={s.id} style={{ border: `1px solid ${C.bd}`, borderRadius: 14, overflow: "hidden" }}>
+            {list.map(s => {
+              const thumb = s.primaryImage || s.images?.[0]
+              return (
+              <div key={s.id} style={{ border: `1px solid ${C.bd}`, borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
                 <div style={{
-                  height: isMobile ? 52 : 80,
+                  height: isMobile ? 104 : 160,
                   background: `linear-gradient(135deg, ${C.p}22, ${C.p}44)`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
-                  <MapPin size={isMobile ? 20 : 28} color={C.p} />
+                  {thumb ? (
+                    <img
+                      src={thumb}
+                      alt={s.stationName}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  ) : (
+                    <MapPin size={isMobile ? 20 : 28} color={C.p} />
+                  )}
                 </div>
-                <div style={{ padding: isMobile ? 10 : 14 }}>
+                <div style={{ padding: isMobile ? 10 : 14, flex: 1, display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4, gap: 6 }}>
                     <div style={{ fontWeight: 600, color: C.t, fontSize: isMobile ? 12 : 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {s.stationName}
@@ -374,8 +384,15 @@ const StationsPage: FC<StationResponse> = (props) => {
                   {!isMobile && (
                     <>
                       <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{s.area} · <Badge color="blue">{s.district}</Badge></div>
-                      <div style={{ fontSize: 12, color: C.tm, marginBottom: 2 }}>{formatAddress(s)}</div>
-                      <div style={{ fontSize: 12, color: C.tm, marginBottom: 10 }}>{s.contactPerson} · {s.mobileNumber}</div>
+                      <div style={{ fontSize: 12, color: C.tm, marginBottom: 8 }}>{formatAddress(s)}</div>
+                      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 8px", fontSize: 12, marginBottom: 10 }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: C.t, fontWeight: 500 }}>
+                          <User size={12} color={C.tm} />{s.contactPerson}
+                        </span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: C.p, fontWeight: 600 }}>
+                          <Phone size={12} />{s.mobileNumber}
+                        </span>
+                      </div>
                     </>
                   )}
                   {isMobile && (
@@ -383,7 +400,7 @@ const StationsPage: FC<StationResponse> = (props) => {
                       {s.area}
                     </div>
                   )}
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 6, marginTop: "auto" }}>
                     <button
                       onClick={() => openEdit(s)}
                       aria-label="Edit station"
@@ -402,7 +419,8 @@ const StationsPage: FC<StationResponse> = (props) => {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 

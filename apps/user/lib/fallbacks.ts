@@ -3,12 +3,13 @@
 // these. Keeps the public pages from looking broken/empty during setup.
 import type { StationPublic, ProductPublic, FaqPublic, ClientPublic } from "@/lib/api";
 
-// Technology-partner logos shown on the existing KR Fuels site. Used only when the
-// admin `clients` collection has no collaborators yet; real entries override these.
+// Technology-partner logos shown on the existing KR Fuels site (krfuels.com partner
+// strip: GFI, BRC, Zavoli). Used only when the admin `clients` collection has no
+// collaborators yet; real entries seeded/added in the admin override these.
 export const PARTNERS_FALLBACK: ClientPublic[] = [
-  { id: "fb-pt1", name: "BRC Gas Equipment", type: "collaborator", website: "", logo: "/assets/feature-1.png" },
-  { id: "fb-pt2", name: "Zavoli", type: "collaborator", website: "", logo: "/assets/feature-2.png" },
-  { id: "fb-pt3", name: "GFI", type: "collaborator", website: "", logo: "/assets/feature-3.png" },
+  { id: "fb-pt1", name: "GFI", type: "collaborator", website: "https://www.gficontrolsystems.eu/", logo: "/assets/feature-3.png" },
+  { id: "fb-pt2", name: "BRC Gas Equipment", type: "collaborator", website: "https://www.brc.it/", logo: "/assets/feature-1.png" },
+  { id: "fb-pt3", name: "Zavoli", type: "collaborator", website: "https://www.zavoli.com/en/", logo: "/assets/feature-2.png" },
 ];
 
 export const STATIONS_FALLBACK: StationPublic[] = [
