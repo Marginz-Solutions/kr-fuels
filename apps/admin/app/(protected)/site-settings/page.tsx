@@ -82,7 +82,7 @@ export default function SiteSettingsPage() {
           <div style={{ fontSize: 13, fontWeight: 600, color: C.t }}>Home page video</div>
         </div>
         <div style={{ fontSize: 11, color: C.tm, marginBottom: 12 }}>
-          Shown in the “See Auto LPG in Action” block on the home page. Paste a hosted MP4/WebM (or YouTube/embed) URL, or upload a clip (max 100MB).
+          Shown in the “About Us” block on the home page. Paste a hosted MP4/WebM (or YouTube/embed) URL, or upload a clip (max 100MB).
         </div>
 
         {/* Preview */}

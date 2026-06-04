@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { Menu, X, Calculator, Leaf, ChevronDown, ArrowUpRight, CalendarDays } from "lucide-react";
+import { Menu, X, Calculator, Leaf, ChevronDown, ArrowUpRight, CalendarDays, Fuel } from "lucide-react";
 import { NAV_LINKS, PRODUCT_MENU, ADMIN_LOGIN_URL, STATION_COUNT_FALLBACK } from "@/lib/site";
 import type { FuelPricesPublic } from "@/lib/api";
 import type { CalculatorSettings } from "@kr/shared/types";
@@ -18,8 +18,6 @@ const CarbonModal = dynamic(() => import("./CarbonModal").then((m) => m.CarbonMo
 export function Header({
   stationCount,
   hqCity,
-  email,
-  phone,
   prices,
   calc,
 }: {
@@ -42,38 +40,55 @@ export function Header({
     setToday(new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }));
   }, []);
 
-  const savings = prices.petrol > 0 && prices.autoLPG > 0 ? Math.round((1 - prices.autoLPG / prices.petrol) * 100) : 38;
   const p = (v: number) => (v > 0 ? v : "—");
-
-  const ticker = (
-    <span className="inline-flex items-center gap-6 px-6 text-[12.5px] whitespace-nowrap">
-      <span className="text-white/75">Today&apos;s Price in {hqCity}:</span>
-      <span className="font-semibold text-white">Auto-LPG ₹{p(prices.autoLPG)}/lit</span>
-      <span className="text-white/40">·</span>
-      <span className="text-amber-200">Petrol ₹{p(prices.petrol)}/lit</span>
-      <span className="text-white/40">·</span>
-      <span className="text-amber-200">Diesel ₹{p(prices.diesel)}/lit</span>
-      <span className="text-white/40">·</span>
-      <span className="font-bold text-white">💚 Savings over Petrol: {savings}%</span>
-    </span>
-  );
+  // Live savings headline (Auto-LPG vs petrol); 40% fallback matches the home page + SEO copy.
+  const savingsPct = prices.petrol > 0 && prices.autoLPG > 0 ? Math.round((1 - prices.autoLPG / prices.petrol) * 100) : 40;
 
   return (
     <header className="sticky top-0 z-50 w-full">
-      {/* ── Top green price-ticker bar (static — no scroll) ─────── */}
+      {/* ── Top green price bar — Auto-LPG is the hero; Petrol/Diesel sit beside it as comparison. */}
       <div className="bg-brand text-white">
-        <div className="container-x flex h-11 items-center justify-between gap-4 text-[12.5px]">
-          <span className="hidden shrink-0 items-center gap-1.5 font-medium md:flex">
-            <CalendarDays size={14} className="text-white/90" />
-            <span suppressHydrationWarning>{today}</span>
-          </span>
-          <div className="flex min-w-0 flex-1 justify-center overflow-hidden">
-            {ticker}
+        <div className="container-x flex items-center justify-between gap-4 py-2.5">
+          {/* Left: today + city context (md+) */}
+          <div className="hidden min-w-0 flex-col md:flex">
+            <span className="text-[12px] font-bold text-white/85">Today · {hqCity}</span>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
+              <CalendarDays size={12} className="text-white/80" />
+              <span suppressHydrationWarning>{today}</span>
+            </span>
           </div>
-          <div className="hidden shrink-0 items-center justify-end gap-4 md:flex">
-            <Link href={`mailto:${email}`} className="hidden text-white/85 hover:text-white lg:inline">{email}</Link>
-            <Link href={`tel:${phone}`} className="text-white/85 hover:text-white">{phone}</Link>
-            <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 font-bold text-white transition hover:bg-white/25">
+
+          {/* Center: prices — Auto-LPG hero card + Petrol/Diesel comparison */}
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-white/15 px-3.5 py-1.5 ring-1 ring-white/20">
+              <Fuel size={20} className="shrink-0 text-white/90" />
+              <div className="leading-none">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">Auto-LPG</div>
+                <div className="mt-1 text-[22px] font-extrabold tracking-tight">
+                  ₹{p(prices.autoLPG)}<span className="ml-0.5 text-[11px] font-semibold text-white/70">/litre</span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden items-center gap-5 sm:flex">
+              {[{ l: "Petrol", v: prices.petrol }, { l: "Diesel", v: prices.diesel }].map((f) => (
+                <div key={f.l} className="leading-none">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/60">{f.l}</div>
+                  <div className="mt-1 text-lg font-bold text-yellow-400">
+                    ₹{p(f.v)}<span className="ml-0.5 text-[11px] font-medium text-white/50">/lit</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: staff login (md+) */}
+          <div className="hidden shrink-0 items-center justify-end gap-2.5 md:flex">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
+              <Leaf size={14} className="text-brand" />
+              <span className="text-[13px] font-extrabold leading-none text-brand">Save {savingsPct}%</span>
+              <span className="hidden text-[10px] font-semibold leading-none text-brand/75 lg:inline">vs petrol</span>
+            </div>
+            <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-white/25">
               Staff Login <ArrowUpRight size={13} />
             </Link>
           </div>

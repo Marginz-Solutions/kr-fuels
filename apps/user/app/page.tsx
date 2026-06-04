@@ -60,9 +60,9 @@ export default async function HomePage() {
 
   const ctaCards = [
     { icon: MapPin, title: "Find a Station", sub: `${count}+ locations near you`, href: "/stations" },
-    { icon: GitCompare, title: "LPG vs Domestic LPG", sub: "Know the real difference", href: "/learn" },
+    { icon: GitCompare, title: "LPG vs Domestic LPG", sub: "Know the real difference", href: "/guide" },
     { icon: MessageSquare, title: "Feedback", sub: "Share your experience", href: "/contact" },
-    { icon: HelpCircle, title: "FAQ", sub: "Common questions answered", href: "/learn#faq" },
+    { icon: HelpCircle, title: "FAQ", sub: "Common questions answered", href: "/guide#faq" },
   ];
 
   return (
@@ -80,7 +80,7 @@ export default async function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/stations" className="btn-primary">Find Nearest Station <ArrowRight size={16} /></Link>
-              <Link href="/learn" className="btn-dark">How It Works <ArrowRight size={16} /></Link>
+              <Link href="/guide" className="btn-dark">How It Works <ArrowRight size={16} /></Link>
             </div>
           </div>
 
@@ -187,7 +187,6 @@ export default async function HomePage() {
           </div>
 
           <div>
-            <h3 className="mb-5 text-xl font-extrabold text-ink">See Auto LPG in Action</h3>
             <HomeVideo src={homeVideoUrl} />
             <div className="mt-4 flex items-center gap-3 rounded-2xl bg-ink px-5 py-4 text-white">
               <Leaf className="shrink-0 text-brand-light" size={24} />

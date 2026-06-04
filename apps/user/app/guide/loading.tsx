@@ -1,7 +1,7 @@
 import { CenteredHeroSkeleton, Skeleton } from "@/components/Skeleton";
 
-// Instant shell for the Learn page — hero + comparison table + calculators + FAQ.
-export default function LearnLoading() {
+// Instant shell for the Guide page — hero + comparison table + calculators + FAQ.
+export default function GuideLoading() {
   return (
     <>
       <CenteredHeroSkeleton />

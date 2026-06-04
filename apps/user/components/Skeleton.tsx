@@ -12,7 +12,7 @@ export function Skeleton({
   return <span aria-hidden style={style} className={`block animate-pulse rounded-lg bg-line ${className}`} />;
 }
 
-// Centered hero band used by /stations, /learn, /contact, /privacy, /about.
+// Centered hero band used by /stations, /guide, /contact, /privacy, /about.
 export function CenteredHeroSkeleton() {
   return (
     <section className="bg-linear-to-b from-brand-pale/60 to-white">

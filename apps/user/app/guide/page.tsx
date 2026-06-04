@@ -6,7 +6,7 @@ import { normalizeUrl } from "@kr/shared/lib/utils";
 import { FAQ_FALLBACK } from "@/lib/fallbacks";
 
 export const metadata: Metadata = {
-  title: "Learn — Auto LPG vs Domestic LPG",
+  title: "Guide — Auto LPG vs Domestic LPG",
   description: "Auto LPG vs Domestic LPG compared, and frequently asked questions about switching.",
 };
 
@@ -34,7 +34,7 @@ function Cell({ v }: { v: string }) {
   return <span className="font-semibold text-ink">{v}</span>;
 }
 
-export default async function LearnPage() {
+export default async function GuidePage() {
   const faq = await getFaq();
   // Real FAQ from the backend wins; fall back to common questions when empty.
   const faqList = faq.length ? faq : FAQ_FALLBACK;
@@ -43,7 +43,7 @@ export default async function LearnPage() {
     <>
       <section className="bg-gradient-to-b from-brand-pale/60 to-white">
         <div className="container-x py-14 text-center">
-          <span className="eyebrow mb-4">Learn</span>
+          <span className="eyebrow mb-4">Guide</span>
           <h1 className="text-4xl font-extrabold text-ink sm:text-5xl">Everything About Auto LPG</h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-mutedfg">
             Understand the savings, the environmental impact and how Auto LPG differs from domestic LPG.
@@ -63,10 +63,10 @@ export default async function LearnPage() {
           {COLUMNS.map((col) => (
             <div
               key={col.title}
-              className={`card-soft ${col.highlight ? "ring-2 ring-brand/25" : ""}`}
+              className={`card-soft border-none ${col.highlight ? "ring-2 ring-brand/25" : "ring-2 ring-yellow-500/25"}`}
             >
               <div className="flex items-center gap-3">
-                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${col.highlight ? "bg-brand text-white" : "bg-cream text-ink/60"}`}>
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${col.highlight ? "bg-brand text-white" : "bg-yellow-500 text-white"}`}>
                   <col.icon size={24} />
                 </span>
                 <div>

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// PUBLIC. FAQ entries for the Learn page.
+// PUBLIC. FAQ entries for the Guide page.
 export async function GET() {
   try {
     const snap = await adminDb.collection("faq").get();

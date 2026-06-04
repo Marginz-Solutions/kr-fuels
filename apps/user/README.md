@@ -6,7 +6,7 @@ read endpoints (`/api/v1/public/*`). Runs on **3000**.
 
 ## Pages
 
-`/` Home · `/about` · `/products` · `/stations` (+ `/stations/[id]`) · `/learn`
+`/` Home · `/about` · `/products` · `/stations` (+ `/stations/[id]`) · `/guide`
 (comparison + calculators + FAQ) · `/contact` · `/privacy`.
 
 ## Dynamic data (single source of truth = backend)
