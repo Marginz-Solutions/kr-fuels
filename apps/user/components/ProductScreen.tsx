@@ -106,7 +106,27 @@ export default async function ProductScreen({ slug }: { slug: string }) {
 
       {/* ── Content sections ─────────────────────────────────── */}
       {(r.sections.length > 0 || r.specs.length > 0 || r.gallery.length > 0) && (
-        <section className="container-x py-14">
+        <section className="container-x pb-14">
+
+          {r.specs.length > 0 && (
+            <div className="mb-10">
+              <h2 className="section-title">Specifications</h2>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {r.specs.map((spec, si) => (
+                  <div key={si} className="card-soft flex items-start gap-3">
+                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-pale text-brand">
+                      <Check size={16} strokeWidth={3} />
+                    </span>
+                    <div>
+                      <div className="font-bold text-ink">{spec.name}</div>
+                      <div className="mt-1 text-sm leading-relaxed text-mutedfg">{spec.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {r.sections.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2">
               {r.sections.map((s, si) => (
@@ -124,25 +144,6 @@ export default async function ProductScreen({ slug }: { slug: string }) {
                   </ul>
                 </div>
               ))}
-            </div>
-          )}
-
-          {r.specs.length > 0 && (
-            <div className="mt-10">
-              <h2 className="section-title">Specifications</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {r.specs.map((spec, si) => (
-                  <div key={si} className="card-soft flex items-start gap-3">
-                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-pale text-brand">
-                      <Check size={16} strokeWidth={3} />
-                    </span>
-                    <div>
-                      <div className="font-bold text-ink">{spec.name}</div>
-                      <div className="mt-1 text-sm leading-relaxed text-mutedfg">{spec.detail}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 

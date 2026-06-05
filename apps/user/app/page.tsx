@@ -103,7 +103,7 @@ export default async function HomePage() {
         </div>
 
         {/* Dark bottom price card */}
-        <div className="container-x pb-14">
+        {/* <div className="container-x pb-14">
           <div className="grid grid-cols-2 gap-y-6 rounded-3xl bg-ink px-6 py-7 text-white sm:px-10 md:grid-cols-4 md:divide-x md:divide-white/10">
             {priceCells.map((c) => (
               <div key={c.l} className="md:px-6">
@@ -119,7 +119,7 @@ export default async function HomePage() {
               <div className="text-xs text-white/60">Save ₹{savingsRs}/lit</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {/* ── Quick Links (moved up) ───────────────────────────── */}
@@ -147,7 +147,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Numbers That Speak ───────────────────────────────── */}
-      <section className="border-y border-line bg-white">
+      {/* <section className="border-y border-line bg-white">
         <div className="container-x py-14">
           <h2 className="mb-10 text-center section-title">Numbers That Speak</h2>
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
@@ -159,7 +159,7 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── About Us + Video ─────────────────────────────────── */}
       <section className="container-x py-20">

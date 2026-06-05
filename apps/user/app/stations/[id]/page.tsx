@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
-import { MapPin, Clock, Navigation, Phone, User, ArrowLeft } from "lucide-react";
+import { MapPin, Clock, Navigation, Phone, User, Mail, ArrowLeft } from "lucide-react";
 import { getStation } from "@/lib/api";
 import { STATIONS_FALLBACK } from "@/lib/fallbacks";
 
@@ -84,6 +84,7 @@ export default async function StationDetailPage({ params }: Props) {
             {s.workingHours && <p className="flex items-center gap-2"><Clock size={16} className="text-brand" />{s.workingHours}</p>}
             {s.contactPerson && <p className="flex items-center gap-2"><User size={16} className="text-brand" />{s.contactPerson}</p>}
             {s.mobileNumber && <p className="flex items-center gap-2"><Phone size={16} className="text-brand" />{s.mobileNumber}</p>}
+            {s.emailID && <p className="flex items-center gap-2"><Mail size={16} className="text-brand" /><a href={`mailto:${s.emailID}`} className="hover:text-brand">{s.emailID}</a></p>}
           </div>
 
           {features.length > 0 && (

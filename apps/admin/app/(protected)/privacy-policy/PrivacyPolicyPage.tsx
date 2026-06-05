@@ -129,7 +129,7 @@ const SectionEditor: FC<{
               value={s.title}
               disabled={disabled}
               onChange={(e) => update(idx, { title: e.target.value })}
-              placeholder="Section title…"
+              placeholder="Section title (optional — leave blank for preamble)…"
               style={{ ...inp(), flex: 1, fontSize: 13, fontWeight: 500 }}
             />
             {!disabled && (
@@ -300,16 +300,16 @@ const PrivacyPolicyPage: FC<{ initialData: PrivacyPolicy | null }> = ({ initialD
                     return;
                   }
 
-                  // Empty section validation
+                  // Empty section validation. Title is optional — the first
+                  // section is an untitled preamble (effective date + intro);
+                  // every section must still carry content.
                   const hasInvalidSection = form.sections.some(
-                    (section) =>
-                      !section.title.trim() ||
-                      !section.content.trim()
+                    (section) => !section.content.trim()
                   );
 
                   if (hasInvalidSection) {
                     toast.error(
-                      "All sections must have title and content"
+                      "Every section must have content"
                     );
 
                     return;

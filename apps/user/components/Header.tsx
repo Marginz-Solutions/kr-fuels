@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { Menu, X, Calculator, Leaf, ChevronDown, ArrowUpRight, CalendarDays, Fuel } from "lucide-react";
+import { Menu, X, Calculator, Leaf, ChevronDown, ArrowUpRight, CalendarDays, Fuel, Shield } from "lucide-react";
 import { NAV_LINKS, PRODUCT_MENU, ADMIN_LOGIN_URL, STATION_COUNT_FALLBACK } from "@/lib/site";
 import type { FuelPricesPublic } from "@/lib/api";
 import type { CalculatorSettings } from "@kr/shared/types";
@@ -81,13 +81,14 @@ export function Header({
             </div>
           </div>
 
-          {/* Right: staff login (md+) */}
+          {/* Right: privacy + staff login (md+) */}
           <div className="hidden shrink-0 items-center justify-end gap-2.5 md:flex">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
+            {/* <div className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
               <Leaf size={14} className="text-brand" />
               <span className="text-[13px] font-extrabold leading-none text-brand">Save {savingsPct}%</span>
               <span className="hidden text-[10px] font-semibold leading-none text-brand/75 lg:inline">vs petrol</span>
-            </div>
+            </div> */}
+            {/* <span className="h-3.5 w-px bg-white/25" aria-hidden /> */}
             <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-white/25">
               Staff Login <ArrowUpRight size={13} />
             </Link>
@@ -188,6 +189,9 @@ export function Header({
                   </Link>
                 );
               })}
+              <Link href="/privacy" onClick={() => setOpen(false)} className={`flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-semibold ${pathname === "/privacy" ? "bg-brand-pale text-brand" : "text-ink/80 hover:bg-brand-pale"}`}>
+                <Shield size={15} /> Privacy Policy
+              </Link>
               <button onClick={() => { setSavingsOpen(true); setOpen(false); }} className="mt-1 btn-dark justify-center">Savings Calculator</button>
               <button onClick={() => { setCarbonOpen(true); setOpen(false); }} className="btn-outline justify-center">Carbon Footprint</button>
               <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="btn-outline justify-center">Admin Login</Link>

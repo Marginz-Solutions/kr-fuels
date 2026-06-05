@@ -36,7 +36,7 @@ export default async function AboutPage() {
 
   return (
     <>
-      <section className="bg-gradient-to-b from-brand-pale/60 to-white">
+      {/* <section className="bg-gradient-to-b from-brand-pale/60 to-white">
         <div className="container-x py-16 text-center lg:py-20">
           <span className="eyebrow mb-4">About {BRAND.shortName}</span>
           <h1 className="mx-auto max-w-3xl text-4xl font-extrabold text-ink sm:text-5xl">
@@ -47,18 +47,18 @@ export default async function AboutPage() {
               "A pioneer in Auto LPG distribution across Tamil Nadu, helping motorists switch to a cleaner, cheaper and greener fuel."}
           </p>
         </div>
-      </section>
+      </section> */}
 
-      {about.videoUrl && (
+      {/* {about.videoUrl && (
         <section className="container-x -mt-6">
           <div className="mx-auto aspect-video max-w-3xl overflow-hidden rounded-2xl border border-line bg-ink shadow-lg">
             <iframe className="h-full w-full" src={about.videoUrl} title="About KR Trans Fuels" allowFullScreen />
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Live counts + headline stats */}
-      {about.showStationCount !== false && (
+      {/* {about.showStationCount !== false && (
         <section className="container-x py-14">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {stats.map((s) => (
@@ -70,10 +70,10 @@ export default async function AboutPage() {
             ))}
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Mission & values — icon-led split cards */}
-      {blocks.length > 0 && (
+      {/* {blocks.length > 0 && (
         <section className="container-x pb-20">
           <div className="mx-auto max-w-4xl space-y-5">
             {blocks.map((b, i) => {
@@ -92,7 +92,7 @@ export default async function AboutPage() {
             })}
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Journey timeline — items reveal on scroll */}
       {journey.length > 0 && (

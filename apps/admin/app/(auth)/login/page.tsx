@@ -145,7 +145,7 @@ function LoginForm() {
             </div>
 
             {/* Google OAuth */}
-            <button
+            {/* <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={loading}
@@ -159,7 +159,7 @@ function LoginForm() {
                 <div className="h-px flex-1 bg-line" />
                 <span className="text-xs text-mutedfg">or sign in with email</span>
                 <div className="h-px flex-1 bg-line" />
-            </div>
+            </div> */}
 
             {error && (
                 <div

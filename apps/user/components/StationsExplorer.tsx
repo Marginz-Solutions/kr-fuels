@@ -1,12 +1,112 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { MapPin, Clock, Navigation, Eye, Search } from "lucide-react";
+import { MapPin, Clock, Navigation, Eye, Search, ChevronDown, Check } from "lucide-react";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import type { StationPublic } from "@/lib/api";
 
 const FEATURE_OPTIONS = ["24x7", "Free Water", "Nitrogen Air", "Parking", "Restroom", "Air Filling"];
 const PER_PAGE = 9;
+
+// Full network of station locations ("District - Area"), shown in the location
+// filter. Some may not have a live station yet — they simply return no results
+// until one is added.
+const LOCATIONS = [
+  "Ariyalur - Trichy Main Road",
+  "Chengalpattu - Kanchipuram Road",
+  "Chennai - Avadi",
+  "Chennai - Kattupakkam",
+  "Chennai - Kodungaiyur",
+  "Chennai - Vadivelan Nagar",
+  "Chennai - Velachery",
+  "Coimbatore - Avinashi",
+  "Coimbatore - Kinathukadavu",
+  "Coimbatore - Mettupalayam",
+  "Coimbatore - Neelambur",
+  "Coimbatore - Saravanampatti",
+  "Coimbatore - Sulur",
+  "Cuddalore - Virudhachalam",
+  "Dharmapuri - Palacode Road",
+  "Dindigul - Batlagundu",
+  "Dindigul - Palani Road",
+  "Dindigul - Palayam",
+  "Dindigul - Vedachandur",
+  "Erode - Ammapettai",
+  "Erode - Bhavani",
+  "Erode - Kodumudi",
+  "Erode - Moolapalayam",
+  "Erode - Nasiyanur",
+  "Erode - Perundurai",
+  "Kallakurichi - Chinnasalem",
+  "Karur - Aravakuruchi",
+  "Karur - Madurai By Pass Road",
+  "Karur - Puliyur",
+  "Krishnagiri - Hosur",
+  "Krishnagiri - Poochampalli",
+  "Krishnagiri - Thiruvannamalai Road",
+  "Madurai - Ellis Nagar",
+  "Madurai - Melur",
+  "Madurai - Pasumalai",
+  "Madurai - Sivagangai Road",
+  "Madurai - Villapuram",
+  "Namakkal - Mettala",
+  "Namakkal - Nallipalayam",
+  "Namakkal - Paramathyvelur",
+  "Namakkal - Rasipuram",
+  "Namakkal - Thuraiyur Road",
+  "Namakkal - Tiruchengode",
+  "Namakkal - Trichy Road",
+  "Namakkal - Vettambadi",
+  "Perambalur - Siruvachur",
+  "Pudukkottai - Nathampannai",
+  "Ramanathapuram - Perungulam",
+  "Salem - Attur",
+  "Salem - Ayothiyapattinam",
+  "Salem - Bangalore Bypass Road",
+  "Salem - Omalur",
+  "Salem - Sankari",
+  "Salem - Tharamangalam",
+  "Salem - Uthamasolapuram",
+  "Sivagangai - Devakottai",
+  "Sivagangai - Karaikudi",
+  "Tenkasi - Madurai Courtallam Road",
+  "Thanjavur - Kumbakonam",
+  "Thanjavur - New Bus Stand",
+  "Thanjavur - Thiruvaiyaru",
+  "Theni - Bodinayakkanur",
+  "Theni - Periyakulam Road",
+  "Theni - Uthamapalayam",
+  "Thoothukudi - Eral",
+  "Tiruchirappalli - Ariyamangalam",
+  "Tiruchirappalli - Cantonment",
+  "Tiruchirappalli - Manapparai",
+  "Tiruchirappalli - Musuri",
+  "Tiruchirappalli - T.V.Kovil",
+  "Tiruchirappalli - Thuraiyur",
+  "Tiruchirappalli - TVS Tolgate",
+  "Tirunelveli - Thachanallur Road",
+  "Tiruppur - Dharapuram",
+  "Tiruppur - Kangeyam",
+  "Tiruppur - Mulanur",
+  "Tiruppur - Palladam",
+  "Tiruppur - Palladam - Trichy Road",
+  "Tiruppur - Udumalpet",
+  "Tiruppur - Vellakovil",
+  "Viruthunagar - Sivakasi Road",
+];
+
+// Collapse a label to a comparison key (lowercase, strip punctuation/spacing) so
+// "Madurai - Sivagangai Road" matches a station stored with quirky district/area
+// formatting (redundant prefixes, en-dashes, missing spaces, etc.).
+const locKey = (s: string) => s.toLowerCase().replace(/–/g, "-").replace(/[^a-z0-9]+/g, "");
+
+function stationMatchesLocation(s: StationPublic, location: string): boolean {
+  const target = locKey(location);
+  const d = (s.district ?? "").trim();
+  const a = (s.area ?? "").trim();
+  const keys = [locKey(`${d} ${a}`), locKey(a), locKey(s.stationName ?? "")];
+  return keys.includes(target);
+}
 
 function stationFeatures(s: StationPublic): string[] {
   const raw = [...(s.amenities ?? []), ...(s.features ?? [])].map((x) => String(x));
@@ -22,8 +122,104 @@ function directionsUrl(s: StationPublic): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.stationName ?? ""} ${s.district ?? ""}`)}`;
 }
 
-export function StationsExplorer({ stations, districts }: { stations: StationPublic[]; districts: string[] }) {
-  const [district, setDistrict] = useState("All");
+// Custom, on-theme location dropdown. A native <select> can't have its option
+// list styled, so we render our own button + searchable popup (closes on outside
+// click / Escape) with the brand palette and a properly-aligned chevron.
+function LocationSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  const close = () => { setOpen(false); setQuery(""); };
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const options = useMemo(() => {
+    const all = [{ value: "All", label: "All Locations" }, ...LOCATIONS.map((l) => ({ value: l, label: l }))];
+    const term = query.trim().toLowerCase();
+    return term ? all.filter((o) => o.label.toLowerCase().includes(term)) : all;
+  }, [query]);
+
+  const label = value === "All" ? "All Locations" : value;
+
+  return (
+    <div ref={ref} className="relative w-full sm:w-auto">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between gap-3 rounded-full border bg-white px-4 py-2.5 text-sm font-medium text-ink outline-none transition sm:w-auto sm:min-w-[17rem] ${
+          open ? "border-brand ring-2 ring-brand/15" : "border-line hover:border-brand"
+        }`}
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDown
+          size={16}
+          className={`shrink-0 transition-transform duration-200 ${open ? "rotate-180 text-brand" : "text-ink/45"}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 z-40 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-white shadow-[0_12px_40px_rgba(13,26,16,0.16)]">
+          {/* Search inside the menu — 81 locations is a lot to scroll. */}
+          <div className="border-b border-line p-2">
+            <div className="relative">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search location…"
+                className="w-full rounded-full border border-line bg-cream py-2 pl-9 pr-3 text-sm outline-none transition focus:border-brand focus:bg-white"
+              />
+            </div>
+          </div>
+          {/* Options */}
+          <div className="max-h-72 overflow-auto p-1.5" role="listbox">
+            {options.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-ink/50">No location found</div>
+            ) : (
+              options.map((o) => {
+                const active = o.value === value;
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => { onChange(o.value); close(); }}
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
+                      active ? "bg-brand font-semibold text-white" : "text-ink/75 hover:bg-brand-pale hover:text-brand"
+                    }`}
+                  >
+                    <span className="truncate">{o.label}</span>
+                    {active && <Check size={15} className="shrink-0" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
+  const [location, setLocation] = useState("All");
   const [features, setFeatures] = useState<string[]>([]);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -33,7 +229,7 @@ export function StationsExplorer({ stations, districts }: { stations: StationPub
 
   const filtered = useMemo(() => {
     return stations.filter((s) => {
-      if (district !== "All" && s.district !== district) return false;
+      if (location !== "All" && !stationMatchesLocation(s, location)) return false;
       if (q && !`${s.stationName} ${s.area} ${s.district}`.toLowerCase().includes(q.toLowerCase())) return false;
       if (features.length) {
         const f = stationFeatures(s).map((x) => x.toLowerCase());
@@ -41,7 +237,7 @@ export function StationsExplorer({ stations, districts }: { stations: StationPub
       }
       return true;
     });
-  }, [stations, district, q, features]);
+  }, [stations, location, q, features]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, pages);
@@ -51,7 +247,8 @@ export function StationsExplorer({ stations, districts }: { stations: StationPub
     <div>
       {/* Filters */}
       <div className="mb-8 space-y-4">
-        <div className="relative max-w-md">
+        <div className="relative flex justify-between items-center">
+        <div className="relative max-w-md min-w-md">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
           <input
             value={q}
@@ -60,19 +257,14 @@ export function StationsExplorer({ stations, districts }: { stations: StationPub
             className="w-full rounded-full border border-black/10 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
-          {["All", ...districts].map((d) => (
-            <button
-              key={d}
-              onClick={() => { setDistrict(d); setPage(1); }}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-                district === d ? "bg-brand text-white" : "bg-brand-pale text-brand hover:bg-brand/15"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
+
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="text-sm font-medium text-ink/60">Location</span>
+          <LocationSelect value={location} onChange={(v) => { setLocation(v); setPage(1); }} />
         </div>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {FEATURE_OPTIONS.map((f) => (
             <button

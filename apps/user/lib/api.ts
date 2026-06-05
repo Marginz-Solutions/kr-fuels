@@ -60,6 +60,8 @@ export interface StationPublic {
   stationCode?: string;
   contactPerson?: string;
   mobileNumber?: string;
+  telephone?: string;
+  emailID?: string;
   [key: string]: any;
 }
 

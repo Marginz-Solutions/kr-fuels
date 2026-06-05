@@ -186,7 +186,7 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
     href: "/lubricants",
     image: "/assets/products/lubricants.jpg",
     label: "Lubricants",
-    category: "Veedol Lubricants",
+    category: "Lubricants",
     icon: "droplets",
     tagline: "Specialised lubricants formulated for LPG / CNG engines.",
     intro:

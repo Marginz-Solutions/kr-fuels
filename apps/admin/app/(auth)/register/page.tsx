@@ -112,7 +112,7 @@ export default function RegisterPage() {
         <p className="mt-1 text-sm text-mutedfg">Bootstrap the first KR Trans Fuels staff account.</p>
       </div>
 
-      <button
+      {/* <button
         type="button"
         onClick={handleGoogleRegister}
         disabled={loading}
@@ -126,7 +126,7 @@ export default function RegisterPage() {
         <div className="h-px flex-1 bg-line" />
         <span className="text-xs text-mutedfg">or</span>
         <div className="h-px flex-1 bg-line" />
-      </div>
+      </div> */}
 
       {error && (
         <div role="alert" className="mb-4 flex items-start gap-2 rounded-lg border border-red-100 bg-red-50 px-3.5 py-3 text-sm text-red-600">

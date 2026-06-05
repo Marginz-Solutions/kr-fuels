@@ -16,9 +16,6 @@ export default async function StationsPage() {
   const stations = await getStations();
   // Real backend data wins; fall back to a representative set when empty.
   const list = stations.data.length ? stations.data : STATIONS_FALLBACK;
-  const districts = stations.districts.length
-    ? stations.districts
-    : Array.from(new Set(STATIONS_FALLBACK.map((s) => s.district).filter(Boolean) as string[])).sort();
   const count = stations.total > 0 ? stations.total : STATION_COUNT_FALLBACK;
 
   return (
@@ -34,7 +31,7 @@ export default async function StationsPage() {
       </section>
 
       <section className="container-x py-14">
-        <StationsExplorer stations={list} districts={districts} />
+        <StationsExplorer stations={list} />
       </section>
     </>
   );
