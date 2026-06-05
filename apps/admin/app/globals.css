@@ -153,7 +153,9 @@ a[aria-disabled="true"],
 /* ── Shared utility classes (mirrors apps/user) ─────────────── */
 @layer components {
   .container-x {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    /* Mirrors apps/user: widened 1280 → 1400. Above 1440 the 4K density-lock
+       at the end of this file scales the whole layout up proportionally. */
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
   }
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60;
@@ -198,3 +200,35 @@ a[aria-disabled="true"],
 }
 .kr-fade-in { animation: kr-fade-in 0.15s ease both; }
 .kr-pop-in { animation: kr-pop-in 0.2s cubic-bezier(0.16, 1, 0.32, 1) both; }
+
+/* ──────────────────────────────────────────────────────────────
+   Large-screen / 4K density lock  (mirrors apps/user/app/globals.css)
+   ----------------------------------------------------------------
+   The admin shell is a fixed sidebar + a flexing content area with NO
+   max-width — so on a 4K monitor the grids, tables and cards stretch
+   edge-to-edge and look sparse/broken. The content is laid out in absolute
+   px (inline styles), so a rem/max-width clamp can't rescale it.
+
+   Instead we scale the whole 1440-density layout up proportionally with
+   `zoom` above 1536px, so a 2560px / 4K screen MIRRORS the 1440px laptop
+   experience — same proportions, spacing and density — and fills the screen.
+
+   `zoom` is applied to <body> (not the viewport/root) so it can never feed
+   back into these min-width media queries. Each step keeps the effective
+   layout width ≈ physical ÷ zoom ≈ 1440–1700px. ≤1535px is left untouched.
+
+   The factor is exposed as --app-zoom so the few full-viewport-HEIGHT
+   containers (the 100dvh app shell, the 100vh sidebar, the login wrapper)
+   can divide by it: `zoom` does not reflow explicit dvh/vh the way it reflows
+   auto widths, so an un-compensated 100dvh becomes 100dvh × zoom and overflows.
+   calc(100dvh / var(--app-zoom)) keeps them exactly one viewport tall. */
+:root { --app-zoom: 1; }
+body { zoom: var(--app-zoom); }
+@media (min-width: 1536px) { :root { --app-zoom: 1.07; } } /* eff ≈ 1440 */
+@media (min-width: 1700px) { :root { --app-zoom: 1.18; } }
+@media (min-width: 2048px) { :root { --app-zoom: 1.42; } }
+@media (min-width: 2304px) { :root { --app-zoom: 1.60; } }
+@media (min-width: 2560px) { :root { --app-zoom: 1.78; } } /* common 4K @150% scaling */
+@media (min-width: 2880px) { :root { --app-zoom: 2.00; } }
+@media (min-width: 3360px) { :root { --app-zoom: 2.33; } }
+@media (min-width: 3840px) { :root { --app-zoom: 2.67; } } /* native 4K @100% scaling */

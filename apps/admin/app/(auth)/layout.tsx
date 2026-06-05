@@ -14,8 +14,10 @@ export default function AuthLayout({
 }) {
   return (
     <div
-      className="relative flex min-h-screen items-center justify-center px-4 py-10"
-      style={{ background: C.bg }}
+      className="relative flex items-center justify-center px-4 py-10"
+      // min-height (not the min-h-screen class) divided by --app-zoom so the
+      // login stays one viewport tall and centered under the 4K density zoom.
+      style={{ background: C.bg, minHeight: "calc(100dvh / var(--app-zoom, 1))" }}
     >
       {/* Soft brand background decoration */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

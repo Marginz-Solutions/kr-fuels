@@ -201,7 +201,7 @@ export function Header({
       </div>
 
       <SavingsModal open={savingsOpen} onClose={() => setSavingsOpen(false)} prices={prices} settings={calc} />
-      <CarbonModal open={carbonOpen} onClose={() => setCarbonOpen(false)} settings={calc} />
+      <CarbonModal open={carbonOpen} onClose={() => setCarbonOpen(false)} />
     </header>
   );
 }

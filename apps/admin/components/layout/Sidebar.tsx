@@ -42,7 +42,7 @@ const Sidebar: FC<SidebarProps> = ({ collapsed, setCollapsed, isMobile = false, 
               transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
               boxShadow: mobileOpen ? "0 0 40px rgba(13,26,16,0.18)" : "none",
             }
-          : { minHeight: "100vh" }),
+          : { minHeight: "calc(100dvh / var(--app-zoom, 1))" }),
       }}
     >
       {/* Brand lockup — height matches the Topbar (64px) so both headers align. */}

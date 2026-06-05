@@ -24,9 +24,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <FuelPriceProvider>
+      {/* height divided by --app-zoom so the shell stays exactly one viewport
+          tall under the large-screen/4K zoom (see globals.css). var() falls
+          back to 1 (no-op) below 1536px and when the property is unset. */}
       <div style={{
         display:    "flex",
-        height:     "100dvh",
+        height:     "calc(100dvh / var(--app-zoom, 1))",
         background: C.bg,
         overflow:   "hidden",
       }}>

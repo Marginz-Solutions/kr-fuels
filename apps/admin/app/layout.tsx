@@ -36,7 +36,11 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakarta.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* No min-h-full: <body> is the zoomed element (see globals.css 4K
+          density lock). A min-height:100% would resolve to the viewport
+          height and then be scaled by zoom, overflowing. Height is instead
+          driven by the content (the 100dvh shell, compensated for zoom). */}
+      <body className="flex flex-col">
         <QueryProvider>
           <AuthProvider>
             {children}

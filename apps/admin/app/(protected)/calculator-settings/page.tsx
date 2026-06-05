@@ -9,12 +9,10 @@ import type { CalculatorSettings } from "@/types";
 
 const FIELDS: Array<{ key: keyof CalculatorSettings; label: string; hint: string }> = [
   { key: "lpgMileageFactor", label: "LPG mileage factor", hint: "LPG mileage ≈ factor × petrol mileage (default 0.9)" },
-  { key: "petrolCo2PerL", label: "Petrol CO₂ (kg/L)", hint: "Emission factor for petrol (default 2.31)" },
-  { key: "autoLpgCo2PerL", label: "Auto-LPG CO₂ (kg/L)", hint: "Emission factor for Auto-LPG (default 1.51)" },
 ];
 
 export default function CalculatorSettingsPage() {
-  const [data, setData] = useState<CalculatorSettings>({ lpgMileageFactor: 0.9, petrolCo2PerL: 2.31, autoLpgCo2PerL: 1.51 });
+  const [data, setData] = useState<CalculatorSettings>({ lpgMileageFactor: 0.9 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -30,8 +28,6 @@ export default function CalculatorSettingsPage() {
     try {
       await authedSend("/calculator-settings", "PUT", {
         lpgMileageFactor: Number(data.lpgMileageFactor),
-        petrolCo2PerL: Number(data.petrolCo2PerL),
-        autoLpgCo2PerL: Number(data.autoLpgCo2PerL),
       });
       toast.success("Calculator settings saved");
     } catch (e: any) {
@@ -49,7 +45,7 @@ export default function CalculatorSettingsPage() {
         <div style={{ width: 38, height: 38, borderRadius: 10, background: `${C.p}15`, display: "flex", alignItems: "center", justifyContent: "center", color: C.p }}><Calculator size={18} /></div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 700, color: C.t }}>Calculator Settings</div>
-          <div style={{ fontSize: 12, color: C.tm }}>Constants used by the website Savings & Carbon calculators.</div>
+          <div style={{ fontSize: 12, color: C.tm }}>Constant used by the website Savings calculator.</div>
         </div>
       </div>
 

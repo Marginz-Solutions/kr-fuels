@@ -55,7 +55,10 @@ a[aria-disabled="true"],
 
 @layer components {
   .container-x {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    /* Content cap widened 1280 → 1400 so the "large laptop" (~1440px) view
+       fills toward the edges instead of leaving wide gutters. Above 1440 the
+       4K density-lock below scales this whole layout up proportionally. */
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
   }
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark;
@@ -100,3 +103,30 @@ a[aria-disabled="true"],
 }
 .kr-fade-in { animation: kr-fade-in 0.15s ease both; }
 .kr-pop-in { animation: kr-pop-in 0.2s cubic-bezier(0.16, 1, 0.32, 1) both; }
+
+/* ──────────────────────────────────────────────────────────────
+   Large-screen / 4K density lock
+   ----------------------------------------------------------------
+   The UI is designed for a ~1440px "large laptop" viewport. On bigger
+   monitors (≥1536px, up to 4K) we don't want the content to stretch wide
+   and look sparse, nor to reflow. Instead we scale the whole 1440-density
+   layout up proportionally with `zoom`, so a 2560px / 4K screen MIRRORS the
+   1440px experience — same proportions, spacing and content density — and
+   fills the screen edge-to-edge.
+
+   Why `zoom` (not max-width clamp): a centered max-width still leaves a
+   sparse island on 4K; `zoom` makes the design fill the monitor at 1440
+   density. Why on <body> and not the root/viewport: a min-width media query
+   is evaluated against the layout viewport (html), so zooming <body> can
+   never feed back into these queries (no oscillation).
+
+   Each step keeps the effective layout width ≈ physical ÷ zoom ≈ 1440–1700px.
+   ≤1535px is left fully untouched — the existing responsive layout applies. */
+@media (min-width: 1536px) { body { zoom: 1.07; } } /* eff ≈ 1440 */
+@media (min-width: 1700px) { body { zoom: 1.18; } }
+@media (min-width: 2048px) { body { zoom: 1.42; } }
+@media (min-width: 2304px) { body { zoom: 1.60; } }
+@media (min-width: 2560px) { body { zoom: 1.78; } } /* common 4K @150% scaling */
+@media (min-width: 2880px) { body { zoom: 2.00; } }
+@media (min-width: 3360px) { body { zoom: 2.33; } }
+@media (min-width: 3840px) { body { zoom: 2.67; } } /* native 4K @100% scaling */

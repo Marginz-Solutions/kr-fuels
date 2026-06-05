@@ -419,14 +419,10 @@ export const SITE_SETTINGS_DEFAULT: SiteSettings = {
 };
 
 export interface CalculatorSettings {
-  lpgMileageFactor: number; // LPG mileage ≈ factor × petrol mileage
-  petrolCo2PerL: number; // kg CO2 per litre petrol
-  autoLpgCo2PerL: number; // kg CO2 per litre Auto-LPG
+  lpgMileageFactor: number; // LPG mileage ≈ factor × petrol mileage (Savings calculator)
   updatedAt?: string | Date | null;
 }
 
 export const CALCULATOR_SETTINGS_DEFAULT: CalculatorSettings = {
   lpgMileageFactor: 0.9,
-  petrolCo2PerL: 2.31,
-  autoLpgCo2PerL: 1.51,
 };
