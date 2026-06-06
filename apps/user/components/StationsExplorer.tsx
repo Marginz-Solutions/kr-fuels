@@ -227,6 +227,16 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
   const toggleFeature = (f: string) =>
     setFeatures((p) => (p.includes(f) ? p.filter((x) => x !== f) : [...p, f]));
 
+  // Clear every filter back to its default. A full refresh already does this
+  // (state starts at these values), but re-clicking "Stations" in the navbar
+  // while already on this screen is a soft navigation that doesn't remount us —
+  // the Header fires "stations:reset" so we can clear the lingering filters.
+  useEffect(() => {
+    const reset = () => { setLocation("All"); setFeatures([]); setQ(""); setPage(1); };
+    window.addEventListener("stations:reset", reset);
+    return () => window.removeEventListener("stations:reset", reset);
+  }, []);
+
   const filtered = useMemo(() => {
     return stations.filter((s) => {
       if (location !== "All" && !stationMatchesLocation(s, location)) return false;
@@ -259,9 +269,15 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
         </div>
 
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-sm font-medium text-ink/60">Location</span>
-          <LocationSelect value={location} onChange={(v) => { setLocation(v); setPage(1); }} />
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-sm font-medium text-ink/60">Location</span>
+            <LocationSelect value={location} onChange={(v) => { setLocation(v); setPage(1); }} />
+          </div>
+          <span className="flex items-center gap-1 pr-1 text-xs font-medium text-brand">
+            <MapPin size={12} className="shrink-0" />
+            {filtered.length} {filtered.length === 1 ? "location" : "locations"} near you
+          </span>
         </div>
         </div>
 

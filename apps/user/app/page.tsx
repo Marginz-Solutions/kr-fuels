@@ -8,7 +8,7 @@ import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { HomeVideo } from "@/components/HomeVideo";
 import { getFuelPrices, getStations, getTestimonials, getAbout, getClients, getHeroImages, getSiteSettings } from "@/lib/api";
-import { BRAND, TESTIMONIAL_FALLBACK, STATION_COUNT_FALLBACK } from "@/lib/site";
+import { BRAND, TESTIMONIAL_FALLBACK, STATION_COUNT_FALLBACK, fmtCount } from "@/lib/site";
 import { PARTNERS_FALLBACK } from "@/lib/fallbacks";
 import { HOME_VIDEO_URL_DEFAULT } from "@kr/shared/types";
 
@@ -46,7 +46,7 @@ export default async function HomePage() {
   const partnerReel = [...partnerHalf, ...partnerHalf];
 
   const stats = [
-    { value: `${count}+`, label: "Stations across Tamil Nadu" },
+    { value: fmtCount(count), label: "Stations across Tamil Nadu" },
     { value: `${savingsPct}%`, label: "Savings over petrol" },
     { value: "26M+", label: "Vehicles on Auto LPG worldwide" },
     { value: `${BRAND.yearsOfService}+`, label: "Years of trusted service" },
@@ -59,7 +59,7 @@ export default async function HomePage() {
   ];
 
   const ctaCards = [
-    { icon: MapPin, title: "Find a Station", sub: `${count}+ locations near you`, href: "/stations" },
+    { icon: MapPin, title: "Find a Station", sub: `${fmtCount(count)} locations near you`, href: "/stations" },
     { icon: GitCompare, title: "LPG vs Domestic LPG", sub: "Know the real difference", href: "/guide" },
     { icon: MessageSquare, title: "Feedback", sub: "Share your experience", href: "/contact" },
     { icon: HelpCircle, title: "FAQ", sub: "Common questions answered", href: "/guide#faq" },
@@ -76,7 +76,7 @@ export default async function HomePage() {
               Switch to Auto LPG. Save {savingsPct}%. <span className="text-brand">Drive Cleaner.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg text-mutedfg">
-              Tamil Nadu&apos;s largest Auto LPG network. {count}+ stations. Cleaner fuel. Real savings every day.
+              Tamil Nadu&apos;s largest Auto LPG network. {fmtCount(count)} stations. Cleaner fuel. Real savings every day.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/stations" className="btn-primary">Find Nearest Station <ArrowRight size={16} /></Link>
@@ -93,7 +93,7 @@ export default async function HomePage() {
             </div>
             <div className="absolute -left-3 bottom-16 rounded-2xl border border-line bg-white px-4 py-3 shadow-lg">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-mutedfg">Network</div>
-              <div className="text-sm font-extrabold text-ink">{count}+ Stations</div>
+              <div className="text-sm font-extrabold text-ink">{fmtCount(count)} Stations</div>
             </div>
             <div className="absolute -right-3 bottom-6 rounded-2xl border border-line bg-white px-4 py-3 shadow-lg">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-mutedfg">Save</div>
@@ -169,14 +169,14 @@ export default async function HomePage() {
             <h2 className="section-title">Powering Green Mobility Since 2007</h2>
             <p className="mt-4 text-mutedfg">
               {about.contentBlocks?.[0]?.body ||
-                `K.R Trans Fuels, a subsidiary of KRT Carriers, established its first Auto LPG Dispensing Station in 2007. Today, with ${count}+ stations across Tamil Nadu and more in the pipeline, we lead the state in cleaner automotive fuel.`}
+                `K.R Trans Fuels, a subsidiary of KRT Carriers, established its first Auto LPG Dispensing Station in 2007. Today, with ${fmtCount(count)} stations across Tamil Nadu and more in the pipeline, we lead the state in cleaner automotive fuel.`}
             </p>
             <Link href="/about" className="mt-6 inline-flex items-center gap-1.5 font-bold text-brand hover:gap-2.5 transition-all">
               Learn More About Us <ArrowRight size={16} />
             </Link>
             <div className="mt-7 grid grid-cols-2 gap-4">
               <div className="rounded-2xl bg-brand-pale p-5">
-                <div className="text-3xl font-extrabold text-brand">{count} Stations</div>
+                <div className="text-3xl font-extrabold text-brand">{fmtCount(count)} Stations</div>
                 <div className="text-sm text-mutedfg">across Tamil Nadu</div>
               </div>
               <div className="rounded-2xl bg-brand-pale p-5">

@@ -25,7 +25,7 @@ const EMPTY_FORM: StationFormDraft = {
   primaryImage: "",
 }
 
-const LIMIT_OPTIONS = [10, 25, 50]
+const LIMIT_OPTIONS = [10, 25, 50, 100]
 
 const StationsPage: FC<StationResponse> = (props) => {
   const { data, meta: initialMeta, stats: initialStats } = props;
@@ -173,8 +173,11 @@ const StationsPage: FC<StationResponse> = (props) => {
     }
   }
 
+  // Show the stored address as-is (doorNo → street → pincode). `area` is rendered
+  // in its own column, so it's NOT appended here — appending it duplicated the
+  // locality that `street` already contains (e.g. "…, Moolapalayam, Moolapalayam").
   const formatAddress = (s: Station) =>
-    [s.address.street, s.area, s.address.doorNo, s.address.pincode].filter(Boolean).join(", ")
+    [s.address.doorNo, s.address.street, s.address.pincode].filter(Boolean).join(", ")
 
   return (
     <div style={{ padding: isMobile ? 12 : 24 }}>

@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { getContact, getStations, getSiteSettings, getFuelPrices, getCalculatorSettings } from "@/lib/api";
-import { BRAND, SITE_URL, STATION_COUNT_FALLBACK, formatAddress } from "@/lib/site";
+import { BRAND, SITE_URL, STATION_COUNT_FALLBACK, formatAddress, fmtCount } from "@/lib/site";
 
 const TITLE = "K.R Trans Fuels — Tamil Nadu's Largest Auto LPG Network";
 
@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ? Math.round((1 - prices.autoLPG / prices.petrol) * 100)
       : 40;
 
-  const description = `Switch to Auto LPG and save ${savingsPct}%. ${count}+ stations across Tamil Nadu. Cleaner fuel. Real savings every day.`;
+  const description = `Switch to Auto LPG and save ${savingsPct}%. ${fmtCount(count)} stations across Tamil Nadu. Cleaner fuel. Real savings every day.`;
 
   return {
     metadataBase: new URL(SITE_URL),

@@ -5,7 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Menu, X, Calculator, Leaf, ChevronDown, ArrowUpRight, CalendarDays, Fuel, Shield } from "lucide-react";
-import { NAV_LINKS, PRODUCT_MENU, ADMIN_LOGIN_URL, STATION_COUNT_FALLBACK } from "@/lib/site";
+import { NAV_LINKS, PRODUCT_MENU, ADMIN_LOGIN_URL, STATION_COUNT_FALLBACK, fmtCount } from "@/lib/site";
 import type { FuelPricesPublic } from "@/lib/api";
 import type { CalculatorSettings } from "@kr/shared/types";
 
@@ -39,6 +39,15 @@ export function Header({
   useEffect(() => {
     setToday(new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }));
   }, []);
+
+  // Re-clicking "Stations" while already on /stations is a soft navigation that
+  // doesn't remount the page, so the explorer keeps its current filters. Tell it
+  // to clear them so the screen opens fresh, like a refresh would.
+  const resetStationFilters = (href: string) => {
+    if (href === "/stations" && pathname === "/stations") {
+      window.dispatchEvent(new Event("stations:reset"));
+    }
+  };
 
   const p = (v: number) => (v > 0 ? v : "—");
   // Live savings headline (Auto-LPG vs petrol); 40% fallback matches the home page + SEO copy.
@@ -133,10 +142,10 @@ export function Header({
                 );
               }
               return (
-                <Link key={l.href} href={l.href} className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[15px] font-semibold transition ${active ? "text-brand" : "text-ink/75 hover:text-brand"}`}>
+                <Link key={l.href} href={l.href} onClick={() => resetStationFilters(l.href)} className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[15px] font-semibold transition ${active ? "text-brand" : "text-ink/75 hover:text-brand"}`}>
                   {l.label}
                   {l.href === "/stations" && (
-                    <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white">{count}+</span>
+                    <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white">{fmtCount(count)}</span>
                   )}
                 </Link>
               );
@@ -184,8 +193,8 @@ export function Header({
                 }
                 const active = pathname === l.href;
                 return (
-                  <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} onClick={() => setOpen(false)} className={`rounded-lg px-3 py-2.5 text-sm font-semibold ${active ? "bg-brand-pale text-brand" : "text-ink/80 hover:bg-brand-pale"}`}>
-                    {l.label}{l.href === "/stations" && ` (${count}+)`}
+                  <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} onClick={() => { setOpen(false); resetStationFilters(l.href); }} className={`rounded-lg px-3 py-2.5 text-sm font-semibold ${active ? "bg-brand-pale text-brand" : "text-ink/80 hover:bg-brand-pale"}`}>
+                    {l.label}{l.href === "/stations" && ` (${fmtCount(count)})`}
                   </Link>
                 );
               })}

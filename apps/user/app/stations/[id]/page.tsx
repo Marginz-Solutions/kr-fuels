@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
+import { StationGallery } from "@/components/StationGallery";
 import { MapPin, Clock, Navigation, Phone, User, Mail, ArrowLeft } from "lucide-react";
 import { getStation } from "@/lib/api";
 import { STATIONS_FALLBACK } from "@/lib/fallbacks";
@@ -40,7 +40,7 @@ export default async function StationDetailPage({ params }: Props) {
     ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.stationName} ${s.district}`)}`);
   const mapQuery = lat && lng ? `${lat},${lng}` : `${s.stationName ?? ""} ${s.district ?? ""}`;
-  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`;
+  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=17&output=embed`;
   const features = Array.from(new Set([...(s.amenities ?? []), ...(s.features ?? [])].map(String)));
 
   return (
@@ -49,33 +49,17 @@ export default async function StationDetailPage({ params }: Props) {
         <ArrowLeft size={15} /> All stations
       </Link>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid items-stretch gap-8 lg:grid-cols-[1.4fr_1fr]">
         <div>
           {(() => {
             const cover = (s as any).primaryImage || s.images?.[0];
-            const subImages = (s.images ?? []).filter((img: string) => img !== cover);
-            return cover ? (
-              <div className="grid grid-cols-2 gap-3">
-                {/* Featured / primary image */}
-                <div className="relative col-span-2 aspect-video w-full overflow-hidden rounded-xl">
-                  <ImageWithSkeleton src={cover} alt={s.stationName ?? "Station"} fill loading="eager" sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
-                </div>
-                {/* Sub-images gallery */}
-                {subImages.map((img: string, i: number) => (
-                  <div key={i} className="relative aspect-square w-full overflow-hidden rounded-xl">
-                    <ImageWithSkeleton src={img} alt={`${s.stationName} ${i + 2}`} fill loading="lazy" sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid aspect-video place-items-center rounded-2xl bg-cream text-ink/30">
-                <MapPin size={48} />
-              </div>
-            );
+            const rest = (s.images ?? []).filter((img: string) => img !== cover);
+            const ordered = cover ? [cover, ...rest] : [];
+            return <StationGallery images={ordered} stationName={s.stationName ?? "Station"} />;
           })()}
         </div>
 
-        <div>
+        <div className="flex flex-col">
           <h1 className="text-3xl font-extrabold text-ink">{s.stationName}</h1>
           <div className="mt-1 font-medium text-brand">{s.district}{s.area ? ` — ${s.area}` : ""}</div>
 
@@ -99,12 +83,15 @@ export default async function StationDetailPage({ params }: Props) {
             <Navigation size={16} /> Get Directions
           </Link>
 
-          {/* Location map — kept tight under the button so there's no gap */}
-          <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+          {/* Location map — `flex-1` grows to fill the right column so its bottom
+              aligns exactly with the images grid on the left (no oversized min that
+              would push it past the grid). A small min-height keeps the map usable
+              on mobile (stacked) and as a floor when the grid is short. */}
+          <div className="mt-4 flex-1 min-h-72 lg:min-h-40 overflow-hidden rounded-2xl border border-line">
             <iframe
               title={`${s.stationName ?? "Station"} location`}
               src={mapSrc}
-              className="block h-64 w-full"
+              className="block h-full w-full"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />

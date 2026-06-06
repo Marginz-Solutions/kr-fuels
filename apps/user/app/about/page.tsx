@@ -3,7 +3,7 @@ import { MapPin, Leaf, CalendarClock, Users, Fuel, Target, Compass, Sparkles, ty
 import { getAbout, getJourney, getStations } from "@/lib/api";
 import { Reveal } from "@/components/Reveal";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
-import { BRAND, STATION_COUNT_FALLBACK, DISTRICT_COUNT_FALLBACK } from "@/lib/site";
+import { BRAND, STATION_COUNT_FALLBACK, DISTRICT_COUNT_FALLBACK, fmtCount } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -27,8 +27,8 @@ export default async function AboutPage() {
   const blocks = (about.contentBlocks ?? []).slice(1);
 
   const stats: { icon: LucideIcon; v: string; l: string }[] = [
-    { icon: MapPin, v: `${count}+`, l: "Active Stations" },
-    { icon: Leaf, v: `${districts}+`, l: "Districts Covered" },
+    { icon: MapPin, v: fmtCount(count), l: "Active Stations" },
+    { icon: Leaf, v: fmtCount(districts), l: "Districts Covered" },
     { icon: CalendarClock, v: `${BRAND.yearsOfService}+`, l: "Years of Operation" },
     { icon: Users, v: "50,000+", l: "Happy Customers" },
     { icon: Fuel, v: "2M+", l: "LPG Refills Delivered" },

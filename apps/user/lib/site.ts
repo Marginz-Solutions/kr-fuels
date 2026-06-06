@@ -22,6 +22,10 @@ export const BRAND = {
 export const STATION_COUNT_FALLBACK = 81;
 export const DISTRICT_COUNT_FALLBACK = 11;
 
+// Display the REAL count value, and only collapse to "99+" once it exceeds 99.
+// Used everywhere a station/district count is shown so "81" never renders as "81+".
+export const fmtCount = (n: number): string => (n > 99 ? "99+" : String(n));
+
 // Admin app ORIGIN (no trailing slash). Dev: the admin runs on :3001.
 // Production: set NEXT_PUBLIC_ADMIN_URL=https://admin.krfuels.com .
 export const ADMIN_URL = (process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:3001").replace(/\/+$/, "");
