@@ -93,7 +93,7 @@ export async function getTestimonials(): Promise<TestimonialPublic[]> {
   return j.data;
 }
 
-export interface FaqPublic { id: string; question?: string; answer?: string; isLink?: boolean; [k: string]: any }
+export interface FaqPublic { id: string; question?: string; answer?: string; isLink?: boolean; order?: number; [k: string]: any }
 export async function getFaq(): Promise<FaqPublic[]> {
   const j = await getJson<{ data: FaqPublic[] }>("/public/faq", { data: [] }, 600);
   return j.data;

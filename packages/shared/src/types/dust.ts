@@ -56,6 +56,9 @@ export interface Faq {
     question: string,
     isLink:boolean
     answer: string,
+    // Display order (ascending). Drives the sequence shown in the admin list and
+    // on the public site. Optional so legacy docs written before this field still parse.
+    order?: number,
     createdAt: Date,
     updatedAt: Date
 }

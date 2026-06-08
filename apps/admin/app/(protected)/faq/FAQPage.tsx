@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, type FC } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Loader2, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Loader2, Search, ArrowUp, ArrowDown } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn, iconBtn } from "../../../styles/shared";
 import { Badge } from "../../../components/ui";
@@ -128,6 +128,42 @@ const FAQPage: FC<FaqResponse> = (props) => {
     setConfirmDelete(null)
   }
 
+  // ─── Reorder (move up / down) ─────────────────────────────────────────────
+  // Persists the manual display order; the public site renders FAQs in this order.
+  const queryKey = ["faqs", page, limit, search] as const
+
+  const reorderMutation = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      // startIndex keeps order values consistent across paginated pages.
+      await api.patch("/faq/reorder", { orderedIds, startIndex: (page - 1) * limit })
+    },
+    onSuccess: () => {
+      toast.success("Order updated")
+      queryClient.invalidateQueries({ queryKey: ["faqs"] })
+    },
+    onError: (e) => {
+      const msg = e instanceof AxiosError ? (e.response?.data?.error ?? e.message) : "Reorder failed"
+      toast.error(msg)
+      // Revert the optimistic move to the server's truth.
+      queryClient.invalidateQueries({ queryKey: ["faqs"] })
+    },
+  })
+
+  const move = (index: number, dir: -1 | 1) => {
+    const target = index + dir
+    if (target < 0 || target >= list.length) return
+    if (reorderMutation.isPending) return
+
+    const next = [...list]
+    ;[next[index], next[target]] = [next[target], next[index]]
+
+    // Optimistically show the new order immediately, then persist it.
+    queryClient.setQueryData(queryKey, (old: { data: Faq[]; meta: Pagination } | undefined) =>
+      old ? { ...old, data: next } : old,
+    )
+    reorderMutation.mutate(next.map((f) => f.id!))
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
   const openEdit = (f: Faq) => {
     setEditing(f)
@@ -202,7 +238,14 @@ const FAQPage: FC<FaqResponse> = (props) => {
           </div>
         )}
 
-        {!isFetching && list.map((f) => (
+        {!isFetching && list.map((f, idx) => {
+          // Reordering only makes sense on the unfiltered list. Boundaries use the
+          // global position so up/down disable correctly across paginated pages.
+          const canReorder = !search
+          const globalIndex = (page - 1) * limit + idx
+          const canMoveUp = canReorder && globalIndex > 0
+          const canMoveDown = canReorder && globalIndex < meta.total - 1
+          return (
           <div
             key={f.id}
             style={{
@@ -220,6 +263,28 @@ const FAQPage: FC<FaqResponse> = (props) => {
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 {f.isLink && <Badge color="blue">Link</Badge>}
+                {canReorder && (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); move(idx, -1) }}
+                      title="Move up"
+                      aria-label="Move FAQ up"
+                      style={{ ...iconBtn("ghost"), opacity: canMoveUp ? 1 : 0.35 }}
+                      disabled={!canMoveUp || reorderMutation.isPending || deleteMutation.isPending}
+                    >
+                      <ArrowUp size={13} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); move(idx, 1) }}
+                      title="Move down"
+                      aria-label="Move FAQ down"
+                      style={{ ...iconBtn("ghost"), opacity: canMoveDown ? 1 : 0.35 }}
+                      disabled={!canMoveDown || reorderMutation.isPending || deleteMutation.isPending}
+                    >
+                      <ArrowDown size={13} />
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); openEdit(f) }}
                   title="Edit"
@@ -253,7 +318,8 @@ const FAQPage: FC<FaqResponse> = (props) => {
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
 
       <PaginationComponent meta={meta} page={page} loading={isFetching} onPageChange={setPage} />

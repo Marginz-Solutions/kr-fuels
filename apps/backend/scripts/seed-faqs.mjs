@@ -101,8 +101,10 @@ async function main() {
         question: f.question,
         answer: f.answer,
         isLink: f.isLink ?? false,
+        // Manual display order — the admin and public site render FAQs by this.
+        order: i,
         normalizedQues: f.question.toLowerCase(),
-        // Stagger createdAt so the public site renders them in this exact order.
+        // Stagger createdAt so ties (docs without order) still render in this order.
         createdAt: Timestamp.fromMillis(baseMs + i * 1000),
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -127,6 +129,7 @@ async function main() {
       question: f.question,
       answer: f.answer,
       isLink: f.isLink ?? false,
+      order: i,
       normalizedQues: key,
       updatedAt: FieldValue.serverTimestamp(),
     };

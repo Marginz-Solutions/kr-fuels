@@ -10,11 +10,16 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const snap = await adminDb.collection("faqKrfuels").get();
-    // Sort oldest-first in memory rather than via orderBy("createdAt"), so any FAQ
-    // missing a createdAt field is still returned (Firestore's orderBy drops them).
+    // Sort by the admin-defined `order` (ascending) so the public site mirrors the
+    // exact sequence arranged in the admin panel. Sorting in memory (not via
+    // Firestore orderBy) keeps any FAQ missing the field — those fall to the end,
+    // tie-broken by createdAt.
     const items = snap.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
       .sort((a: any, b: any) => {
+        const ao = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+        const bo = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+        if (ao !== bo) return ao - bo;
         const at = a.createdAt?.toMillis?.() ?? 0;
         const bt = b.createdAt?.toMillis?.() ?? 0;
         return at - bt;
