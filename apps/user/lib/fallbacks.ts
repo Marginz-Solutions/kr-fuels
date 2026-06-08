@@ -83,11 +83,49 @@ export const PRODUCTS_FALLBACK: ProductPublic[] = [
   { ...EMPTY_PRODUCT_FIELDS, id: "fb-p4", slug: "tanks", product_name: "Tanks & Multivalves", product_category: "Equipment", description: "Safety-certified high-pressure tanks and multivalves built to automotive standards.", product_image: "", gallery_images: [], external_url: "", is_external: true },
 ];
 
+// The 7 FAQs published on krfuels.com/faq.php. Mirrored here as the fallback so the
+// Guide page shows the real questions even before the admin `faqKrfuels` collection
+// is seeded. Real entries managed in the admin override these.
 export const FAQ_FALLBACK: FaqPublic[] = [
-  { id: "fb-f1", question: "What is Auto LPG and how is it different from domestic LPG?", answer: "Auto LPG is an automotive-grade liquefied petroleum gas dispensed at high-pressure certified stations for vehicles. Domestic LPG is a low-pressure cooking fuel and is not legal or safe for vehicles." },
-  { id: "fb-f2", question: "How much can I save by switching to Auto LPG?", answer: "Most drivers save 35–40% on running costs compared with petrol, since Auto LPG is priced significantly lower per litre." },
-  { id: "fb-f3", question: "Is Auto LPG safe for my vehicle?", answer: "Yes. It uses BIS-certified conversion kits and tanks built to automotive safety standards, and it burns cleaner than petrol." },
-  { id: "fb-f4", question: "Which vehicles can be converted to Auto LPG?", answer: "Most petrol cars, taxis and SUVs can be converted with an approved kit. Speak to our team for a free suitability check." },
-  { id: "fb-f5", question: "How long does a conversion take and pay back?", answer: "A typical conversion is completed in a day, and the kit usually pays for itself within several months depending on your running." },
-  { id: "fb-f6", question: "Where can I find my nearest Auto LPG station?", answer: "Use the Stations page to filter by district and amenities and get directions to your nearest KR Trans Fuels station." },
+  { id: "fb-f1", question: "What is LPG?", answer: "Liquefied Petroleum Gas." },
+  { id: "fb-f2", question: "What are the uses of LPG?", answer: "LPG is used for cooking, as automobile fuel, in industries and for agricultural purpose." },
+  {
+    id: "fb-f3",
+    question: "What is the difference between Domestic LPG and Automotive LPG?",
+    answer:
+      "Auto LPG vs Domestic LPG:\n" +
+      "• Grade: BIS 14861 (Auto LPG) vs BIS 4576 (Domestic LPG)\n" +
+      "• Composition: Propane and Butane only (Auto LPG) vs Contains impurities also (Domestic LPG)\n" +
+      "• Motor Octane Number (MON): 93+ (Auto LPG) vs 60+ (Domestic LPG)\n" +
+      "• Sale: Sold through retail outlets approved by PESO (Petroleum and Explosives Safety Organization) (Auto LPG) vs Transferring from a domestic cylinder to a car/auto tank is illegal and punishable (Domestic LPG)\n" +
+      "• Safety: Very safe (Auto LPG) vs Crude and unsafe method (Domestic LPG)",
+  },
+  {
+    id: "fb-f4",
+    question: "How safe is LPG as an automotive fuel?",
+    answer:
+      "Over 24 million vehicles consume 64 million tons of LPG worldwide through more than 3 lakh distributing points. There are more than 1500 LPG stations PAN India and 220 LPG stations across Tamil Nadu.\n\n" +
+      "Some highly prominent people own them — for example, the President of the United States' limousine and the Queen's Rolls Royce in the UK.\n\n" +
+      "LPG has exemplary safety records. LPG storage tanks are extremely robust (20 times more puncture resistant than petrol tanks), capable of withstanding huge impacts and collisions, and are certified by PESO. It has the lowest flammability range and a higher ignition temperature than petrol and diesel.",
+  },
+  {
+    id: "fb-f5",
+    question: "How to identify the right and genuine conversion kit?",
+    answer:
+      "Always have your car fitted with a genuine LPG conversion kit from authorized retrofitters. Check the genuine nature of the approval certificate issued by the competent authorities like ICAT, ARAI, PESO and STA.",
+  },
+  {
+    id: "fb-f6",
+    question: "Can I transfer LPG from a domestic cylinder or commercial cylinder into the LPG tank in my vehicle?",
+    answer:
+      "No, absolutely not. It is both illegal and highly unsafe. There is no approved mechanism or equipment to transfer LPG from cylinders to a tank.\n\n" +
+      "Moreover, the BIS of LPG used for cooking is BIS 4576 and the BIS of LPG used as automotive fuel is 14861.\n\n" +
+      "Using domestic LPG as automotive fuel will cause damage to the engine and conversion kit, and this will affect the performance of the vehicle.",
+  },
+  {
+    id: "fb-f7",
+    question: "What happens if an LPG converted vehicle is involved in an accident?",
+    answer:
+      "Authorized LPG tanks and kits are equipped with numerous safety devices and have been crash tested to prove that in the instance of a severe impact, they will deform and not puncture.",
+  },
 ];

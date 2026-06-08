@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p 4000",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:faqs": "node --env-file=.env.local scripts/seed-faqs.mjs",
+    "seed:faqs:replace": "node --env-file=.env.local scripts/seed-faqs.mjs --replace"
   },
   "dependencies": {
     "@kr/shared": "workspace:*",
