@@ -23,10 +23,11 @@ export default async function ContactPage() {
   const whatsapp = contact.essentials?.phoneNos?.whatsapp;
   const address = formatAddress(contact.presents?.address);
   const hours = contact.presents?.workingHours || "Mon–Sat, 9:00 AM – 8:00 PM";
-  const coords = getCoords(contact.presents);
-  const mapQuery = coords
-    ? `${coords.latitude},${coords.longitude}`
-    : `${companyName}, ${address}`;
+  // Prefer the coordinates the admin stored (presents.exactLocation); otherwise fall
+  // back to the brand HQ coordinates so the map always pins the real office location
+  // rather than a fuzzy name+address text search.
+  const coords = getCoords(contact.presents) ?? { latitude: BRAND.coords.lat, longitude: BRAND.coords.lng };
+  const mapQuery = `${coords.latitude},${coords.longitude}`;
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`;
 
   const info = [

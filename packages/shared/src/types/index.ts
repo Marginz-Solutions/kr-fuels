@@ -241,6 +241,9 @@ export type StationFormDraft = Pick<Station,
   mapLink: string;
   images: string[];
   primaryImage: string;
+  // Mirrors Station.timingDisabled. The Add/Edit form toggles this; when true the
+  // working-hours picker is hidden and workingHours is saved empty.
+  timingDisabled: boolean;
 };
 
 export type FAQFormDraft = Pick<FAQ, "question" | "answer" | "isLink">;

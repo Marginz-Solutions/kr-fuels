@@ -110,7 +110,7 @@ function stationMatchesLocation(s: StationPublic, location: string): boolean {
 
 function stationFeatures(s: StationPublic): string[] {
   const raw = [...(s.amenities ?? []), ...(s.features ?? [])].map((x) => String(x));
-  if (s.workingHours && /24/.test(s.workingHours)) raw.push("24x7");
+  if (!s.timingDisabled && s.workingHours && /24/.test(s.workingHours)) raw.push("24x7");
   return Array.from(new Set(raw));
 }
 
@@ -315,6 +315,7 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
                     alt={s.stationName ?? "Station"}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={85}
                     className="object-cover"
                   />
                 </div>
@@ -331,7 +332,7 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
               <p className="mt-2 flex items-start gap-1.5 text-sm text-ink/60">
                 <MapPin size={14} className="mt-0.5 shrink-0" />{line}{pincode}
               </p>
-              {s.workingHours && (
+              {!s.timingDisabled && s.workingHours && (
                 <p className="mt-1.5 flex items-center gap-1.5 text-sm text-ink/60">
                   <Clock size={14} />{s.workingHours}
                 </p>

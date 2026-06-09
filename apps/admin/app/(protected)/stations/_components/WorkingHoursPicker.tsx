@@ -1,7 +1,8 @@
 "use client"
-import { useState, useEffect, type FC, type CSSProperties, type ReactNode } from "react"
-import { Clock, Pencil, ChevronDown } from "lucide-react"
+import { useState, type FC, type CSSProperties, type ReactNode } from "react"
+import { Clock, Pencil } from "lucide-react"
 import { C } from "@/constants/colors"
+import { Select } from "@/components/ui"
 
 // Working hours are stored as a free-text string on the station doc (the public
 // site renders it verbatim, e.g. "6:00 AM - 10:00 PM"). This picker keeps that
@@ -60,9 +61,8 @@ const parse = (value: string): Parsed => {
 const rangeString = (s: Parsed) =>
     `${s.oH}:${s.oM} ${s.oP} - ${s.cH}:${s.cM} ${s.cP}`
 
-// Native select arrows render differently per browser and ignore right padding,
-// so we strip the native chrome and draw our own chevron (see SelectBox). The
-// extra right padding reserves clean space for that chevron.
+// Base style shared by the custom free-text fallback input below. The time
+// dropdowns themselves use the shared <Select> component for a consistent look.
 const selStyle: CSSProperties = {
     width: "100%",
     boxSizing: "border-box",
@@ -91,25 +91,6 @@ const rowGrid: CSSProperties = {
     columnGap: 8,
 }
 
-// A styled <select> with our own chevron, consistently inset from the right edge.
-const SelectBox: FC<{
-    label: string
-    value: string | number
-    onChange: (v: string) => void
-    options: readonly (string | number)[]
-}> = ({ label, value, onChange, options }) => (
-    <div style={{ position: "relative", width: "100%" }}>
-        <select aria-label={label} value={value} onChange={e => onChange(e.target.value)} style={selStyle}>
-            {options.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-        <ChevronDown
-            size={14}
-            color={C.tm}
-            style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
-        />
-    </div>
-)
-
 const linkBtn: CSSProperties = {
     alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer",
     fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4, padding: 0,
@@ -120,13 +101,11 @@ const WorkingHoursPicker: FC<Props> = ({ value, onChange }) => {
     // an untouched legacy value is preserved exactly as stored.
     const [s, setS] = useState<Parsed>(() => parse(value))
 
-    // When there's no value yet (a new station), commit the sensible default so the
-    // saved string matches the preview the admin sees, even if they never touch it.
-    useEffect(() => {
-        if (!(value ?? "").trim()) onChange(rangeString(s))
-        // mount-only: seeding a default exactly once for an empty field.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    // NOTE: we intentionally do NOT auto-commit a default value on mount. The picker
+    // shows a sensible default preview, but nothing is saved unless the admin actually
+    // sets hours — otherwise every untouched station would get a fabricated
+    // "6:00 AM - 10:00 PM" that doesn't match reality. Stations with no operating
+    // hours use the "Timing Not Available" toggle instead.
 
     const update = (patch: Partial<Parsed>) => {
         const next = { ...s, ...patch }
@@ -145,12 +124,12 @@ const WorkingHoursPicker: FC<Props> = ({ value, onChange }) => {
         return (
             <div style={rowGrid}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: C.tm }}>{label}</span>
-                <SelectBox label={`${label} hour`} value={h} options={HOURS}
+                <Select size="sm" block searchable={false} ariaLabel={`${label} hour`} value={String(h)} options={[...HOURS]}
                     onChange={v => update({ [`${which}H`]: Number(v) } as Partial<Parsed>)} />
                 <span style={{ textAlign: "center", color: C.tm, fontWeight: 700 }}>:</span>
-                <SelectBox label={`${label} minute`} value={m} options={MINUTES}
+                <Select size="sm" block searchable={false} ariaLabel={`${label} minute`} value={m} options={[...MINUTES]}
                     onChange={v => update({ [`${which}M`]: v } as Partial<Parsed>)} />
-                <SelectBox label={`${label} period`} value={p} options={PERIODS}
+                <Select size="sm" block searchable={false} ariaLabel={`${label} period`} value={p} options={[...PERIODS]}
                     onChange={v => update({ [`${which}P`]: v as Period } as Partial<Parsed>)} />
             </div>
         )

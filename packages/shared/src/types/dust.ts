@@ -24,6 +24,11 @@ export interface Station {
     address: StationAddress;
     status: "active" | "inactive";
     workingHours:string,
+    // When true, the station has no operating timings: the admin form hides the
+    // working-hours picker and the user site / mobile app render no timing for it
+    // (matches the live site, where stations show no working hours). Optional so
+    // legacy docs written before this field still parse.
+    timingDisabled?: boolean,
     images?:string[],
     primaryImage?: string,
     location: StationLocation;
@@ -143,7 +148,18 @@ export interface StationResponse {
     meta: Pagination,
     stats: {
         active: number,
+        // City (district) options for the filter — ACTIVE stations only, matching the
+        // mobile app's station-locator dropdowns exactly.
         districts: string[],
+        // All distinct station areas (sorted) for the admin area filter, plus the
+        // areas grouped by their district so the area dropdown can cascade from the
+        // selected city. Both active-only, sourced from the same station data the
+        // mobile app's locator consumes.
+        areas: string[],
+        areasByDistrict: Record<string, string[]>,
+        // Every distinct district across ALL stations (active + inactive) — used by
+        // the add/edit form's district picker and the "Districts Covered" stat.
+        allDistricts: string[],
         inactive: number,
         totalDistricts: number
     }

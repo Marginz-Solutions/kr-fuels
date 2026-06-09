@@ -49,6 +49,7 @@ import {
   fetchCategories,
   createCategory
 } from "@/lib/api/products";
+import { Select } from "@/components/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -749,19 +750,23 @@ const ProductModal: FC<ProductModalProps> = ({
               <label className="text-[11px] font-medium uppercase tracking-wider text-mutedfg">
                 Category *
               </label>
-              <input
-                list="product-categories-list"
-                className={[inputCls, errors.product_category ? errorInputCls : ""].join(" ")}
-                value={form.product_category}
-                onChange={field("product_category")}
+              <Select
+                block
+                creatable
+                searchable
+                invalid={!!errors.product_category}
+                ariaLabel="Category"
                 placeholder="Type or pick a category…"
-                autoComplete="off"
+                searchPlaceholder="Search or add a category…"
+                value={form.product_category}
+                onChange={(v) => {
+                  onChange({ product_category: v });
+                  if (errors.product_category) {
+                    setErrors((prev) => ({ ...prev, product_category: undefined }));
+                  }
+                }}
+                options={categories}
               />
-              <datalist id="product-categories-list">
-                {categories.map((c: string) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
               {errors.product_category && (
                 <p className="text-[12px] text-red-500">{errors.product_category}</p>
               )}

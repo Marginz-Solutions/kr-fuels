@@ -51,6 +51,7 @@ export interface StationPublic {
   area?: string;
   address?: { doorNo?: string; street?: string; pincode?: number | string };
   workingHours?: string;
+  timingDisabled?: boolean;
   status?: string;
   images?: string[];
   mapLink?: string;

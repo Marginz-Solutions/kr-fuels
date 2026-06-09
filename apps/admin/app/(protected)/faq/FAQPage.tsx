@@ -1,9 +1,9 @@
 "use client"
 import Link from "next/link";
-import { useState, type FC } from "react";
+import { useState, type FC, type DragEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Loader2, Search, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronRight, ChevronDown, Loader2, Search, GripVertical } from "lucide-react";
 import { C } from "../../../constants/colors";
 import { card, btn, iconBtn } from "../../../styles/shared";
 import { Badge } from "../../../components/ui";
@@ -38,6 +38,9 @@ const FAQPage: FC<FaqResponse> = (props) => {
   const [form, setForm] = useState<FAQFormDraft>(EMPTY_DRAFT)
   const [formError, setFormError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<Faq | null>(null)
+  // Drag-and-drop reorder state: the row being dragged and the row hovered over.
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [overIndex, setOverIndex] = useState<number | null>(null)
 
   // ─── Fetch FAQs ───────────────────────────────────────────────────────────
   const { data, isFetching, isError, error } = useQuery({
@@ -128,8 +131,9 @@ const FAQPage: FC<FaqResponse> = (props) => {
     setConfirmDelete(null)
   }
 
-  // ─── Reorder (move up / down) ─────────────────────────────────────────────
-  // Persists the manual display order; the public site renders FAQs in this order.
+  // ─── Reorder (drag and drop) ──────────────────────────────────────────────
+  // Persists the manual display order; the mobile app and public site render FAQs
+  // in this exact order.
   const queryKey = ["faqs", page, limit, search] as const
 
   const reorderMutation = useMutation({
@@ -149,19 +153,47 @@ const FAQPage: FC<FaqResponse> = (props) => {
     },
   })
 
-  const move = (index: number, dir: -1 | 1) => {
-    const target = index + dir
-    if (target < 0 || target >= list.length) return
-    if (reorderMutation.isPending) return
-
+  // Move the dragged item into the dropped-on slot, show the new order immediately,
+  // then persist it. Other items shift to make room (a true reorder, not a swap).
+  const reorder = (from: number, to: number) => {
+    if (from === to || reorderMutation.isPending) return
     const next = [...list]
-    ;[next[index], next[target]] = [next[target], next[index]]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
 
-    // Optimistically show the new order immediately, then persist it.
     queryClient.setQueryData(queryKey, (old: { data: Faq[]; meta: Pagination } | undefined) =>
       old ? { ...old, data: next } : old,
     )
     reorderMutation.mutate(next.map((f) => f.id!))
+  }
+
+  const handleDragStart = (e: DragEvent<HTMLDivElement>, index: number) => {
+    if (reorderMutation.isPending) { e.preventDefault(); return }
+    setDragIndex(index)
+    e.dataTransfer.effectAllowed = "move"
+    // Firefox won't begin a drag unless some data is attached.
+    try { e.dataTransfer.setData("text/plain", String(index)) } catch { /* no-op */ }
+  }
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, index: number) => {
+    if (dragIndex === null) return
+    e.preventDefault() // allow the drop
+    e.dataTransfer.dropEffect = "move"
+    if (index !== overIndex) setOverIndex(index)
+  }
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault()
+    const from = dragIndex
+    setDragIndex(null)
+    setOverIndex(null)
+    if (from === null) return
+    reorder(from, index)
+  }
+
+  const handleDragEnd = () => {
+    setDragIndex(null)
+    setOverIndex(null)
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -192,14 +224,24 @@ const FAQPage: FC<FaqResponse> = (props) => {
     <div style={{ padding: 24 }}>
       <style>{shimmerStyle}</style>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 600, color: C.t }}>Frequently Asked Questions</div>
           <div style={{ fontSize: 12, color: C.tm }}>
             {isFetching ? "Loading..." : `${meta.total} FAQs`}
+            {!search && meta.total > 1 && !isFetching && <span> · drag to reorder</span>}
           </div>
         </div>
-        <button style={btn()} onClick={openAdd}><Plus size={15} />Add FAQ</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Saving indicator while a reorder is being persisted */}
+          {reorderMutation.isPending && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, color: C.p, background: `${C.p}12`, padding: "6px 10px", borderRadius: 8 }}>
+              <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />
+              Saving order…
+            </span>
+          )}
+          <button style={btn()} onClick={openAdd}><Plus size={15} />Add FAQ</button>
+        </div>
       </div>
 
       {errorMsg && (
@@ -239,18 +281,23 @@ const FAQPage: FC<FaqResponse> = (props) => {
         )}
 
         {!isFetching && list.map((f, idx) => {
-          // Reordering only makes sense on the unfiltered list. Boundaries use the
-          // global position so up/down disable correctly across paginated pages.
+          // Drag-reordering only makes sense on the unfiltered list, so it's disabled
+          // while a search is active.
           const canReorder = !search
-          const globalIndex = (page - 1) * limit + idx
-          const canMoveUp = canReorder && globalIndex > 0
-          const canMoveDown = canReorder && globalIndex < meta.total - 1
+          const isDragging = dragIndex === idx
+          const isDropTarget = overIndex === idx && dragIndex !== null && dragIndex !== idx
           return (
           <div
             key={f.id}
+            draggable={canReorder && !reorderMutation.isPending}
+            onDragStart={(e) => handleDragStart(e, idx)}
+            onDragOver={(e) => handleDragOver(e, idx)}
+            onDrop={(e) => handleDrop(e, idx)}
+            onDragEnd={handleDragEnd}
             style={{
               ...card(), padding: 0, overflow: "hidden",
-              opacity: deleteMutation.isPending && deleteMutation.variables === f.id ? 0.5 : 1,
+              opacity: (deleteMutation.isPending && deleteMutation.variables === f.id) || isDragging ? 0.5 : 1,
+              boxShadow: isDropTarget ? `inset 0 3px 0 0 ${C.p}` : undefined,
               transition: "opacity 0.2s"
             }}
           >
@@ -258,33 +305,24 @@ const FAQPage: FC<FaqResponse> = (props) => {
               style={{ display: "flex", alignItems: "center", padding: "14px 16px", cursor: "pointer" }}
               onClick={() => setOpen(open === f.id ? null : f.id!)}
             >
-              <div style={{ flex: 1 }}>
+              {canReorder && (
+                <span
+                  title="Drag to reorder"
+                  aria-label="Drag to reorder"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    display: "flex", alignItems: "center", marginRight: 10, flexShrink: 0,
+                    color: C.tm, cursor: reorderMutation.isPending ? "not-allowed" : "grab",
+                  }}
+                >
+                  <GripVertical size={16} />
+                </span>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 500, fontSize: 14, color: C.t }}>{f.question}</div>
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 {f.isLink && <Badge color="blue">Link</Badge>}
-                {canReorder && (
-                  <>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); move(idx, -1) }}
-                      title="Move up"
-                      aria-label="Move FAQ up"
-                      style={{ ...iconBtn("ghost"), opacity: canMoveUp ? 1 : 0.35 }}
-                      disabled={!canMoveUp || reorderMutation.isPending || deleteMutation.isPending}
-                    >
-                      <ArrowUp size={13} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); move(idx, 1) }}
-                      title="Move down"
-                      aria-label="Move FAQ down"
-                      style={{ ...iconBtn("ghost"), opacity: canMoveDown ? 1 : 0.35 }}
-                      disabled={!canMoveDown || reorderMutation.isPending || deleteMutation.isPending}
-                    >
-                      <ArrowDown size={13} />
-                    </button>
-                  </>
-                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); openEdit(f) }}
                   title="Edit"

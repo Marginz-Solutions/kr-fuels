@@ -8,6 +8,7 @@ import { ImageIcon, Save, Star, X } from 'lucide-react'
 import React, { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import WorkingHoursPicker from './WorkingHoursPicker'
+import { Select } from '@/components/ui'
 
 type DrawerProps = {
     editing: Station | null
@@ -83,11 +84,38 @@ const Drawer = (props: DrawerProps) => {
                         </div>
                     ))}
 
-                    {/* Working Hours — guided open/close time picker */}
-                    <WorkingHoursPicker
-                        value={form.workingHours ?? ""}
-                        onChange={(workingHours) => setForm((p) => ({ ...p, workingHours }))}
-                    />
+                    {/* Timing availability toggle — when enabled the station has no
+                        operating hours: the picker is hidden and workingHours saves empty,
+                        so the website + mobile app show no timing for it. */}
+                    <div style={{ marginBottom: form.timingDisabled ? 16 : 8 }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, color: C.t }}>
+                            <input
+                                type="checkbox"
+                                checked={!!form.timingDisabled}
+                                onChange={(e) =>
+                                    setForm((p) => ({
+                                        ...p,
+                                        timingDisabled: e.target.checked,
+                                        // Clear hours when disabling so no stale value is saved.
+                                        workingHours: e.target.checked ? "" : p.workingHours,
+                                    }))
+                                }
+                                style={{ width: 16, height: 16, accentColor: C.p, cursor: "pointer" }}
+                            />
+                            Timing Not Available
+                        </label>
+                        <div style={{ fontSize: 11, color: C.tm, marginTop: 4, marginLeft: 24 }}>
+                            Enable for stations with no fixed operating hours — the app &amp; website will show no timing.
+                        </div>
+                    </div>
+
+                    {/* Working Hours — guided open/close time picker (hidden when timing is disabled) */}
+                    {!form.timingDisabled && (
+                        <WorkingHoursPicker
+                            value={form.workingHours ?? ""}
+                            onChange={(workingHours) => setForm((p) => ({ ...p, workingHours }))}
+                        />
+                    )}
 
                     {/* Status */}
                     <div style={{ marginBottom: 16 }}>
@@ -141,9 +169,13 @@ const Drawer = (props: DrawerProps) => {
                     {/* District */}
                     <div style={{ marginBottom: 16 }}>
                         <label style={{ fontSize: 13, fontWeight: 500, color: C.t, marginBottom: 4, display: "block" }}>District</label>
-                        <select style={inp()} value={form.district} onChange={(e) => setForm((p) => ({ ...p, district: e.target.value }))}>
-                            {districts.map((d) => <option key={d}>{d}</option>)}
-                        </select>
+                        <Select
+                            block
+                            ariaLabel="District"
+                            value={form.district}
+                            onChange={(district) => setForm((p) => ({ ...p, district }))}
+                            options={districts}
+                        />
                     </div>
 
                     {/* Location */}

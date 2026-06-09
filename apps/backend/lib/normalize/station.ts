@@ -11,6 +11,7 @@ export interface PublicStation {
   area: string;
   address: { doorNo: string; street: string; pincode: string | number };
   workingHours: string;
+  timingDisabled: boolean;
   status: string;
   images: string[];
   primaryImage: string;
@@ -55,6 +56,7 @@ export function normalizeStation(id: string, d: any): PublicStation {
       pincode: addr.pincode ?? d?.pincode ?? "",
     },
     workingHours: d?.workingHours ?? "",
+    timingDisabled: d?.timingDisabled === true,
     status: String(d?.status ?? "active"),
     images: Array.isArray(d?.images) ? d.images.filter(Boolean) : [],
     primaryImage: d?.primaryImage ?? "",

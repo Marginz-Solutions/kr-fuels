@@ -32,6 +32,8 @@ export const StationSchema = z.object({
   mobileNumber: MobileNumberSchema,
   telephone: z.string().optional().default(""),
   workingHours: z.string().optional(),
+  // Station has no operating timings — hides working hours everywhere it's shown.
+  timingDisabled: z.coerce.boolean().optional().default(false),
   emailID: z.string().email("Invalid email").optional().or(z.literal("")),
   status: z.enum(["active", "inactive"]).default("active"),
   // Google-Maps directions link entered in the admin form. The user site reads it
@@ -53,6 +55,7 @@ export const StationPatchSchema = z.object({
   telephone: z.string().optional(),
   emailID: z.string().email().optional().or(z.literal("")),
   workingHours: z.string().optional(),
+  timingDisabled: z.coerce.boolean().optional(),
   mapLink: z.string().optional(),
   address: StationAddressSchema.optional(),
   status: z.string().optional(),

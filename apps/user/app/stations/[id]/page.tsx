@@ -65,7 +65,7 @@ export default async function StationDetailPage({ params }: Props) {
 
           <div className="mt-6 space-y-3 text-sm text-ink/70">
             <p className="flex items-start gap-2"><MapPin size={16} className="mt-0.5 shrink-0 text-brand" />{line}{pincode}</p>
-            {s.workingHours && <p className="flex items-center gap-2"><Clock size={16} className="text-brand" />{s.workingHours}</p>}
+            {!s.timingDisabled && s.workingHours && <p className="flex items-center gap-2"><Clock size={16} className="text-brand" />{s.workingHours}</p>}
             {s.contactPerson && <p className="flex items-center gap-2"><User size={16} className="text-brand" />{s.contactPerson}</p>}
             {s.mobileNumber && <p className="flex items-center gap-2"><Phone size={16} className="text-brand" />{s.mobileNumber}</p>}
             {s.emailID && <p className="flex items-center gap-2"><Mail size={16} className="text-brand" /><a href={`mailto:${s.emailID}`} className="hover:text-brand">{s.emailID}</a></p>}

@@ -12,7 +12,7 @@ export const BRAND = {
   tagline: "Eco-Friendly Automotive Fuel — Since 2007",
   heroTagline: "Switch to Auto LPG. Save 40%. Drive Cleaner.",
   footerTagline: "Eco-friendly fuel. Proven savings.",
-  coords: { lat: 10.805, lng: 78.6856 },
+  coords: { lat: 10.80621, lng: 78.67951 },
   yearsOfService: new Date().getFullYear() - 2007,
 };
 

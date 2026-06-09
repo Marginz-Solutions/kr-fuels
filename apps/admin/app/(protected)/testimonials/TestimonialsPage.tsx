@@ -32,7 +32,7 @@ import StarRating from "./components/Starrating";
 import { toast } from "sonner";
 import { C } from "../../../constants/colors";
 import { card, btn, inp, iconBtn } from "../../../styles/shared";
-import { Badge, StatCard } from "../../../components/ui";
+import { Badge, StatCard, Select } from "../../../components/ui";
 import { fmtDate } from "../contact/ContactPage";
 
 interface TestimonialsPageProps {
@@ -419,20 +419,21 @@ const TestimonialModal: FC<ModalProps> = ({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 12 }}>
             <div>
               <FieldLabel htmlFor="m-rating">Star Rating</FieldLabel>
-              <select
-                id="m-rating"
-                style={{ ...inputStyle, cursor: "pointer" }}
-                value={form.rating}
-                onChange={field("rating")}
-              >
-                <option value="">— No rating —</option>
-                {[5, 4, 3, 2, 1].map((n) => (
-                  <option key={n} value={n}>
-                    {"★".repeat(n)}
-                    {"☆".repeat(5 - n)} ({n})
-                  </option>
-                ))}
-              </select>
+              <Select
+                block
+                searchable={false}
+                ariaLabel="Star Rating"
+                placeholder="— No rating —"
+                value={String(form.rating ?? "")}
+                onChange={(v) => onChange({ rating: v === "" ? "" : Number(v) })}
+                options={[
+                  { value: "", label: "— No rating —" },
+                  ...[5, 4, 3, 2, 1].map((n) => ({
+                    value: String(n),
+                    label: `${"★".repeat(n)}${"☆".repeat(5 - n)} (${n})`,
+                  })),
+                ]}
+              />
             </div>
             <div>
               <FieldLabel>Status</FieldLabel>

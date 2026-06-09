@@ -1,7 +1,7 @@
 import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { verifySession } from "@/lib/auth/verify-session";
 import { NextRequest, NextResponse } from "next/server";
-import { type Query, type DocumentData, FieldValue } from "firebase-admin/firestore";
+import { type DocumentData, FieldValue } from "firebase-admin/firestore";
 import { StationSchema } from "@kr/shared/validators/station.schema";
 import { DecodedIdToken } from "firebase-admin/auth";
 import AppError from "@/utils/appError";
@@ -18,55 +18,82 @@ export async function GET(request: NextRequest) {
 
     const page = Math.max(Number.parseInt(searchParams.get("page") ?? "1"), 1);
     const limit = Math.min(Number.parseInt(searchParams.get("limit") ?? "10"), 100);
-    const skip = (page - 1) * limit;
-    const district = searchParams.get("district") ?? "";
-    const area = searchParams.get("area") ?? "";
-    const search = searchParams.get("search") ?? "";
-
-    let query: Query<DocumentData> = adminDb.collection("stations");
-
-    if (district) query = query.where("district", "==", district);
-    if (area) query = query.where("area", "==", area);
-    if (search) {
-      query = query
-        .where("stationName", ">=", search)
-        .where("stationName", "<=", search + "\uf8ff");
-    }
+    const district = (searchParams.get("district") ?? "").trim();
+    const area = (searchParams.get("area") ?? "").trim();
+    const search = (searchParams.get("search") ?? "").trim().toLowerCase();
 
     const baseCollection = adminDb.collection("stations");
 
-    const [
-      countSnap,
-      activeSnap,
-      inactiveSnap,
-      districtsSnap,
-      paginatedSnap,
-    ] = await Promise.all([
-
-      query.count().get(),
-
+    // Read the whole collection once, then filter / sort / paginate in memory.
+    // Stations are a small set (a few hundred across the network \u2014 the public site
+    // and /stations/all already read them all), and doing it this way lets the
+    // district + area + search filters combine freely WITHOUT needing Firestore
+    // composite indexes (a `.where()` + `.orderBy("stationName")` combo requires
+    // one per field combination, which is what made the old filter fail). The
+    // active/inactive counts stay as cheap single-field aggregations.
+    const [allSnap, activeSnap, inactiveSnap] = await Promise.all([
+      baseCollection.get(),
       baseCollection.where("status", "==", "active").count().get(),
-
       baseCollection.where("status", "==", "inactive").count().get(),
-
-      baseCollection.select("district").get(),
-
-      query.orderBy("stationName").offset(skip).limit(limit).get(),
     ]);
 
+    const all = allSnap.docs.map(doc => ({
+      id: doc.id,
+      ...(doc.data() as DocumentData),
+    })) as Array<DocumentData & { id: string }>;
 
-    const uniqueDistricts = [
-      ...new Set(districtsSnap.docs.map(doc => doc.data().district).filter(Boolean))
+    // Filter options mirror the mobile app's station-locator dropdowns EXACTLY: only
+    // ACTIVE stations contribute, grouped district(=City) -> area, so the admin's
+    // City and Area dropdowns show the same values the app does. (Matches the Flutter
+    // groupStationsByDistrictArea: a station counts as active when status is
+    // missing/empty or "active"; rows with an empty district or area are skipped.)
+    const isActiveStation = (s: DocumentData) => {
+      const st = (s.status ?? "").toString().trim().toLowerCase();
+      return st === "" || st === "active";
+    };
+
+    const groupedActive: Record<string, Set<string>> = {};
+    for (const s of all) {
+      if (!isActiveStation(s)) continue;
+      const d = (s.district ?? "").trim();
+      const a = (s.area ?? "").trim();
+      if (!d || !a) continue;
+      (groupedActive[d] ??= new Set()).add(a);
+    }
+
+    // City list + cascading area map, both active-only to match the app. Area can
+    // still be filtered on its own (when no city is chosen) via the flat list.
+    const uniqueDistricts = Object.keys(groupedActive).sort();
+    const areasByDistrict: Record<string, string[]> = Object.fromEntries(
+      Object.entries(groupedActive).map(([d, set]) => [d, [...set].sort()]),
+    );
+    const uniqueAreas = [
+      ...new Set(Object.values(groupedActive).flatMap(set => [...set])),
     ].sort();
 
+    // Every distinct district across ALL stations (active + inactive) — powers the
+    // "Districts Covered" stat and the add/edit form's district picker, which must
+    // still offer a district that currently has only inactive stations.
+    const allDistricts = [
+      ...new Set(all.map(s => (s.district ?? "").trim()).filter(Boolean)),
+    ].sort();
 
-    const total = countSnap.data().count;
+    // Apply the active filters. Equality on district/area; case-insensitive
+    // substring match on the station name for search.
+    let filtered = all;
+    if (district) filtered = filtered.filter(s => (s.district ?? "").trim() === district);
+    if (area) filtered = filtered.filter(s => (s.area ?? "").trim() === area);
+    if (search) filtered = filtered.filter(s => (s.stationName ?? "").toLowerCase().includes(search));
+
+    // Stable alphabetical order by station name (matches the previous orderBy).
+    filtered.sort((a, b) =>
+      (a.stationName ?? "").localeCompare(b.stationName ?? "", undefined, { sensitivity: "base" }),
+    );
+
+    const total = filtered.length;
     const totalPages = Math.ceil(total / limit);
-
-    const stations = paginatedSnap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const skip = (page - 1) * limit;
+    const stations = filtered.slice(skip, skip + limit);
 
     return NextResponse.json({
       data: stations,
@@ -81,8 +108,11 @@ export async function GET(request: NextRequest) {
       stats: {
         active: activeSnap.data().count,
         inactive: inactiveSnap.data().count,
-        totalDistricts: uniqueDistricts.length,
+        totalDistricts: allDistricts.length,
         districts: uniqueDistricts,
+        areas: uniqueAreas,
+        areasByDistrict,
+        allDistricts,
       },
     });
   }

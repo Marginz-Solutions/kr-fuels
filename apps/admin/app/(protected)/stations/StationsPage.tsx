@@ -1,9 +1,9 @@
 "use client"
-import { useState, useEffect, type FC } from "react";
-import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload, Loader2, User, Phone } from "lucide-react";
+import { useState, useEffect, useRef, type FC } from "react";
+import { Plus, Edit2, Trash2, MapPin, Store, Check, Map, AlertCircle, Grid, List, Clock, Upload, Loader2, User, Phone, X } from "lucide-react";
 import { C } from "../../../constants/colors";
-import { card, btn, inp, iconBtn } from "../../../styles/shared";
-import { Badge, StatCard } from "../../../components/ui";
+import { card, btn, iconBtn } from "../../../styles/shared";
+import { Badge, StatCard, Select } from "../../../components/ui";
 import type { StationFormDraft } from "../../../types";
 import Folder from "./_components/Folder";
 import ImagesModal from "./_components/ImagesModal";
@@ -18,7 +18,7 @@ const EMPTY_FORM: StationFormDraft = {
   id: "",
   stationName: "", area: "", address: { street: "", doorNo: "", pincode: "" },
   contactPerson: "", mobileNumber: "", telephone: "", emailID: "",
-  district: "Madurai", workingHours: "",
+  district: "Madurai", workingHours: "", timingDisabled: false,
   location: { latitude: 0, longitude: 0 }, mapLink: "",
   status: "active",
   images: [],
@@ -27,17 +27,21 @@ const EMPTY_FORM: StationFormDraft = {
 
 const LIMIT_OPTIONS = [10, 25, 50, 100]
 
+// Persist the active filters for the lifetime of the tab so navigating away to
+// another admin page and back restores the same view instead of resetting.
+const FILTER_KEY = "kr.stations.filter"
+
 const StationsPage: FC<StationResponse> = (props) => {
   const { data, meta: initialMeta, stats: initialStats } = props;
 
   const [list, setList] = useState<Station[]>(data ?? []);
   const [meta, setMeta] = useState(initialMeta);
   const [stats, setStats] = useState(initialStats)
-  const [districts, setDistricts] = useState(stats?.districts ?? []);
-  const [view, setView] = useState<"table" | "grid">("table");
+  const [view, setView] = useState<"table" | "grid">("grid");
   const [isMobile, setIsMobile] = useState(false)
   const [search, setSearch] = useState("");
   const [district, setDistrict] = useState("All");
+  const [area, setArea] = useState("All");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -51,7 +55,24 @@ const StationsPage: FC<StationResponse> = (props) => {
   const [deleteTarget, setDeleteTarget] = useState<Station | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const allDistricts = ["All", ...districts];
+  // Monotonic id so a slow in-flight request can never overwrite the results of a
+  // newer one — kills the stale-data race when filters change quickly.
+  const reqId = useRef(0)
+  const restored = useRef(false)
+
+  // Filter sources are derived from the latest stats (not separate state) so the
+  // dropdowns always reflect the real station data. district == "City" here; the
+  // City + Area lists are active-only and cascade exactly like the mobile app's
+  // station-locator screen (areas list off the selected city, but every area is
+  // listed when no city is chosen, so area can be filtered on its own).
+  const districts = stats?.districts ?? [];
+  const areasByDistrict = stats?.areasByDistrict ?? {};
+  const cityOptions = ["All", ...districts];
+  const areaOptions = ["All", ...(district !== "All" ? (areasByDistrict[district] ?? []) : (stats?.areas ?? []))];
+  const filtersActive = district !== "All" || area !== "All";
+  // The add/edit form must still offer districts that have only inactive stations,
+  // so it uses the full list, not the active-only City filter list.
+  const drawerDistricts = stats?.allDistricts ?? districts;
 
   // ── mobile detection ───────────────────────────────────
   useEffect(() => {
@@ -67,6 +88,7 @@ const StationsPage: FC<StationResponse> = (props) => {
 
   // ── fetch ──────────────────────────────────────────────
   const fetchStations = async (p = page, l = limit) => {
+    const myReq = ++reqId.current
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -74,15 +96,18 @@ const StationsPage: FC<StationResponse> = (props) => {
         limit: String(l),
         ...(search && { search }),
         ...(district !== "All" && { district }),
+        ...(area !== "All" && { area }),
       })
       const response = await api.get(`/stations?${params}`)
+      if (myReq !== reqId.current) return // a newer request superseded this one
       setList(response.data.data)
       setMeta(response.data.meta)
       setStats(response.data.stats)
     } catch (err) {
+      if (myReq !== reqId.current) return
       console.error("Fetch failed:", err)
     } finally {
-      setLoading(false)
+      if (myReq === reqId.current) setLoading(false)
     }
   }
 
@@ -101,17 +126,59 @@ const StationsPage: FC<StationResponse> = (props) => {
     }
   }
 
-  useEffect(() => { fetchStations(page, limit) }, [page, limit])
-
+  // Restore persisted filters once on mount (sessionStorage is client-only, so this
+  // lives in an effect to avoid any hydration mismatch). Setting the filters then
+  // triggers the fetch effect below with the restored values.
   useEffect(() => {
-    setPage(1)
-    fetchStations(1, limit)
-  }, [search, district])
+    try {
+      const raw = sessionStorage.getItem(FILTER_KEY)
+      if (raw) {
+        const f = JSON.parse(raw)
+        if (typeof f.district === "string") setDistrict(f.district)
+        if (typeof f.area === "string") setArea(f.area)
+        if (typeof f.limit === "number" && LIMIT_OPTIONS.includes(f.limit)) setLimit(f.limit)
+      }
+    } catch { /* ignore malformed persisted state */ }
+    restored.current = true
+  }, [])
+
+  // Persist filters whenever they change so a later remount can restore them.
+  useEffect(() => {
+    if (!restored.current) return
+    try { sessionStorage.setItem(FILTER_KEY, JSON.stringify({ district, area, limit })) } catch { /* no-op */ }
+  }, [district, area, limit])
+
+  // Single source of truth for fetching: any change to page/limit/search/city/area
+  // refetches exactly once (page resets happen synchronously in the handlers below,
+  // so they batch into this same render instead of firing a second request).
+  useEffect(() => {
+    fetchStations(page, limit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, search, district, area])
 
   const handlePageChange = (p: number) => setPage(p)
 
   const handleLimitChange = (l: number) => {
     setLimit(l)
+    setPage(1)
+  }
+
+  // Changing the city resets the area (the old area may not exist in the new city)
+  // and returns to page 1. Both run in this handler so they batch into one fetch.
+  const handleDistrictChange = (d: string) => {
+    setDistrict(d)
+    setArea("All")
+    setPage(1)
+  }
+
+  const handleAreaChange = (a: string) => {
+    setArea(a)
+    setPage(1)
+  }
+
+  const clearFilters = () => {
+    setDistrict("All")
+    setArea("All")
     setPage(1)
   }
 
@@ -125,7 +192,8 @@ const StationsPage: FC<StationResponse> = (props) => {
       mobileNumber: s.mobileNumber, telephone: s.telephone ?? "",
       emailID: s.emailID ?? "", district: s.district,
       status: s.status,
-      workingHours: s.workingHours, location: s.location,
+      workingHours: s.workingHours, timingDisabled: s.timingDisabled ?? false,
+      location: s.location,
       mapLink: s.mapLink ?? "", images: s.images ?? [],
       primaryImage: s.primaryImage ?? "",
     })
@@ -145,7 +213,11 @@ const StationsPage: FC<StationResponse> = (props) => {
       stationName: form.stationName, area: form.area,
       contactPerson: form.contactPerson, mobileNumber: form.mobileNumber,
       telephone: form.telephone ?? "", emailID: form.emailID ?? "",
-      district: form.district, workingHours: form.workingHours,
+      district: form.district,
+      // When timing is disabled the station has no operating hours — persist an
+      // empty workingHours so no stale/fabricated value lingers in the data.
+      workingHours: form.timingDisabled ? "" : form.workingHours,
+      timingDisabled: !!form.timingDisabled,
       status: form.status,
       mapLink: form.mapLink ?? "", address: form.address, location: form.location,
       primaryImage: form.primaryImage ?? "",
@@ -204,13 +276,45 @@ const StationsPage: FC<StationResponse> = (props) => {
           flexWrap: "wrap",
           alignItems: "center",
         }}>
-          <select
-            value={district}
-            onChange={e => setDistrict(e.target.value)}
-            style={{ ...inp({ width: "auto", padding: "7px 12px" }), minWidth: 140 }}
-          >
-            {allDistricts.map(d => <option key={d}>{d}</option>)}
-          </select>
+          {/* City filter — active-only districts, mirrors the mobile app's locator */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.p }}>City</span>
+            <Select
+              size="sm"
+              minWidth={140}
+              menuMinWidth={220}
+              ariaLabel="Filter by city"
+              value={district}
+              onChange={handleDistrictChange}
+              options={cityOptions.map(d => ({ value: d, label: d === "All" ? "All Cities" : d }))}
+            />
+          </div>
+
+          {/* Area filter — cascades off the selected city, lists every area otherwise */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.p }}>Area</span>
+            <Select
+              size="sm"
+              minWidth={140}
+              menuMinWidth={220}
+              ariaLabel="Filter by area"
+              value={area}
+              onChange={handleAreaChange}
+              options={areaOptions.map(a => ({ value: a, label: a === "All" ? "All Areas" : a }))}
+            />
+          </div>
+
+          {/* Clear filters — only shown when a city/area filter is active */}
+          {filtersActive && (
+            <button
+              onClick={clearFilters}
+              title="Clear filters"
+              aria-label="Clear filters"
+              style={{ ...btn("ghost"), padding: "6px 10px", fontSize: 12, color: C.red }}
+            >
+              <X size={13} />Clear
+            </button>
+          )}
 
           {/* limit selector */}
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -330,7 +434,7 @@ const StationsPage: FC<StationResponse> = (props) => {
                     <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.contactPerson}</td>
                     <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>{s.mobileNumber}</td>
                     <td style={{ padding: "12px 16px", fontSize: 12, color: C.tm, whiteSpace: "nowrap" }}>
-                      <Clock size={11} style={{ marginRight: 4 }} />{s.workingHours}
+                      <Clock size={11} style={{ marginRight: 4 }} />{s.timingDisabled ? "—" : (s.workingHours || "—")}
                     </td>
                     <td style={{ padding: "12px 16px" }}><Badge color={s.status === "active" ? "green" : "red"}>{s.status}</Badge></td>
                     <td style={{ padding: "12px 16px" }}>
@@ -444,7 +548,7 @@ const StationsPage: FC<StationResponse> = (props) => {
 
       {drawer && (
         <Drawer
-          districts={districts} editing={editing} form={form}
+          districts={drawerDistricts} editing={editing} form={form}
           save={save} setDrawer={setDrawer} setForm={setForm}
           setStations={setList} pendingFiles={pendingFiles}
           setPendingFiles={setPendingFiles} loading={saveLoading}

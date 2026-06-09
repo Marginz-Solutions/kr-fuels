@@ -135,15 +135,15 @@ export default async function GuidePage() {
           ) : (
             faqList.map((f) => (
               <details key={f.id} className="card-soft group">
-                <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-ink">
-                  {f.question}
-                  <span className="text-brand transition group-open:rotate-45">+</span>
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0 leading-snug">{f.question}</span>
+                  <span className="mt-0.5 shrink-0 text-xl leading-none text-brand transition-transform duration-200 group-open:rotate-45">+</span>
                 </summary>
-                <div className="mt-3 text-sm text-mutedfg">
+                <div className="mt-3 text-sm leading-relaxed text-mutedfg">
                   {f.isLink ? (
-                    <Link href={normalizeUrl(f.answer)} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline">{f.answer}</Link>
+                    <Link href={normalizeUrl(f.answer)} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline break-words">{f.answer}</Link>
                   ) : (
-                    <p className="whitespace-pre-line">{f.answer}</p>
+                    <p className="whitespace-pre-line break-words">{f.answer}</p>
                   )}
                 </div>
               </details>

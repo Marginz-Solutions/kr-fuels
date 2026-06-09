@@ -4,9 +4,10 @@ import Image from "next/image";
 import { MapPin, X, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { ImageWithSkeleton } from "./ImageWithSkeleton";
 
-// `next/image` serves a different optimized file per `sizes` value. The grid tiles
-// and the lightbox both request GRID_SIZES so the full-screen view paints INSTANTLY
-// from cache (no refetch) — it reuses the file the tile already downloaded.
+// `next/image` serves a different optimized file per `sizes` value. The small grid
+// tiles request GRID_SIZES; the full-screen lightbox requests `100vw` + quality 90
+// so it loads a large, high-DPI-appropriate file and renders sharp (a small grid
+// variant stretched to full screen is what made it look blurry before).
 const GRID_SIZES = "(max-width: 1024px) 50vw, 33vw";
 
 // The grid never grows past a 2×2 footprint. Extra images collapse into a
@@ -87,6 +88,7 @@ export function StationGallery({ images, stationName }: { images: string[]; stat
                 fill
                 loading={i === 0 ? "eager" : "lazy"}
                 sizes={GRID_SIZES}
+                quality={85}
                 className="object-contain transition-transform duration-500 ease-out group-hover:scale-105"
               />
               {moreCount > 0 && (
@@ -159,17 +161,25 @@ export function StationGallery({ images, stationName }: { images: string[]; stat
                         : "translate-x-6 scale-95 opacity-0"
                   }`}
                 >
-                  <Image
-                    src={src}
-                    alt={`${stationName} image ${i + 1}`}
-                    fill
-                    priority={i === index}
-                    // Same `sizes` as the grid tile → reuses the already-cached
-                    // file, so the large view paints instantly with no refetch.
-                    sizes={GRID_SIZES}
-                    draggable={false}
-                    className="object-contain"
-                  />
+                  {/* White matte frame around the image (matches the live site's
+                      full-screen viewer). The image is inset from the white panel
+                      via padding on the <Image>, so object-contain never clips or
+                      distorts it — the white shows as a clean border on every side. */}
+                  <div className="relative h-full w-full overflow-hidden rounded-2xl bg-white shadow-2xl">
+                    <Image
+                      src={src}
+                      alt={`${stationName} image ${i + 1}`}
+                      fill
+                      priority={i === index}
+                      // Full-viewport `sizes` so the optimizer serves a large,
+                      // high-DPI-appropriate file (not the small grid variant) —
+                      // this is what makes the full-screen view render sharp.
+                      sizes="100vw"
+                      quality={90}
+                      draggable={false}
+                      className="object-contain p-3 sm:p-5"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
