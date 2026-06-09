@@ -15,9 +15,9 @@ export const PARTNERS_FALLBACK: ClientPublic[] = [
 export const STATIONS_FALLBACK: StationPublic[] = [
   {
     id: "fb-try-01", stationName: "KR Trans Fuels — Cantonment", district: "Tiruchirappalli", area: "Cantonment",
-    address: { doorNo: "No. 20", street: "Lawson's Road", pincode: 620001 }, workingHours: "Open 24x7",
+    address: { doorNo: "No. 20", street: "Lawson's Road", pincode: 620001 }, workingHours: "6:00 AM – 10:00 PM",
     status: "active", stationCode: "KRTF-TRY-01", contactPerson: "Station Manager", mobileNumber: "9585586667",
-    amenities: ["24x7", "Free Water", "Nitrogen Air", "Parking"], location: { latitude: 10.8050, longitude: 78.6856 },
+    amenities: ["Free Water", "Nitrogen Air", "Parking"], location: { latitude: 10.8050, longitude: 78.6856 },
   },
   {
     id: "fb-try-02", stationName: "KR Trans Fuels — Srirangam", district: "Tiruchirappalli", area: "Srirangam",
@@ -27,9 +27,9 @@ export const STATIONS_FALLBACK: StationPublic[] = [
   },
   {
     id: "fb-mdu-01", stationName: "KR Trans Fuels — Mattuthavani", district: "Madurai", area: "Mattuthavani",
-    address: { doorNo: "45", street: "Melur Road", pincode: 625020 }, workingHours: "Open 24x7",
+    address: { doorNo: "45", street: "Melur Road", pincode: 625020 }, workingHours: "6:00 AM – 10:00 PM",
     status: "active", stationCode: "KRTF-MDU-01", contactPerson: "Station Manager", mobileNumber: "9585586667",
-    amenities: ["24x7", "Nitrogen Air", "Restroom"], location: { latitude: 9.9396, longitude: 78.1530 },
+    amenities: ["Nitrogen Air", "Restroom"], location: { latitude: 9.9396, longitude: 78.1530 },
   },
   {
     id: "fb-cbe-01", stationName: "KR Trans Fuels — Avinashi Road", district: "Coimbatore", area: "Peelamedu",
@@ -39,9 +39,9 @@ export const STATIONS_FALLBACK: StationPublic[] = [
   },
   {
     id: "fb-che-01", stationName: "KR Trans Fuels — Guindy", district: "Chennai", area: "Guindy",
-    address: { doorNo: "9", street: "Mount Road (GST Road)", pincode: 600032 }, workingHours: "Open 24x7",
+    address: { doorNo: "9", street: "Mount Road (GST Road)", pincode: 600032 }, workingHours: "6:00 AM – 10:00 PM",
     status: "active", stationCode: "KRTF-CHE-01", contactPerson: "Station Manager", mobileNumber: "9585586667",
-    amenities: ["24x7", "Free Water", "Nitrogen Air", "Restroom"], location: { latitude: 13.0067, longitude: 80.2206 },
+    amenities: ["Free Water", "Nitrogen Air", "Restroom"], location: { latitude: 13.0067, longitude: 80.2206 },
   },
   {
     id: "fb-slm-01", stationName: "KR Trans Fuels — Hasthampatti", district: "Salem", area: "Hasthampatti",
@@ -57,9 +57,9 @@ export const STATIONS_FALLBACK: StationPublic[] = [
   },
   {
     id: "fb-tnj-01", stationName: "KR Trans Fuels — Thanjavur Bypass", district: "Thanjavur", area: "Bypass Road",
-    address: { doorNo: "5", street: "Trichy–Thanjavur Bypass", pincode: 613005 }, workingHours: "Open 24x7",
+    address: { doorNo: "5", street: "Trichy–Thanjavur Bypass", pincode: 613005 }, workingHours: "6:00 AM – 10:00 PM",
     status: "active", stationCode: "KRTF-TNJ-01", contactPerson: "Station Manager", mobileNumber: "9585586667",
-    amenities: ["24x7", "Nitrogen Air", "Free Water"], location: { latitude: 10.7867, longitude: 79.1378 },
+    amenities: ["Nitrogen Air", "Free Water"], location: { latitude: 10.7867, longitude: 79.1378 },
   },
   {
     id: "fb-tvl-01", stationName: "KR Trans Fuels — Palayamkottai", district: "Tirunelveli", area: "Palayamkottai",

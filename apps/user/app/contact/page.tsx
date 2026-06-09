@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, Mail, Phone, Clock, MessageCircle } from "lucide-react";
+import { MapPin, Mail, Phone, MessageCircle } from "lucide-react";
 import { getContact, getSiteSettings, getStations } from "@/lib/api";
 import { ContactPanels } from "@/components/ContactPanels";
 import { BRAND, formatAddress, getCoords } from "@/lib/site";
@@ -22,7 +22,6 @@ export default async function ContactPage() {
   const phone = contact.essentials?.phoneNos?.office || BRAND.phone;
   const whatsapp = contact.essentials?.phoneNos?.whatsapp;
   const address = formatAddress(contact.presents?.address);
-  const hours = contact.presents?.workingHours || "Mon–Sat, 9:00 AM – 8:00 PM";
   // Prefer the coordinates the admin stored (presents.exactLocation); otherwise fall
   // back to the brand HQ coordinates so the map always pins the real office location
   // rather than a fuzzy name+address text search.
@@ -35,7 +34,6 @@ export default async function ContactPage() {
     { icon: Mail, label: "Email", value: email, href: `mailto:${email}` },
     { icon: Phone, label: "Phone", value: phone, href: `tel:${phone}` },
     ...(whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", value: whatsapp, href: `https://wa.me/${String(whatsapp).replace(/[^0-9]/g, "")}` }] : []),
-    { icon: Clock, label: "Hours", value: hours },
   ];
 
   return (

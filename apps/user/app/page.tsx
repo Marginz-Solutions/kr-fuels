@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+// import Image from "next/image"; // only used by the disabled Partners section
 import {
   ArrowRight, MapPin, ShieldCheck,
   HelpCircle, MessageSquare, GitCompare, Leaf,
@@ -7,9 +7,9 @@ import {
 import { TestimonialsCarousel } from "@/components/TestimonialsCarousel";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { HomeVideo } from "@/components/HomeVideo";
-import { getFuelPrices, getStations, getTestimonials, getAbout, getClients, getHeroImages, getSiteSettings } from "@/lib/api";
+import { getFuelPrices, getStations, getTestimonials, getAbout, getHeroImages, getSiteSettings } from "@/lib/api";
 import { BRAND, TESTIMONIAL_FALLBACK, STATION_COUNT_FALLBACK, fmtCount } from "@/lib/site";
-import { PARTNERS_FALLBACK } from "@/lib/fallbacks";
+// import { PARTNERS_FALLBACK } from "@/lib/fallbacks"; // only used by the disabled Partners section
 import { HOME_VIDEO_URL_DEFAULT } from "@kr/shared/types";
 
 // ISR: home reflects live fuel prices — keep it fresh but served from cache.
@@ -18,12 +18,12 @@ export const revalidate = 30;
 const HERO_IMAGES_FALLBACK = ["/assets/hero-2.jpg", "/assets/hero-1.jpg", "/assets/products/auto-lpg.jpg"];
 
 export default async function HomePage() {
-  const [prices, stations, testimonials, about, partners, heroImages, site] = await Promise.all([
+  const [prices, stations, testimonials, about, /* partners, */ heroImages, site] = await Promise.all([
     getFuelPrices(),
     getStations(),
     getTestimonials(),
     getAbout(),
-    getClients("collaborator"),
+    // getClients("collaborator"), // Partners section disabled
     getHeroImages(),
     getSiteSettings(),
   ]);
@@ -38,12 +38,13 @@ export default async function HomePage() {
   const savingsRs = prices.petrol > 0 && prices.autoLPG > 0 ? (prices.petrol - prices.autoLPG).toFixed(1) : "39";
   const p = (v: number) => (v > 0 ? v : "—");
   const carousel = testimonials.length ? testimonials : TESTIMONIAL_FALLBACK;
-  const partnerList = partners.length ? partners : PARTNERS_FALLBACK;
+  // Partners section disabled per request — data prep kept (commented) for easy re-enable.
+  // const partnerList = partners.length ? partners : PARTNERS_FALLBACK;
   // Build a marquee reel of two IDENTICAL halves so the CSS `translateX(-50%)` loop is
   // perfectly seamless. Each half repeats the partner list enough times to overflow the
   // widest viewport, so there's never an empty gap before it loops.
-  const partnerHalf = Array.from({ length: Math.max(2, Math.ceil(12 / Math.max(1, partnerList.length))) }).flatMap(() => partnerList);
-  const partnerReel = [...partnerHalf, ...partnerHalf];
+  // const partnerHalf = Array.from({ length: Math.max(2, Math.ceil(12 / Math.max(1, partnerList.length))) }).flatMap(() => partnerList);
+  // const partnerReel = [...partnerHalf, ...partnerHalf];
 
   const stats = [
     { value: fmtCount(count), label: "Stations across Tamil Nadu" },
@@ -209,15 +210,15 @@ export default async function HomePage() {
         <TestimonialsCarousel items={carousel} />
       </section>
 
-      {/* ── Partners (horizontal auto-scroll) ────────────────── */}
+      {/* ── Partners (horizontal auto-scroll) — DISABLED per request ──────────
       {partnerList.length > 0 && (
         <section className="overflow-hidden border-y border-line bg-white py-14">
           <div className="container-x">
             <p className="mb-8 text-center text-sm font-semibold uppercase tracking-wider text-mutedfg/70">Our technology partners</p>
           </div>
           <div className="relative flex overflow-hidden">
-            {/* Per-item right margin (not flex gap) so the two identical halves line up
-                exactly at the -50% loop point — perfectly seamless, infinite scroll. */}
+            // Per-item right margin (not flex gap) so the two identical halves line up
+            // exactly at the -50% loop point — perfectly seamless, infinite scroll.
             <div className="flex w-max kr-marquee items-center">
               {partnerReel.map((pt, idx) =>
                 pt.logo ? (
@@ -230,6 +231,7 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+      ────────────────────────────────────────────────────────────────────── */}
 
       {/* ── Final CTA ────────────────────────────────────────── */}
       <section className="container-x py-20">

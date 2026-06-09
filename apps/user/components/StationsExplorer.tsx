@@ -5,7 +5,7 @@ import { MapPin, Clock, Navigation, Eye, Search, ChevronDown, Check } from "luci
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import type { StationPublic } from "@/lib/api";
 
-const FEATURE_OPTIONS = ["24x7", "Free Water", "Nitrogen Air", "Parking", "Restroom", "Air Filling"];
+const FEATURE_OPTIONS = ["Free Water", "Nitrogen Air", "Parking", "Restroom", "Air Filling"];
 const PER_PAGE = 9;
 
 // Full network of station locations ("District - Area"), shown in the location
@@ -110,7 +110,6 @@ function stationMatchesLocation(s: StationPublic, location: string): boolean {
 
 function stationFeatures(s: StationPublic): string[] {
   const raw = [...(s.amenities ?? []), ...(s.features ?? [])].map((x) => String(x));
-  if (!s.timingDisabled && s.workingHours && /24/.test(s.workingHours)) raw.push("24x7");
   return Array.from(new Set(raw));
 }
 
