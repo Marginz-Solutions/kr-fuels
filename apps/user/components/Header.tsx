@@ -37,6 +37,7 @@ export function Header({
 
   // Render the date only after mount to avoid SSR/CSR hydration drift.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToday(new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }));
   }, []);
 
@@ -50,8 +51,6 @@ export function Header({
   };
 
   const p = (v: number) => (v > 0 ? v : "—");
-  // Live savings headline (Auto-LPG vs petrol); 40% fallback matches the home page + SEO copy.
-  const savingsPct = prices.petrol > 0 && prices.autoLPG > 0 ? Math.round((1 - prices.autoLPG / prices.petrol) * 100) : 40;
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -107,9 +106,9 @@ export function Header({
 
       {/* ── Main nav ────────────────────────────────────────────── */}
       <div className="border-b border-line bg-white/95 backdrop-blur">
-        <div className="container-x flex h-[72px] items-center justify-between">
+        <div className="container-x flex h-18 items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/assets/logo.png" alt="KR Trans Fuels" width={48} height={38} className="h-[38px] w-auto" priority />
+            <Image src="/assets/logo.png" alt="KR Trans Fuels" width={48} height={38} className="h-9.5 w-auto" priority />
             <span className="leading-tight">
               <span className="block text-[15px] font-extrabold text-ink">K.R Trans Fuels</span>
               <span className="block text-[11px] font-medium tracking-wide text-mutedfg">Private Limited</span>
