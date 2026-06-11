@@ -4,11 +4,14 @@ import Image from "next/image";
 import { MapPin, X, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { ImageWithSkeleton } from "./ImageWithSkeleton";
 
-// `next/image` serves a different optimized file per `sizes` value. The small grid
-// tiles request GRID_SIZES; the full-screen lightbox requests `100vw` + quality 90
-// so it loads a large, high-DPI-appropriate file and renders sharp (a small grid
-// variant stretched to full screen is what made it look blurry before).
-const GRID_SIZES = "(max-width: 1024px) 50vw, 33vw";
+// Station gallery images render UNOPTIMIZED — the original file straight from
+// Firebase/the DB — for the two reasons the brief calls out:
+//   1. Full quality: the optimizer recompresses to a smaller WebP/AVIF, so the
+//      original URL is the only way to show the photo "fully fetched from the DB".
+//   2. One cached file, reused everywhere: the grid tile, the full-screen view and
+//      the thumbnail all point at the SAME original URL. Once the grid has loaded an
+//      image the lightbox paints it instantly from the browser cache instead of
+//      fetching a different optimized variant every time it is opened.
 
 // The grid never grows past a 2×2 footprint. Extra images collapse into a
 // "+N more" overlay on the last tile, which opens the full viewer.
@@ -86,9 +89,8 @@ export function StationGallery({ images, stationName }: { images: string[]; stat
                 src={src}
                 alt={`${stationName} image ${i + 1}`}
                 fill
+                unoptimized
                 loading={i === 0 ? "eager" : "lazy"}
-                sizes={GRID_SIZES}
-                quality={85}
                 className="object-contain transition-transform duration-500 ease-out group-hover:scale-105"
               />
               {moreCount > 0 && (
@@ -153,7 +155,7 @@ export function StationGallery({ images, stationName }: { images: string[]; stat
                 <div
                   key={i}
                   aria-hidden={i !== index}
-                  className={`absolute inset-0 transition-all duration-500 ease-out ${
+                  className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out ${
                     i === index
                       ? "z-10 translate-x-0 scale-100 opacity-100"
                       : i < index
@@ -161,25 +163,20 @@ export function StationGallery({ images, stationName }: { images: string[]; stat
                         : "translate-x-6 scale-95 opacity-0"
                   }`}
                 >
-                  {/* White matte frame around the image (matches the live site's
-                      full-screen viewer). The image is inset from the white panel
-                      via padding on the <Image>, so object-contain never clips or
-                      distorts it — the white shows as a clean border on every side. */}
-                  <div className="relative h-full w-full overflow-hidden rounded-2xl bg-white shadow-2xl">
-                    <Image
-                      src={src}
-                      alt={`${stationName} image ${i + 1}`}
-                      fill
-                      priority={i === index}
-                      // Full-viewport `sizes` so the optimizer serves a large,
-                      // high-DPI-appropriate file (not the small grid variant) —
-                      // this is what makes the full-screen view render sharp.
-                      sizes="100vw"
-                      quality={90}
-                      draggable={false}
-                      className="object-contain p-3 sm:p-5"
-                    />
-                  </div>
+                  {/* The image sizes to its OWN aspect ratio (capped by the stage via
+                      max-h/max-w), so the 5px white border hugs it tightly on every
+                      side instead of a fixed-ratio white panel with letterbox margins.
+                      Rendered straight from the original DB URL (no next/image
+                      optimizer) so it shows full quality and reuses the very file the
+                      grid already cached — no re-fetch when the viewer re-opens. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={`${stationName} image ${i + 1}`}
+                    loading={i === index ? "eager" : "lazy"}
+                    draggable={false}
+                    className="block max-h-full max-w-full rounded-2xl border-[5px] border-white bg-white object-contain shadow-2xl"
+                  />
                 </div>
               ))}
             </div>
@@ -218,7 +215,7 @@ export function StationGallery({ images, stationName }: { images: string[]; stat
                       : "border-transparent opacity-50 hover:opacity-90"
                   }`}
                 >
-                  <Image src={src} alt="" fill sizes="80px" className="object-cover" />
+                  <Image src={src} alt="" fill unoptimized className="object-cover" />
                 </button>
               ))}
             </div>
