@@ -1,0 +1,32 @@
+{
+  "name": "@kr/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "build": "next build",
+    "start": "next start -p 4000",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "seed:faqs": "node --env-file=.env.local scripts/seed-faqs.mjs",
+    "seed:faqs:replace": "node --env-file=.env.local scripts/seed-faqs.mjs --replace"
+  },
+  "dependencies": {
+    "@kr/shared": "workspace:*",
+    "firebase-admin": "^13.10.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "typescript": "^5"
+  }
+}

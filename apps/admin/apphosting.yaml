@@ -1,0 +1,66 @@
+# Firebase App Hosting — KR Trans Fuels Admin (apps/admin)
+# When creating this backend, set its ROOT DIRECTORY to: apps/admin
+
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 80
+
+env:
+  # Client (browser) API base — RELATIVE so calls stay same-origin and the
+  # httpOnly `session` cookie attaches. A Next rewrite (next.config.ts) proxies
+  # /api/v1/* to BACKEND_API_BASE_URL, forwarding the cookie server-side. This
+  # is what fixes the cross-host 401s (admin and backend are different hosts).
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: /api/v1
+    availability: [BUILD, RUNTIME]
+
+  # Absolute backend base — server-side only (session route, serverFetch) and
+  # the rewrite-proxy destination. rewrites() runs at BUILD, so BUILD is required.
+  - variable: BACKEND_API_BASE_URL
+    value: https://kr-fuels-backend--krfuelsgfivibuh.asia-southeast1.hosted.app/api/v1
+    availability: [BUILD, RUNTIME]
+
+  # On-demand revalidation: after a content change the admin pings the public
+  # site so it refreshes immediately. USER_ORIGIN = the public site origin.
+  - variable: USER_ORIGIN
+    value: https://kr-fuels-user--krfuelsgfivibuh.asia-southeast1.hosted.app
+    availability: [RUNTIME]
+  # Shared secret (Cloud Secret Manager) — MUST match the kr-user backend's value.
+  # Create once and grant both backends access:
+  #   firebase apphosting:secrets:set revalidate-secret
+  - variable: REVALIDATE_SECRET
+    secret: revalidate-secret
+    availability: [RUNTIME]
+
+  # ── Public Firebase web config — safe to commit (ships in the client bundle) ──
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBB4h6N8aU78Q0aLaxUYeqZR6kkZToa3OI
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: krfuelsgfivibuh.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: krfuelsgfivibuh
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: krfuelsgfivibuh.appspot.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "372539814104"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:372539814104:web:0a721e217c5a01f0aa27ad"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_DB
+    value: kr-fuels
+    availability: [BUILD, RUNTIME]
+
+  # Keep registration closed in production (open briefly only to seed the 1st admin).
+  - variable: NEXT_PUBLIC_ALLOW_REGISTRATION
+    value: "false"
+    availability: [BUILD, RUNTIME]
+  # COOKIE_DOMAIN intentionally omitted - set it (e.g. .krfuels.com) only once
+  # the apps move to custom domains. An empty value ("") is invalid here.

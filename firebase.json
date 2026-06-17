@@ -1,0 +1,25 @@
+{
+  "firestore": [
+    {
+      "database": "kr-fuels",
+      "rules": "firestore.rules"
+    }
+  ],
+  "apphosting": [
+    {
+      "backendId": "kr-backend",
+      "rootDir": "apps/backend",
+      "ignore": ["node_modules", "**/node_modules", ".git", ".next", "**/.next", ".turbo", "**/.turbo", "*.log"]
+    },
+    {
+      "backendId": "kr-admin",
+      "rootDir": "apps/admin",
+      "ignore": ["node_modules", "**/node_modules", ".git", ".next", "**/.next", ".turbo", "**/.turbo", "*.log"]
+    },
+    {
+      "backendId": "kr-user",
+      "rootDir": "apps/user",
+      "ignore": ["node_modules", "**/node_modules", ".git", ".next", "**/.next", ".turbo", "**/.turbo", "*.log"]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+# Firebase App Hosting — KR Trans Fuels public site (apps/user)
+# When creating this backend, set its ROOT DIRECTORY to: apps/user
+
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 80
+
+env:
+  # Backend API base — verify the exact backend host/region after it deploys.
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://kr-fuels-backend--krfuelsgfivibuh.asia-southeast1.hosted.app/api/v1
+    availability: [BUILD, RUNTIME]
+
+  # Public site origin (canonical URLs / sitemap) — set to this app's own URL.
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://kr-fuels-user--krfuelsgfivibuh.asia-southeast1.hosted.app
+    availability: [BUILD, RUNTIME]
+
+  # Admin app origin (the "Admin Login" link appends /login itself).
+  - variable: NEXT_PUBLIC_ADMIN_URL
+    value: https://kr-fuels-admin--krfuelsgfivibuh.asia-southeast1.hosted.app
+    availability: [BUILD, RUNTIME]
+
+  # Shared secret (Cloud Secret Manager) for the on-demand revalidation endpoint
+  # (POST /api/revalidate). MUST be the SAME value as the kr-admin backend's.
+  # Create once and grant both backends access:
+  #   firebase apphosting:secrets:set revalidate-secret
+  - variable: REVALIDATE_SECRET
+    secret: revalidate-secret
+    availability: [RUNTIME]

@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────
+   Design system — shared visual language with the public site
+   (apps/user). Same token NAMES, utilities, font, radii and
+   shadows; the brand hue stays our teal (not the site's green).
+   Teal values mirror @kr/shared C.* so inline C.* styles and
+   Tailwind utility classes resolve to the exact same colors.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* ── PRIMARY BRAND — single reusable token. Edit --color-brand to recolor the
+     whole admin: the shades and the shadcn/sidebar :root tokens all derive from it. */
+  --color-brand: #16a34a;        /* Tailwind green-600 — PRIMARY */
+  --color-brand-dark: #15803d;   /* green-700 (hover/active) */
+  --color-brand-light: #22c55e;  /* green-500 */
+  --color-brand-pale: #dcfce7;   /* green-100 tint (chips/eyebrow) */
+
+  /* Secondary (lime) — mirrors C.s / C.sDark */
+  --color-lime: oklch(0.94 0.17 124.44);
+  --color-lime-dark: oklch(0.72 0.16 124.44);
+
+  /* Neutrals — mirror apps/user + C.t / C.tm / C.bg / C.bd */
+  --color-ink: #0d1a10;      /* near-black green text */
+  --color-dark: #0d1a10;     /* dark bars/buttons */
+  --color-cream: #f7f9f7;    /* muted background */
+  --color-mutedfg: #52715a;  /* muted foreground */
+  --color-line: #e4ede7;     /* borders */
+  --color-accent: #f2f6f3;
+
+  --radius-card: 1.25rem;
+
+  --font-sans: var(--font-plus-jakarta), "Plus Jakarta Sans", ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* shadcn / sonner token bridge (kept for any default-skinned primitives) */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  /* primary / ring re-pointed to brand teal so default-skinned bits stay on-brand */
+  --primary: var(--color-brand);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: var(--color-brand-pale);
+  --accent-foreground: var(--color-brand-dark);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: var(--color-brand);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: var(--color-brand);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: var(--color-brand);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+/* Every link and button shows the pointer cursor on hover (native <button>
+   defaults to the arrow). Left UNLAYERED on purpose so it wins over all of
+   Tailwind's @layer rules (and antd's). Disabled controls keep not-allowed. */
+a[href],
+button,
+[role="button"],
+label[for],
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+a[aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed;
+}
+
+/* ── Shared utility classes (mirrors apps/user) ─────────────── */
+@layer components {
+  .container-x {
+    /* Mirrors apps/user: widened 1280 → 1400. Above 1440 the 4K density-lock
+       at the end of this file scales the whole layout up proportionally. */
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-line bg-white px-6 py-3.5 text-sm font-bold text-ink transition hover:bg-cream disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-white;
+  }
+  .card-soft {
+    @apply rounded-2xl border border-line bg-white p-6 shadow-[0_2px_18px_rgba(26,46,41,0.05)];
+  }
+  .section-title {
+    @apply text-3xl font-extrabold tracking-tight text-ink sm:text-4xl;
+  }
+}
+
+/* ── Skeleton shimmer (kept for loading states) ─────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0 }
+  100% { background-position:  600px 0 }
+}
+.sk {
+  background: linear-gradient(90deg, #eef2f0 25%, #e3eae7 50%, #eef2f0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+
+/* ── Modal / dropdown enter animations (framer-motion-free) ─── */
+@keyframes kr-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes kr-pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.kr-fade-in { animation: kr-fade-in 0.15s ease both; }
+.kr-pop-in { animation: kr-pop-in 0.2s cubic-bezier(0.16, 1, 0.32, 1) both; }
+
+/* ──────────────────────────────────────────────────────────────
+   Large-screen / 4K density lock  (mirrors apps/user/app/globals.css)
+   ----------------------------------------------------------------
+   The admin shell is a fixed sidebar + a flexing content area with NO
+   max-width — so on a 4K monitor the grids, tables and cards stretch
+   edge-to-edge and look sparse/broken. The content is laid out in absolute
+   px (inline styles), so a rem/max-width clamp can't rescale it.
+
+   Instead we scale the whole 1440-density layout up proportionally with
+   `zoom` above 1536px, so a 2560px / 4K screen MIRRORS the 1440px laptop
+   experience — same proportions, spacing and density — and fills the screen.
+
+   `zoom` is applied to <body> (not the viewport/root) so it can never feed
+   back into these min-width media queries. Each step keeps the effective
+   layout width ≈ physical ÷ zoom ≈ 1440–1700px. ≤1535px is left untouched.
+
+   The factor is exposed as --app-zoom so the few full-viewport-HEIGHT
+   containers (the 100dvh app shell, the 100vh sidebar, the login wrapper)
+   can divide by it: `zoom` does not reflow explicit dvh/vh the way it reflows
+   auto widths, so an un-compensated 100dvh becomes 100dvh × zoom and overflows.
+   calc(100dvh / var(--app-zoom)) keeps them exactly one viewport tall. */
+:root { --app-zoom: 1; }
+body { zoom: var(--app-zoom); }
+@media (min-width: 1536px) { :root { --app-zoom: 1.07; } } /* eff ≈ 1440 */
+@media (min-width: 1700px) { :root { --app-zoom: 1.18; } }
+@media (min-width: 2048px) { :root { --app-zoom: 1.42; } }
+@media (min-width: 2304px) { :root { --app-zoom: 1.60; } }
+@media (min-width: 2560px) { :root { --app-zoom: 1.78; } } /* common 4K @150% scaling */
+@media (min-width: 2880px) { :root { --app-zoom: 2.00; } }
+@media (min-width: 3360px) { :root { --app-zoom: 2.33; } }
+@media (min-width: 3840px) { :root { --app-zoom: 2.67; } } /* native 4K @100% scaling */
