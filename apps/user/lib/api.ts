@@ -166,10 +166,15 @@ export async function getCalculatorSettings(): Promise<CalculatorSettings> {
 }
 
 export async function getHeroImages(): Promise<string[]> {
+  // Keep the hero data cache aligned with the home page's own `revalidate = 30`
+  // so a background regeneration actually re-fetches the slides. A longer window
+  // (e.g. 300) makes the hero lag the rest of the page by minutes whenever the
+  // on-demand purge (POST /api/revalidate) doesn't fire — e.g. a REVALIDATE_SECRET
+  // mismatch between the admin and user backends.
   const j = await getJson<{ data: { id: string; url: string; order: number }[] }>(
     "/public/hero-images",
     { data: [] },
-    300,
+    30,
   );
   return (j.data ?? [])
     .filter((img) => img.url)

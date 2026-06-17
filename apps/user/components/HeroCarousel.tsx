@@ -28,6 +28,13 @@ export function HeroCarousel({ images, alt }: { images: string[]; alt: string })
           priority={idx === 0}
           onLoad={idx === 0 ? () => setReady(true) : undefined}
           sizes="(max-width:1024px) 100vw, 580px"
+          // Hero slides are arbitrary admin uploads served straight from Firebase
+          // Storage. Some are technically-malformed PNGs that browsers render but
+          // libspng (sharp / Next's image optimizer) rejects with a "libspng read
+          // error", making /_next/image return 500 and the slide break. Bypass the
+          // optimizer and load the raw URL — same approach the admin panel uses for
+          // these images, and what next.config documents for admin-entered URLs.
+          unoptimized
           className={`object-cover transition-opacity duration-1000 ease-in-out ${idx === i ? "opacity-100" : "opacity-0"}`}
         />
       ))}
