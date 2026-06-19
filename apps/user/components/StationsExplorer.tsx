@@ -256,28 +256,30 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
     <div>
       {/* Filters */}
       <div className="mb-8 space-y-4">
-        <div className="relative flex justify-between items-center">
-        <div className="relative max-w-md min-w-md">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
-          <input
-            value={q}
-            onChange={(e) => { setQ(e.target.value); setPage(1); }}
-            placeholder="Search stations by name or area…"
-            className="w-full rounded-full border border-black/10 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
-          />
-        </div>
-
-
-        <div className="flex flex-col items-end gap-1.5">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-sm font-medium text-ink/60">Location</span>
-            <LocationSelect value={location} onChange={(v) => { setLocation(v); setPage(1); }} />
+        {/* Stack on phones, lay out side-by-side from sm up. The old `min-w-md`
+            (= 28rem in Tailwind v4) on the search box forced the row wider than a
+            phone viewport, causing the whole page to scroll horizontally. */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-md sm:flex-1">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
+            <input
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setPage(1); }}
+              placeholder="Search stations by name or area…"
+              className="w-full rounded-full border border-black/10 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
+            />
           </div>
-          <span className="flex items-center gap-1 pr-1 text-xs font-medium text-brand">
-            <MapPin size={12} className="shrink-0" />
-            {filtered.length} {filtered.length === 1 ? "location" : "locations"} near you
-          </span>
-        </div>
+
+          <div className="flex flex-col gap-1.5 sm:items-end">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-sm font-medium text-ink/60">Location</span>
+              <LocationSelect value={location} onChange={(v) => { setLocation(v); setPage(1); }} />
+            </div>
+            <span className="flex items-center gap-1 pr-1 text-xs font-medium text-brand">
+              <MapPin size={12} className="shrink-0" />
+              {filtered.length} {filtered.length === 1 ? "location" : "locations"} near you
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">

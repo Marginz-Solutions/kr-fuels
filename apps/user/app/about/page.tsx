@@ -96,7 +96,11 @@ export default async function AboutPage() {
 
       {/* Journey timeline — items reveal on scroll */}
       {journey.length > 0 && (
-        <section className="bg-cream py-20">
+        // `overflow-x-clip`: the right-sliding Reveal cards start at translate-x-12
+        // (48px) which, on full-width mobile cards, pushed past the viewport and
+        // added a blank strip / horizontal scroll. Clip the off-screen offset here
+        // (x only — vertical page scroll is untouched).
+        <section className="overflow-x-clip bg-cream py-20">
           <div className="container-x">
             <div className="mb-12 text-center">
               <span className="eyebrow mb-4">Our Journey</span>
