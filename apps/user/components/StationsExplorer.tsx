@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { MapPin, Clock, Navigation, Eye, Search, ChevronDown, Check } from "lucide-react";
+import { MapPin, Clock, Navigation, Eye, Search, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import type { StationPublic } from "@/lib/api";
 
@@ -119,6 +119,22 @@ function directionsUrl(s: StationPublic): string {
   const lng = s.location?.longitude;
   if (lat && lng) return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.stationName ?? ""} ${s.district ?? ""}`)}`;
+}
+
+// Compact page list: first, last and a small window around the current page,
+// with "…" gaps for the rest. A station network this size can hit 9+ pages, and
+// rendering one circle per page overflowed a 320px viewport — this keeps the
+// control narrow. ≤7 pages just shows every page.
+function paginationRange(current: number, total: number): (number | "ellipsis")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | "ellipsis")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) out.push("ellipsis");
+  for (let i = start; i <= end; i++) out.push(i);
+  if (end < total - 1) out.push("ellipsis");
+  out.push(total);
+  return out;
 }
 
 // Custom, on-theme location dropdown. A native <select> can't have its option
@@ -360,21 +376,47 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
         <div className="card-soft mt-4 text-center text-ink/60">No stations match your filters.</div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination — windowed + wrappable so it never overflows a narrow phone. */}
       {pages > 1 && (
-        <div className="mt-10 flex items-center justify-center gap-2">
-          {Array.from({ length: pages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i + 1)}
-              className={`h-9 w-9 shrink-0 rounded-full text-sm font-semibold transition ${
-                current === i + 1 ? "bg-brand text-white" : "border border-black/10 text-ink/60 hover:border-brand"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
+        <nav className="mt-10 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2" aria-label="Pagination">
+          <button
+            type="button"
+            onClick={() => setPage(Math.max(1, current - 1))}
+            disabled={current === 1}
+            aria-label="Previous page"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-black/10 text-ink/60 transition hover:border-brand disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          {paginationRange(current, pages).map((it, idx) =>
+            it === "ellipsis" ? (
+              <span key={`gap-${idx}`} className="select-none px-0.5 text-sm text-ink/40">…</span>
+            ) : (
+              <button
+                key={it}
+                type="button"
+                onClick={() => setPage(it)}
+                aria-current={current === it ? "page" : undefined}
+                className={`h-8 w-8 shrink-0 rounded-full text-sm font-semibold transition sm:h-9 sm:w-9 ${
+                  current === it ? "bg-brand text-white" : "border border-black/10 text-ink/60 hover:border-brand"
+                }`}
+              >
+                {it}
+              </button>
+            )
+          )}
+
+          <button
+            type="button"
+            onClick={() => setPage(Math.min(pages, current + 1))}
+            disabled={current === pages}
+            aria-label="Next page"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-black/10 text-ink/60 transition hover:border-brand disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </nav>
       )}
     </div>
   );
