@@ -300,15 +300,15 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
 
         <div className="flex flex-wrap gap-2">
           {FEATURE_OPTIONS.map((f) => (
-            <button
+            <div
               key={f}
-              onClick={() => { toggleFeature(f); setPage(1); }}
+              // onClick={() => { toggleFeature(f); setPage(1); }}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                 features.includes(f) ? "border-brand bg-brand text-white" : "border-black/10 bg-white text-ink/60 hover:border-brand"
               }`}
             >
               {f}
-            </button>
+            </div>
           ))}
         </div>
       </div>

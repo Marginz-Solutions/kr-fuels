@@ -56,33 +56,33 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
     label: "Auto LPG",
     category: "Auto LPG Fuel",
     icon: "fuel",
-    tagline: "Eco-friendly automotive fuel — cleaner, safer and up to 40% cheaper than petrol.",
+    tagline: "Eco-friendly automotive fuel — cleaner and safer than petrol.",
     intro:
-      "Auto LPG (Liquefied Petroleum Gas) is a clean-burning, eco-friendly automotive fuel dispensed at every KR Trans Fuels station. It costs roughly 40% less than petrol, burns cleaner with significantly lower emissions, and refuels as quickly and easily as any other fuel — so you save money on every kilometre while driving greener.",
+      "Auto LPG (liquefied petroleum gas) is a clean-burning, Eco-friendly automotive fuel dispensed at every kr trans fuels station. It costs roughly 40% less than petrol, Burns cleaner with significantly lower emissions, And refuels as quickly and easily as any other fuel — so you save money on every kilometre while driving greener.",
     sections: [
       {
         heading: "Why switch to Auto LPG",
         items: [
           "Up to 40% cheaper to run than petrol",
-          "Far lower CO, hydrocarbon and NOx emissions",
+          "Far lower CO, Hydrocarbon and nox emissions",
           "Cleaner combustion means longer engine life",
-          "Quick, easy refuelling across our growing station network",
-          "Dual-fuel freedom — switch between petrol and LPG on the move",
+          "Quick, Easy refuelling across our growing station network",
+          "Dual-fuel freedom — switch between petrol and lpg on the move",
         ],
       },
       {
         heading: "How it works",
         items: [
-          "A BIS-certified conversion kit lets your petrol vehicle run on LPG",
+          "A bis-certified conversion kit lets your petrol vehicle run on lpg",
           "A dedicated high-pressure tank stores the Auto LPG safely",
-          "Flip a change-over switch to run on petrol or LPG at any time",
-          "No loss of convenience — same range, same performance",
+          "Flip a change-over switch to run on petrol or lpg at any time",
+          "No loss of convenience — same range, Same performance",
         ],
       },
     ],
     specs: [
-      { name: "Availability", detail: "Dispensed at all KR Trans Fuels Auto LPG stations across Tamil Nadu" },
-      { name: "Typical saving", detail: "~40% lower running cost versus petrol" },
+      { name: "Availability", detail: "Dispensed at all kr trans fuels Auto LPG stations across tamil nadu" },
+      // { name: "Typical saving", detail: "~40% lower running cost versus petrol" },
     ],
     match: ["auto lpg", "auto-lpg", "fuel"],
   },
@@ -94,14 +94,14 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
     label: "Conversion Kits",
     category: "Conversion Kits",
     icon: "wrench",
-    tagline: "BIS-certified Venturi & Sequential LPG conversion kits for two-, three- and four-wheelers.",
+    tagline: "Bis-certified venturi & sequential lpg conversion kits for two-, Three- and four-wheelers.",
     intro:
-      "An LPG conversion kit lets your vehicle run on LPG instead of petrol, cutting fuel costs and emissions. Each kit bundles the components needed for safe, efficient fuel delivery — a tank, reducer, injectors, ECU and hoses — fitted by trained technicians and certified to automotive safety standards.",
+      "An lpg conversion kit lets your vehicle run on lpg instead of petrol, Cutting fuel costs and emissions. Each kit bundles the components needed for safe, Efficient fuel delivery — a tank, Reducer, Injectors, Ecu and hoses — fitted by trained technicians and certified to automotive safety standards.",
     sections: [
       {
         heading: "Venturi (open-loop) kits",
         items: [
-          "Mixer-based fuelling — simple, robust and economical",
+          "Mixer-based fuelling — simple, Robust and economical",
           "Ideal for carburettor and older-generation petrol vehicles",
           "Lower cost of conversion with reliable everyday performance",
         ],
@@ -109,20 +109,20 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
       {
         heading: "Sequential (closed-loop) kits",
         items: [
-          "Electronically controlled multipoint LPG injection",
-          "ECU meters fuel precisely for each cylinder",
-          "Best suited to modern BS-IV / BS-VI fuel-injected vehicles",
-          "Smoother performance, better mileage and cleaner emissions",
+          "Electronically controlled multipoint lpg injection",
+          "Ecu meters fuel precisely for each cylinder",
+          "Best suited to modern bs-iv / bs-vi fuel-injected vehicles",
+          "Smoother performance, Better mileage and cleaner emissions",
         ],
       },
       {
         heading: "What's in the kit",
         items: [
-          "High-pressure LPG tank and filler valve",
-          "Reducer / vaporiser (KR 67, KR 56)",
-          "Injector rail (3-way, 4-way, KR 360)",
-          "ECU (Pride, Ultra, Optima Nano)",
-          "Change-over switch, hoses and fittings",
+          "High-pressure lpg tank and filler valve",
+          "Reducer / vaporiser (kr 67, Kr 56)",
+          "Injector rail (3-way, 4-way, Kr 360)",
+          "Ecu (pride, Ultra, Optima nano)",
+          "Change-over switch, Hoses and fittings",
         ],
       },
     ],
@@ -145,7 +145,7 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
     icon: "cylinder",
     tagline: "Safety-certified high-pressure tanks and multivalves built to automotive standards.",
     intro:
-      "KR Trans Fuels supplies BIS / automotive-standard LPG tanks and multivalves for Auto LPG vehicles. Cylindrical and toroidal designs suit different vehicles and boot layouts, while the integrated multivalve manages safe filling, level sensing and pressure relief.",
+      "Kr trans fuels supplies bis / automotive-standard lpg tanks and multivalves for Auto LPG vehicles. Cylindrical and toroidal designs suit different vehicles and boot layouts, While the integrated multivalve manages safe filling, Level sensing and pressure relief.",
     sections: [
       {
         heading: "Cylindrical tanks",
@@ -159,13 +159,13 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
         heading: "Toroidal (doughnut) tanks",
         items: [
           "Fit neatly into the spare-wheel well",
-          "Free up boot space while keeping a full LPG range",
+          "Free up boot space while keeping a full lpg range",
         ],
       },
       {
         heading: "Multivalves & safety",
         items: [
-          "Integrated fill, level-gauge, excess-flow and safety-relief functions",
+          "Integrated fill, Level-gauge, Excess-flow and safety-relief functions",
           "80% auto-stop fill prevents overfilling",
           "Pressure-relief valve for safe operation",
         ],
@@ -188,14 +188,14 @@ export const PRODUCT_CATALOG: ProductDetail[] = [
     label: "Lubricants",
     category: "Lubricants",
     icon: "droplets",
-    tagline: "Specialised lubricants formulated for LPG / CNG engines.",
+    tagline: "Specialised lubricants formulated for lpg / cng engines.",
     intro:
-      "Lubricant is a thin film, generally composed of 70% base oil and 30% additives, which helps to keep your engine running at its best. Our Veedol lubricants are formulated for LPG and CNG vehicles to protect the engine, reduce wear and extend its life.",
+      "Lubricant is a thin film, Generally composed of 70% base oil and 30% additives, Which helps to keep your engine running at its best. Our veedol lubricants are formulated for lpg and cng vehicles to protect the engine, Reduce wear and extend its life.",
     sections: [
       {
         heading: "What a lubricant does",
         items: [
-          "Lubricate — reduces friction, engine wear and fuel consumption",
+          "Lubricate — reduces friction, Engine wear and fuel consumption",
           "Clean — clears piston varnish and deposit sludge in the sump",
           "Protect — guards against acid corrosion and rust",
           "Cool & seal the engine",

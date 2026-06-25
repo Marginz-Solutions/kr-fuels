@@ -96,11 +96,11 @@ export function Header({
 
           {/* Right: staff login — shares the top row with the date on mobile (order-2, pushed
               right via ml-auto); sits at the far right on md+ (order-3). */}
-          <div className="order-2 ml-auto flex shrink-0 items-center justify-end gap-2.5 md:order-3 md:ml-0">
+          {/* <div className="order-2 ml-auto flex shrink-0 items-center justify-end gap-2.5 md:order-3 md:ml-0">
             <Link href={ADMIN_LOGIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-white/25">
               Staff Login <ArrowUpRight size={13} />
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
 
