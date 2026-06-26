@@ -3,7 +3,7 @@ import { PRODUCT_CATALOG } from "./products";
 
 export const BRAND = {
   name: "K.R Trans Fuels Private Limited",
-  shortName: "KR Trans Fuels",
+  shortName: "K.R Trans Fuels",
   email: "autolpg@krfuels.com",
   phone: "+91-9585586667",
   phone2: "+91-431-2730267",

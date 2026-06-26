@@ -20,7 +20,7 @@ const COMPARISON: [string, string, string][] = [
   ["40 % Vol", "Propane", "15 % Vol"],
   ["60 % Vol", "N Butane & Iso Butane", "80% Vol"],
   ["0 % Vol", "Other heavier hydrocarbons", "1 % Vol"],
-  ["upto 550 Kg/Cu M", "Density @ 15 C", "upto 580 Kg/Cu M"],
+  ["Upto 550 Kg/Cu M", "Density @ 15 C", "Upto 580 Kg/Cu M"],
   ["Upto 7 bar", "Vapour pressure @ 40 C", "Upto 7 bar"],
   ["93 +", "Motor octane number", "60 +"],
   ["Nil", "Free water content", "Nil"],
@@ -41,7 +41,7 @@ const COMPARISON: [string, string, string][] = [
     "Consists impurities and low octane value. Hence maintenance cost is higher than Auto LPG.",
   ],
   ["More than 220 LPG bunks are available in Tamil Nadu.", "Availability", "------"],
-  ["30 ltrs per minute & same as Petrol.", "Filling time", "Extremely risky and also illegal"],
+  ["30 ltrs per minute & same as petrol.", "Filling time", "Extremely risky and also illegal"],
   [
     "Suitable for all types of LPG conversion kits.",
     "Suitability",
