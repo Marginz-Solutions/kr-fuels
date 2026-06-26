@@ -5,7 +5,7 @@ import { MapPin, Clock, Navigation, Eye, Search, ChevronDown, ChevronLeft, Chevr
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import type { StationPublic } from "@/lib/api";
 
-const FEATURE_OPTIONS = ["Free Water", "Nitrogen Air", "Parking", "Restroom", "Air Filling"];
+const FEATURE_OPTIONS = ["Free water", "Nitrogen air", "Parking", "Restroom", "Air filling"];
 const PER_PAGE = 9;
 
 // Full network of station locations ("District - Area"), shown in the location
@@ -176,9 +176,8 @@ function LocationSelect({ value, onChange }: { value: string; onChange: (v: stri
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-3 rounded-full border bg-white px-4 py-2.5 text-sm font-medium text-ink outline-none transition sm:w-auto sm:min-w-[17rem] ${
-          open ? "border-brand ring-2 ring-brand/15" : "border-line hover:border-brand"
-        }`}
+        className={`flex w-full items-center justify-between gap-3 rounded-full border bg-white px-4 py-2.5 text-sm font-medium text-ink outline-none transition sm:w-auto sm:min-w-[17rem] ${open ? "border-brand ring-2 ring-brand/15" : "border-line hover:border-brand"
+          }`}
       >
         <span className="truncate">{label}</span>
         <ChevronDown
@@ -216,9 +215,8 @@ function LocationSelect({ value, onChange }: { value: string; onChange: (v: stri
                     role="option"
                     aria-selected={active}
                     onClick={() => { onChange(o.value); close(); }}
-                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
-                      active ? "bg-brand font-semibold text-white" : "text-ink/75 hover:bg-brand-pale hover:text-brand"
-                    }`}
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${active ? "bg-brand font-semibold text-white" : "text-ink/75 hover:bg-brand-pale hover:text-brand"
+                      }`}
                   >
                     <span className="truncate">{o.label}</span>
                     {active && <Check size={15} className="shrink-0" />}
@@ -303,9 +301,8 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
             <div
               key={f}
               // onClick={() => { toggleFeature(f); setPage(1); }}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                features.includes(f) ? "border-brand bg-brand text-white" : "border-black/10 bg-white text-ink/60 hover:border-brand"
-              }`}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${features.includes(f) ? "border-brand bg-brand text-white" : "border-black/10 bg-white text-ink/60 hover:border-brand"
+                }`}
             >
               {f}
             </div>
@@ -398,9 +395,8 @@ export function StationsExplorer({ stations }: { stations: StationPublic[] }) {
                 type="button"
                 onClick={() => setPage(it)}
                 aria-current={current === it ? "page" : undefined}
-                className={`h-8 w-8 shrink-0 rounded-full text-sm font-semibold transition sm:h-9 sm:w-9 ${
-                  current === it ? "bg-brand text-white" : "border border-black/10 text-ink/60 hover:border-brand"
-                }`}
+                className={`h-8 w-8 shrink-0 rounded-full text-sm font-semibold transition sm:h-9 sm:w-9 ${current === it ? "bg-brand text-white" : "border border-black/10 text-ink/60 hover:border-brand"
+                  }`}
               >
                 {it}
               </button>

@@ -60,7 +60,7 @@ export default async function HomePage() {
   ];
 
   const ctaCards = [
-    { icon: MapPin, title: "Find a Station", sub: `${fmtCount(count)} locations near you`, href: "/stations" },
+    { icon: MapPin, title: "Find a station", sub: `${fmtCount(count)} locations near you`, href: "/stations" },
     { icon: GitCompare, title: "LPG vs Domestic LPG", sub: "Know the real difference", href: "/guide" },
     { icon: MessageSquare, title: "Feedback", sub: "Share your experience", href: "/contact" },
     { icon: HelpCircle, title: "FAQ", sub: "Common questions answered", href: "/guide#faq" },
@@ -72,7 +72,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-brand-pale/60 to-white">
         <div className="container-x grid items-center gap-12 py-14 lg:grid-cols-2 lg:py-20">
           <div>
-            <span className="eyebrow mb-6">🌿 Eco-Friendly Automotive Fuel — Since 2007</span>
+            <span className="eyebrow mb-6">🌿 Eco-friendly automotive fuel — since 2007</span>
             <h1 className="text-[44px] font-extrabold leading-[1.04] tracking-tight text-ink sm:text-6xl lg:text-[68px]">
               Switch to Auto LPG. Save {savingsPct}%. <span className="text-brand">Drive Cleaner.</span>
             </h1>
@@ -182,7 +182,7 @@ export default async function HomePage() {
               </div>
               <div className="rounded-2xl bg-brand-pale p-5">
                 <div className="text-3xl font-extrabold text-brand">{savingsPct}%</div>
-                <div className="text-sm text-mutedfg">Savings over Petrol</div>
+                <div className="text-sm text-mutedfg">Savings over petrol</div>
               </div>
             </div>
           </div>
@@ -242,7 +242,7 @@ export default async function HomePage() {
             Join thousands of drivers saving {savingsPct}% on fuel costs with cleaner, greener Auto LPG.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/stations" className="btn-primary">Find a Station Near You <ArrowRight size={16} /></Link>
+            <Link href="/stations" className="btn-primary">Find a station near you <ArrowRight size={16} /></Link>
             <Link href="/contact" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/10">
               Talk to Our Team
             </Link>

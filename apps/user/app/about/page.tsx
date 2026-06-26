@@ -104,7 +104,7 @@ export default async function AboutPage() {
           <div className="container-x">
             <div className="mb-12 text-center">
               <span className="eyebrow mb-4">Our Journey</span>
-              <h2 className="section-title">Milestones Along the Way</h2>
+              <h2 className="section-title">Milestones along the way</h2>
             </div>
             <div className="relative mx-auto max-w-3xl">
               {/* center line — centered on the same x as every node via -translate-x-1/2 */}

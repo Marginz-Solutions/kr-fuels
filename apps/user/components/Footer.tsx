@@ -54,7 +54,7 @@ export function Footer({
         </div>
 
         <div>
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">Quick Links</h4>
+          <h4 className="mb-4 text-sm font-bold tracking-wider text-white">Quick Links</h4>
           <ul className="space-y-2.5 text-sm">
             {QUICK_LINKS.map((l) => (
               <li key={l.href}><Link href={l.href} className="hover:text-lime">{l.label}</Link></li>
@@ -64,7 +64,7 @@ export function Footer({
         </div>
 
         <div>
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">Products</h4>
+          <h4 className="mb-4 text-sm font-bold tracking-wider text-white">Products</h4>
           <ul className="space-y-2.5 text-sm">
             {PRODUCT_MENU.map((p) => (
               <li key={p.label}>
@@ -79,7 +79,7 @@ export function Footer({
         </div>
 
         <div>
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">Explore</h4>
+          <h4 className="mb-4 text-sm font-bold tracking-wider text-white">Explore</h4>
           <div className="flex flex-wrap gap-2">
             {tags.map((t) => (
               <span key={t} className="rounded-full bg-white/10 px-2.5 py-1 text-xs">{t}</span>
