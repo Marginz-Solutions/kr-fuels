@@ -30,6 +30,9 @@
 
   --radius-card: 1.25rem;
 
+  /* ── SHADOWS */
+  --shadow-card: 0 2px 18px rgba(13, 26, 16, 0.05);
+
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -88,7 +91,7 @@ a[aria-disabled="true"],
   }
 
   .card-soft {
-    @apply rounded-2xl border border-line bg-white p-6 shadow-[0_2px_18px_rgba(13, 26, 16, 0.05)];
+    @apply rounded-2xl border border-line bg-white p-6 shadow-[var(--shadow-card)];
   }
 
   .section-title {
