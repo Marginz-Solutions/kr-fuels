@@ -127,7 +127,7 @@ export default async function HomePage() {
       <section className="container-x py-14">
         <div className="mb-8 text-center">
           <span className="eyebrow mb-3">Quick Links</span>
-          <h2 className="section-title">Everything You Need, One Tap Away</h2>
+          <h2 className="section-title">Everything you need, One tap away</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {ctaCards.map((c) => (
@@ -167,13 +167,13 @@ export default async function HomePage() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <span className="eyebrow mb-4">About Us</span>
-            <h2 className="section-title">Powering Green Mobility Since 2007</h2>
+            <h2 className="section-title">Powering green mobility since 2007</h2>
             <p className="mt-4 text-mutedfg">
               {about.contentBlocks?.[0]?.body ||
-                `K.R Trans Fuels, a subsidiary of KRT Carriers, established its first Auto LPG Dispensing Station in 2007. Today, with ${fmtCount(count)} stations across Tamil Nadu and more in the pipeline, we lead the state in cleaner automotive fuel.`}
+                `K.R Trans Fuels, a subsidiary of KRT Carriers, established its first Auto LPG dispensing station in 2007. Today, with ${fmtCount(count)} stations across Tamil Nadu and more in the pipeline, we lead the state in cleaner automotive fuel.`}
             </p>
             <Link href="/about" className="mt-6 inline-flex items-center gap-1.5 font-bold text-brand hover:gap-2.5 transition-all">
-              Learn More About Us <ArrowRight size={16} />
+              Learn more about us <ArrowRight size={16} />
             </Link>
             <div className="mt-7 grid grid-cols-2 gap-4">
               <div className="rounded-2xl bg-brand-pale p-5">
@@ -204,7 +204,7 @@ export default async function HomePage() {
       <section className="container-x py-20">
         <div className="mb-10 text-center">
           <span className="eyebrow mb-4">Testimonials</span>
-          <h2 className="section-title">Trusted by Thousands</h2>
+          <h2 className="section-title">Trusted by thousands</h2>
           <p className="mt-2 text-mutedfg">Hear from our customers across Tamil Nadu</p>
         </div>
         <TestimonialsCarousel items={carousel} />
@@ -237,7 +237,7 @@ export default async function HomePage() {
       <section className="container-x py-20">
         <div className="overflow-hidden rounded-[32px] bg-ink px-8 py-16 text-center text-white">
           <ShieldCheck className="mx-auto mb-4 text-brand-light" size={36} />
-          <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to Switch to Smarter Fuel?</h2>
+          <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to switch to smarter fuel?</h2>
           <p className="mx-auto mt-3 max-w-xl text-white/70">
             Join thousands of drivers saving {savingsPct}% on fuel costs with cleaner, greener Auto LPG.
           </p>

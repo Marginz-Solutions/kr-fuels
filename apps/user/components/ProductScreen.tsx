@@ -77,7 +77,7 @@ export default async function ProductScreen({ slug }: { slug: string }) {
         <div className="container-x py-12 lg:py-16">
           <div className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
             <div>
-              <span className="eyebrow mb-4">{r.category}</span>
+              {/* <span className="eyebrow mb-4">{r.category}</span> */}
               <h1 className="text-4xl font-extrabold text-ink sm:text-5xl">{r.name}</h1>
               {r.tagline && <p className="mt-4 max-w-xl text-lg text-mutedfg">{r.tagline}</p>}
               {r.intro && <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink/70">{r.intro}</p>}
