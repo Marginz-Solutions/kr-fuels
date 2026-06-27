@@ -78,7 +78,7 @@ export function Header({
               <div className="leading-none">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">Auto-LPG</div>
                 <div className="mt-1 text-lg font-extrabold tracking-tight sm:text-[22px]">
-                  ₹{p(prices.autoLPG)}<span className="ml-0.5 hidden text-[11px] font-semibold text-white/70 sm:inline">/litre</span>
+                  ₹{p(prices.autoLPG)}<span className="ml-0.5 text-[11px] font-semibold text-white/70">/litre</span>
                 </div>
               </div>
             </div>
@@ -87,7 +87,7 @@ export function Header({
                 <div key={f.l} className="leading-none">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-white/60">{f.l}</div>
                   <div className="mt-1 text-base font-bold text-yellow-400 sm:text-lg">
-                    ₹{p(f.v)}<span className="ml-0.5 hidden text-[11px] font-medium text-white/50 sm:inline">/lit</span>
+                    ₹{p(f.v)}<span className="ml-0.5 text-[11px] font-medium text-white/50">/lit</span>
                   </div>
                 </div>
               ))}
