@@ -80,7 +80,7 @@ export default async function HomePage() {
               Tamil Nadu&apos;s largest Auto LPG network. {fmtCount(count)} stations. Cleaner fuel. Real savings every day.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/stations" className="btn-primary">Contact Us <ArrowRight size={16} /></Link>
+              <Link href="/contact" className="btn-primary">Contact Us <ArrowRight size={16} /></Link>
               <Link href="/guide" className="btn-dark">How It Works <ArrowRight size={16} /></Link>
             </div>
           </div>
