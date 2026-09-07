@@ -4,11 +4,14 @@ import { Fuel, Flame, HelpCircle } from "lucide-react";
 import { getFaq } from "@/lib/api";
 import { normalizeUrl } from "@kr/shared/lib/utils";
 import { FAQ_FALLBACK } from "@/lib/fallbacks";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Guide — Auto LPG vs Domestic LPG",
-  description: "Auto LPG vs Domestic LPG compared, and frequently asked questions about switching.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Auto LPG Vs Domestic LPG | Differences & Safety | K.R Trans Fuels",
+  description:
+    "Learn The Difference Between Auto LPG And Domestic LPG, Including Fuel Standards, Safety, Performance, Maintenance, Filling, And Vehicle Suitability.",
+  path: "/guide",
+});
 
 // ISR: FAQ/settings change infrequently — serve from cache, refresh in background.
 export const revalidate = 120;
