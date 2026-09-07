@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import ProductScreen, { productMetadata } from "@/components/ProductScreen";
+import ProductScreen from "@/components/ProductScreen";
+import { pageMetadata } from "@/lib/seo";
 
 // ISR: catalog copy changes infrequently — serve from cache, refresh in background.
 export const revalidate = 300;
 
-// Default products screen = Auto LPG (selected in the product picker).
-export function generateMetadata(): Promise<Metadata> {
-  return productMetadata("auto-lpg");
-}
+export const metadata: Metadata = pageMetadata({
+  title: "Auto LPG | Clean Automotive Fuel In Tamil Nadu | K.R Trans Fuels",
+  description:
+    "Explore Auto LPG From K.R Trans Fuels — A Cleaner, Cost-Effective Automotive Fuel Available Across Tamil Nadu. Find Auto LPG Stations And Learn How It Works.",
+  path: "/products",
+});
 
 export default function ProductsPage() {
   return <ProductScreen slug="auto-lpg" />;

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import { getPrivacy } from "@/lib/api";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "How K.R Trans Fuels collects, uses and protects your personal information.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Privacy Policy | K.R Trans Fuels",
+  description:
+    "Read The K.R Trans Fuels Privacy Policy To Learn How We Collect, Use, Store, Protect, And Manage User Information Through Our Website And Customer App.",
+  path: "/privacy",
+});
 
 // ISR: legal copy changes very rarely — cache for an hour. (Admin edits also
 // trigger on-demand revalidation, so changes show up immediately in practice.)

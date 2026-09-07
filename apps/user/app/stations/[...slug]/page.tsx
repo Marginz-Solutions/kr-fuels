@@ -6,6 +6,8 @@ import { MapPin, Clock, Navigation, Phone, User, Mail, ArrowLeft } from "lucide-
 import { getStation } from "@/lib/api";
 import { STATIONS_FALLBACK } from "@/lib/fallbacks";
 import { SITE_URL } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
+import { STATION_SEO } from "@/lib/stationSeo";
 import { StationsDirectory } from "../page";
 
 interface Props {
@@ -30,8 +32,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (slug.length === 1 && /^\d+$/.test(slug[0])) {
     const pageNum = Number.parseInt(slug[0], 10);
     return {
-      title: `Auto LPG Stations — Page ${pageNum}`,
-      description: "Find your nearest K.R Trans Fuels Auto LPG station across Tamil Nadu. Filter by district and amenities.",
+      ...pageMetadata({
+        title: `Auto LPG Stations Across Tamil Nadu — Page ${pageNum} | K.R Trans Fuels`,
+        description:
+          "Find Auto LPG Stations Across Tamil Nadu With K.R Trans Fuels. Explore Locations, Find A Station Near You, Get Directions, And Refuel With Auto LPG.",
+        path: `/stations/${slug[0]}`,
+      }),
       alternates: { canonical: `${SITE_URL}/stations/${slug[0]}` },
     };
   }
@@ -43,11 +49,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const where = [s.area, s.district].filter(Boolean).join(", ");
   const pagePrefix = slug.length >= 2 ? `${slug[0]}/` : "";
+  const handleSlug = s.slug || s.id;
+  const canonicalPath = `/stations/${pagePrefix}${handleSlug}`;
+
+  // Prefer the exact, hand-written SEO copy from the spreadsheet; fall back to
+  // the auto-generated title/description for any station added since.
+  const seo = STATION_SEO[s.slug ?? ""];
+  const title = seo?.title ?? (s.stationName ? `${s.stationName} — Auto LPG Station${where ? ` in ${where}` : ""}` : "Station");
+  const description = seo?.description ?? `Auto LPG station${where ? ` in ${where}` : ""}. Working hours, directions and amenities.`;
 
   return {
-    title: s.stationName ? `${s.stationName} — Auto LPG Station${where ? ` in ${where}` : ""}` : "Station",
-    description: `Auto LPG station${where ? ` in ${where}` : ""}. Working hours, directions and amenities.`,
-    alternates: { canonical: `${SITE_URL}/stations/${pagePrefix}${s.slug || s.id}` },
+    ...pageMetadata({
+      title,
+      description,
+      path: canonicalPath,
+      image: (s as any).primaryImage || s.images?.[0],
+    }),
+    alternates: { canonical: `${SITE_URL}${canonicalPath}` },
   };
 }
 

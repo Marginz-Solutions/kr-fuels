@@ -5,11 +5,14 @@ import { getContact, getSiteSettings, getStations } from "@/lib/api";
 import { ContactPanels } from "@/components/ContactPanels";
 import { resolveSocials } from "@/components/SocialIcons";
 import { BRAND, formatAddress, getCoords } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact Us",
-  description: "Get in touch with K.R Trans Fuels — phone, email, address and enquiry form.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Contact K.R Trans Fuels | Auto LPG In Tamil Nadu",
+  description:
+    "Contact K.R Trans Fuels For Auto LPG Enquiries, Station Information, Fuel Availability, And Support. Reach Our Tiruchirappalli Office By Phone, Email Or WhatsApp.",
+  path: "/contact",
+});
 
 // ISR: contact details rarely change — long cache, background refresh.
 export const revalidate = 300;

@@ -4,11 +4,14 @@ import { getAbout, getJourney, getStations } from "@/lib/api";
 import { Reveal } from "@/components/Reveal";
 import { ImageWithSkeleton } from "@/components/ImageWithSkeleton";
 import { BRAND, STATION_COUNT_FALLBACK, DISTRICT_COUNT_FALLBACK, fmtCount } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description: "K.R Trans Fuels — pioneering Auto LPG in Tamil Nadu since 2007. Our story, mission and journey.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "About K.R Trans Fuels | Tamil Nadu Auto LPG Network",
+  description:
+    "Learn About KR Fuels, K.R Trans Fuels Pvt Ltd, And Our Journey Since 2007. Discover Our 81 Auto LPG Stations And Commitment To Cleaner, Affordable Mobility.",
+  path: "/about",
+});
 
 // ISR: editorial content — long cache window, refreshed in the background.
 export const revalidate = 300;

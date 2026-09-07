@@ -3,11 +3,14 @@ import { getStations } from "@/lib/api";
 import { StationsExplorer } from "@/components/StationsExplorer";
 import { STATIONS_FALLBACK } from "@/lib/fallbacks";
 import { STATION_COUNT_FALLBACK, fmtCount } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Auto LPG Stations",
-  description: "Find your nearest K.R Trans Fuels Auto LPG station across Tamil Nadu. Filter by district and amenities.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "81 Auto LPG Stations Across Tamil Nadu | K.R Trans Fuels",
+  description:
+    "Find Auto LPG Stations Across Tamil Nadu With K.R Trans Fuels. Explore 81 Locations, Find A Station Near You, Get Directions, And Refuel With Auto LPG.",
+  path: "/stations",
+});
 
 // ISR: station network changes rarely — serve from cache, refresh in background.
 export const revalidate = 60;
